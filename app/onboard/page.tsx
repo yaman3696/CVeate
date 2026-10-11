@@ -12,7 +12,6 @@ function OnboardingContent() {
   const [errorMsg, setErrorMsg] = useState('')
   const [isAutoFilledBanner, setIsAutoFilledBanner] = useState(false)
 
-  // Refs for editable containers
   const bioRef = useRef<HTMLDivElement | null>(null)
   const bulletRefs = useRef<(HTMLDivElement | null)[]>([])
 
@@ -29,20 +28,11 @@ function OnboardingContent() {
     bio: '',
     
     experiences: [
-      {
-        role: '',
-        company: '',
-        duration: '',
-        bullets: ''
-      }
+      { role: '', company: '', duration: '', bullets: '' }
     ],
 
     qualifications: [
-      {
-        degree: '',
-        institution: '',
-        year: ''
-      }
+      { degree: '', institution: '', year: '' }
     ],
 
     technicalSkills: '',
@@ -51,10 +41,8 @@ function OnboardingContent() {
     languages: ''
   })
 
-  // Auto-fill dynamically with extracted profile data from sessionStorage
   useEffect(() => {
     const isAutoFill = searchParams.get('autofill')
-
     if (isAutoFill === 'true') {
       try {
         const rawData = sessionStorage.getItem('cveate_ats_data')
@@ -86,12 +74,11 @@ function OnboardingContent() {
           }
         }
       } catch (err) {
-        console.error('Failed to load ATS auto-fill profile data from session storage:', err)
+        console.error('Failed to load ATS auto-fill profile data:', err)
       }
     }
   }, [searchParams])
 
-  // Sync contenteditable fields when state changes externally (e.g. auto-fill)
   useEffect(() => {
     if (bioRef.current && bioRef.current.innerHTML !== formData.bio) {
       bioRef.current.innerHTML = formData.bio || ''
@@ -107,7 +94,6 @@ function OnboardingContent() {
     })
   }, [formData.experiences, step])
 
-  // Browser command executor for formatting selection
   const executeFormatting = (command: 'bold' | 'italic' | 'insertUnorderedList') => {
     document.execCommand(command, false, undefined)
   }
@@ -149,16 +135,18 @@ function OnboardingContent() {
   }
 
   const handleNext = () => {
-    if (step === 1 && (!formData.fullName.trim() || !formData.headline.trim() || !formData.email.trim())) {
-      setErrorMsg('Please fill in required personal details marked with *.')
+    if (step === 1) {
+      if (!formData.fullName.trim() || !formData.headline.trim() || !formData.email.trim() || !formData.phone.trim() || !formData.city.trim() || !formData.state.trim() || !formData.pincode.trim()) {
+        setErrorMsg('Please fill in all required personal details (Phone, Pincode, City, State are mandatory).')
+        return
+      }
+    }
+    if (step === 2 && formData.experiences.some(exp => !exp.role.trim() || !exp.company.trim() || !exp.duration.trim() || !exp.bullets.trim())) {
+      setErrorMsg('All fields in Work Experience (including duration and bullets) are mandatory.')
       return
     }
-    if (step === 2 && formData.experiences.some(exp => !exp.role.trim() || !exp.company.trim())) {
-      setErrorMsg('Please fill in role and company for all work experience entries.')
-      return
-    }
-    if (step === 3 && formData.qualifications.some(q => !q.degree.trim() || !q.institution.trim())) {
-      setErrorMsg('Please fill in degree and institution for all qualifications.')
+    if (step === 3 && formData.qualifications.some(q => !q.degree.trim() || !q.institution.trim() || !q.year.trim())) {
+      setErrorMsg('All fields in Qualifications & Education (including passing year) are mandatory.')
       return
     }
 
@@ -182,12 +170,9 @@ function OnboardingContent() {
       const { data: { session } } = await supabase.auth.getSession()
       
       if (session) {
-        // Save data strictly keyed to the current authenticated user ID in session/local storage
-        // without automatically writing to cv_history (leaving history saves in user's hands)
         sessionStorage.setItem(`cveate_resume_data_${session.user.id}`, JSON.stringify(formData))
         localStorage.setItem(`cveate_profile_${session.user.id}`, JSON.stringify(formData))
       } else {
-        // Fallback for guest mode
         localStorage.setItem('cveate_profile', JSON.stringify(formData))
       }
 
@@ -207,7 +192,6 @@ function OnboardingContent() {
         {isAutoFilledBanner && (
           <div className="mb-6 rounded-2xl bg-indigo-50 border border-indigo-100 p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="text-xl">✨</span>
               <div>
                 <h4 className="text-xs font-bold text-indigo-900">ATS Auto-Fill Active</h4>
                 <p className="text-[11px] text-indigo-600">Your resume details have been extracted and pre-filled from your CV!</p>
@@ -286,13 +270,14 @@ function OnboardingContent() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
-                    Phone Number
+                    Phone Number (Numbers Only) <span className="text-red-500">*</span>
                   </label>
                   <input
-                    type="text"
+                    type="tel"
+                    maxLength={10}
                     value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="e.g. +91 98765 43210"
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '') })}
+                    placeholder="e.g. 9876543210"
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
                   />
                 </div>
@@ -300,7 +285,9 @@ function OnboardingContent() {
 
              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">City</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                    City <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     value={formData.city}
@@ -310,7 +297,9 @@ function OnboardingContent() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">State</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                    State <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     value={formData.state}
@@ -320,11 +309,14 @@ function OnboardingContent() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Pincode</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                    Pincode (Numbers Only) <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
+                    maxLength={6}
                     value={formData.pincode}
-                    onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, pincode: e.target.value.replace(/\D/g, '') })}
                     placeholder="e.g. 110001"
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
                   />
@@ -333,7 +325,7 @@ function OnboardingContent() {
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">LinkedIn Profile</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">LinkedIn Profile (Optional)</label>
                   <input
                     type="text"
                     value={formData.linkedin}
@@ -343,7 +335,7 @@ function OnboardingContent() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Portfolio / GitHub / Behance</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Portfolio / GitHub / Behance (Optional)</label>
                   <input
                     type="text"
                     value={formData.portfolio}
@@ -355,15 +347,14 @@ function OnboardingContent() {
               </div>
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">Professional Summary</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">Professional Summary <span className="text-red-500">*</span></label>
                   
-                  {/* Bio Formatting Toolbar */}
                   <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-1 shadow-xs">
                     <button
                       type="button"
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => executeFormatting('bold')}
-                      title="Bold / Unbold"
+                      title="Bold"
                       className="px-2.5 py-0.5 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded transition-colors cursor-pointer"
                     >
                       B
@@ -372,7 +363,7 @@ function OnboardingContent() {
                       type="button"
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => executeFormatting('italic')}
-                      title="Italic / Un-italicize"
+                      title="Italic"
                       className="px-2.5 py-0.5 text-xs italic font-serif text-slate-700 hover:bg-slate-100 rounded transition-colors cursor-pointer"
                     >
                       I
@@ -389,7 +380,6 @@ function OnboardingContent() {
                   </div>
                 </div>
 
-                {/* Rich Text ContentEditable Div */}
                 <div
                   ref={bioRef}
                   contentEditable
@@ -450,7 +440,7 @@ function OnboardingContent() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Duration</label>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Duration *</label>
                     <input
                       type="text"
                       value={exp.duration}
@@ -465,15 +455,14 @@ function OnboardingContent() {
                   </div>
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">Key Achievements / Bullets</label>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">Key Achievements / Bullets *</label>
                       
-                      {/* Experience Formatting Toolbar */}
                       <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-1 shadow-xs">
                         <button
                           type="button"
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={() => executeFormatting('bold')}
-                          title="Bold / Unbold"
+                          title="Bold"
                           className="px-2.5 py-0.5 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded transition-colors cursor-pointer"
                         >
                           B
@@ -482,7 +471,7 @@ function OnboardingContent() {
                           type="button"
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={() => executeFormatting('italic')}
-                          title="Italic / Un-italicize"
+                          title="Italic"
                           className="px-2.5 py-0.5 text-xs italic font-serif text-slate-700 hover:bg-slate-100 rounded transition-colors cursor-pointer"
                         >
                           I
@@ -499,7 +488,6 @@ function OnboardingContent() {
                       </div>
                     </div>
 
-                    {/* Rich Text ContentEditable Div for Bullets */}
                     <div
                       ref={(el) => { bulletRefs.current[index] = el }}
                       contentEditable
@@ -560,11 +548,12 @@ function OnboardingContent() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Passing Year</label>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Passing Year *</label>
                       <input
                         type="text"
+                        maxLength={4}
                         value={q.year}
-                        onChange={(e) => handleQualificationChange(index, 'year', e.target.value)}
+                        onChange={(e) => handleQualificationChange(index, 'year', e.target.value.replace(/\D/g, ''))}
                         placeholder="e.g. 2022"
                         className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
                       />

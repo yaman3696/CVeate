@@ -33,8 +33,8 @@ export default function DashboardPage() {
     const loadUserData = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return
-
-      // 1. Check session storage first for quick downloads tied to this user session
+  
+      // 1. Check user-scoped session storage first for quick renders/downloads tied to this login session
       const storedResume = sessionStorage.getItem(`cveate_resume_data_${session.user.id}`)
       if (storedResume) {
         try {
@@ -48,7 +48,7 @@ export default function DashboardPage() {
           console.error(e)
         }
       }
-
+  
       // 2. Fetch primary or latest CV directly from Supabase scoped to the authenticated user ID
       const { data: primaryCv } = await supabase
         .from('cv_history')
@@ -56,7 +56,7 @@ export default function DashboardPage() {
         .eq('user_id', session.user.id)
         .eq('is_primary', true)
         .single()
-
+  
       if (primaryCv?.cv_data) {
         setCvData(primaryCv.cv_data)
       } else {
@@ -78,19 +78,19 @@ export default function DashboardPage() {
             bio: parsed.bio || prev.bio,
             experiences: parsed.experiences && parsed.experiences.length > 0 ? parsed.experiences : prev.experiences,
             qualifications: parsed.qualifications && parsed.qualifications.length > 0 ? parsed.qualifications : prev.qualifications,
-            technicalSkills: parsed.technicalSkills ? parsed.technicalSkills.split(',').map((s: string) => s.trim()) : prev.technicalSkills,
+            technicalSkills: parsed.technicalSkills || prev.technicalSkills,
             softSkills: parsed.softSkills || prev.softSkills,
             hobbies: parsed.hobbies || prev.hobbies,
             languages: parsed.languages || prev.languages,
           }))
         }
       }
-
+  
       if (searchParams.get('download') === 'true') {
         setTimeout(() => handleDownloadPDF(), 500)
       }
     }
-
+  
     loadUserData()
   }, [searchParams])
 

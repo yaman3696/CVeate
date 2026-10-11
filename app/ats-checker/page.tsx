@@ -131,33 +131,77 @@ useEffect(() => {
 }, [authLoading]) // <--- Re-runs as soon as session verification completes and canvas mounts
 
 
-  // Check Session on Load & Listen for Auth Changes
-  useEffect(() => {
-    const checkUserSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
-        setUser(session.user)
+  // Check Session on Load, Verify Credits Timer, & Listen for Auth Changes
+useEffect(() => {
+  const checkUserSession = async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session) {
+      setUser(session.user)
 
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .single()
 
-        if (profileData) {
+      if (profileData) {
+        const now = new Date().getTime()
+        const lastReset = profileData.ats_last_reset 
+          ? new Date(profileData.ats_last_reset).getTime() 
+          : now
+        const hoursElapsed = (now - lastReset) / (1000 * 60 * 60)
+        const daysElapsed = hoursElapsed / 24
+
+        let updatedCredits = profileData.ats_chances_remaining
+        let updatedPlan = profileData.plan_name
+        let shouldUpdate = false
+
+        // 1. FREEMIUM: Refresh to 2 credits every 24 hours
+        if (profileData.plan_name === 'Freemium' && hoursElapsed >= 24) {
+          updatedCredits = 2
+          shouldUpdate = true
+        }
+        // 2. DAILY PASS: Drop to 2 credits after 24 hours (whether used or not) & revert to Freemium
+        else if (profileData.plan_name === 'Daily Pass' && hoursElapsed >= 24) {
+          updatedCredits = 2
+          updatedPlan = 'Freemium'
+          shouldUpdate = true
+        }
+        // 3. MONTHLY: Drop to 2 credits after 30 days & revert to Freemium
+        else if (profileData.plan_name === 'Monthly' && daysElapsed >= 30) {
+          updatedCredits = 2
+          updatedPlan = 'Freemium'
+          shouldUpdate = true
+        }
+
+        if (shouldUpdate) {
+          const { data: refreshedProfile } = await supabase
+            .from('profiles')
+            .update({
+              ats_chances_remaining: updatedCredits,
+              plan_name: updatedPlan,
+              ats_last_reset: new Date().toISOString()
+            })
+            .eq('id', session.user.id)
+            .select()
+            .single()
+
+          setProfile(refreshedProfile || profileData)
+        } else {
           setProfile(profileData)
         }
       }
-      setAuthLoading(false)
     }
-    checkUserSession()
+    setAuthLoading(false)
+  }
+  checkUserSession()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    setUser(session?.user ?? null)
+  })
 
-    return () => subscription.unsubscribe()
-  }, [])
+  return () => subscription.unsubscribe()
+}, [])
 
   // Close dropdown when clicking outside
   useEffect(() => {
