@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
+export const dynamic = 'force-dynamic';
+
 export default function LandingPage() {
   const router = useRouter()
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
