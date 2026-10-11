@@ -4,10 +4,12 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { unstable_noStore as noStore } from 'next/cache';
 
-export const dynamic = 'force-dynamic';
+
 
 export default function LandingPage() {
+  noStore();
   const router = useRouter()
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
