@@ -24,7 +24,7 @@ function OnboardingContent() {
     state: '',
     pincode: '',
     linkedin: '',
-    portfolio: '',
+    portfolioLinks: [''],
     bio: '',
     
     experiences: [
@@ -61,7 +61,7 @@ function OnboardingContent() {
               state: profile.state || prev.state,
               pincode: profile.pincode || prev.pincode,
               linkedin: profile.linkedin || prev.linkedin,
-              portfolio: profile.portfolio || prev.portfolio,
+              portfolioLinks: profile.portfolio ? [profile.portfolio] : prev.portfolioLinks,
               bio: profile.bio || prev.bio,
               experiences: profile.experiences?.length > 0 ? profile.experiences : prev.experiences,
               qualifications: profile.qualifications?.length > 0 ? profile.qualifications : prev.qualifications,
@@ -169,14 +169,20 @@ function OnboardingContent() {
     try {
       const { data: { session } } = await supabase.auth.getSession()
       
-      if (session) {
-        sessionStorage.setItem(`cveate_resume_data_${session.user.id}`, JSON.stringify(formData))
-        localStorage.setItem(`cveate_profile_${session.user.id}`, JSON.stringify(formData))
-      } else {
-        localStorage.setItem('cveate_profile', JSON.stringify(formData))
+      const payload = { 
+        ...formData, 
+        portfolio: formData.portfolioLinks.filter(Boolean).join(', ') 
       }
 
-      await new Promise((resolve) => setTimeout(resolve, 800))
+      if (session) {
+        sessionStorage.setItem(`cveate_resume_data_${session.user.id}`, JSON.stringify(payload))
+        localStorage.setItem(`cveate_profile_${session.user.id}`, JSON.stringify(payload))
+      } else {
+        sessionStorage.setItem('cveate_resume_data_guest', JSON.stringify(payload))
+        localStorage.setItem('cveate_profile', JSON.stringify(payload))
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 600))
       router.push('/dashboard')
     } catch (error: any) {
       alert('Error saving profile: ' + error.message)
@@ -191,11 +197,9 @@ function OnboardingContent() {
         
         {isAutoFilledBanner && (
           <div className="mb-6 rounded-2xl bg-indigo-50 border border-indigo-100 p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div>
-                <h4 className="text-xs font-bold text-indigo-900">ATS Auto-Fill Active</h4>
-                <p className="text-[11px] text-indigo-600">Your resume details have been extracted and pre-filled from your CV!</p>
-              </div>
+            <div>
+              <h4 className="text-xs font-bold text-indigo-900">ATS Auto-Fill Active</h4>
+              <p className="text-[11px] text-indigo-600">Your resume details have been extracted and pre-filled from your CV!</p>
             </div>
             <button 
               onClick={() => setIsAutoFilledBanner(false)}
@@ -323,28 +327,58 @@ function OnboardingContent() {
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">LinkedIn Profile (Optional)</label>
-                  <input
-                    type="text"
-                    value={formData.linkedin}
-                    onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
-                    placeholder="e.g. linkedin.com/in/johndoe"
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Portfolio / GitHub / Behance (Optional)</label>
-                  <input
-                    type="text"
-                    value={formData.portfolio}
-                    onChange={(e) => setFormData({ ...formData, portfolio: e.target.value })}
-                    placeholder="e.g. github.com/johndoe"
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
-                  />
-                </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">LinkedIn Profile (Optional)</label>
+                <input
+                  type="text"
+                  value={formData.linkedin}
+                  onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
+                  placeholder="e.g. linkedin.com/in/johndoe"
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                />
               </div>
+
+              {/* Dynamic Portfolio / GitHub / Behance Links */}
+              <div className="space-y-3">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">
+                  Portfolio / GitHub / Behance Links (Optional)
+                </label>
+                {formData.portfolioLinks.map((link, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={link}
+                      onChange={(e) => {
+                        const updated = [...formData.portfolioLinks]
+                        updated[idx] = e.target.value
+                        setFormData({ ...formData, portfolioLinks: updated })
+                      }}
+                      placeholder="e.g. github.com/username or behance.net/username"
+                      className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                    />
+                    {formData.portfolioLinks.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = formData.portfolioLinks.filter((_, i) => i !== idx)
+                          setFormData({ ...formData, portfolioLinks: updated })
+                        }}
+                        className="text-xs font-bold text-red-500 hover:text-red-700 px-2 cursor-pointer"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, portfolioLinks: [...formData.portfolioLinks, ''] })}
+                  className="text-xs font-bold text-indigo-600 hover:underline cursor-pointer pt-1 inline-block"
+                >
+                  + Add Another Link
+                </button>
+              </div>
+
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">Professional Summary <span className="text-red-500">*</span></label>

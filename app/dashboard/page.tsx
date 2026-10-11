@@ -32,57 +32,40 @@ export default function DashboardPage() {
   useEffect(() => {
     const loadUserData = async () => {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
+      const userId = session?.user?.id
   
-      // 1. Check user-scoped session storage first for quick renders/downloads tied to this login session
-      const storedResume = sessionStorage.getItem(`cveate_resume_data_${session.user.id}`)
-      if (storedResume) {
-        try {
-          const parsedCv = JSON.parse(storedResume)
-          setCvData(parsedCv)
-          if (searchParams.get('download') === 'true') {
-            setTimeout(() => handleDownloadPDF(), 500)
+      // Check user-scoped storage or guest storage
+      const storageKeys = userId 
+        ? [`cveate_resume_data_${userId}`, `cveate_profile_${userId}`]
+        : ['cveate_resume_data_guest', 'cveate_profile']
+  
+      for (const key of storageKeys) {
+        const stored = sessionStorage.getItem(key) || localStorage.getItem(key)
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored)
+            setCvData(parsed)
+            if (searchParams.get('download') === 'true') {
+              setTimeout(() => handleDownloadPDF(), 500)
+            }
+            return
+          } catch (e) {
+            console.error(e)
           }
-          return
-        } catch (e) {
-          console.error(e)
         }
       }
   
-      // 2. Fetch primary or latest CV directly from Supabase scoped to the authenticated user ID
-      const { data: primaryCv } = await supabase
-        .from('cv_history')
-        .select('cv_data')
-        .eq('user_id', session.user.id)
-        .eq('is_primary', true)
-        .single()
+      // Fallback to Supabase database if local storage is empty and user is logged in
+      if (userId) {
+        const { data: primaryCv } = await supabase
+          .from('cv_history')
+          .select('cv_data')
+          .eq('user_id', userId)
+          .eq('is_primary', true)
+          .single()
   
-      if (primaryCv?.cv_data) {
-        setCvData(primaryCv.cv_data)
-      } else {
-        // Fallback to user-scoped localStorage if no primary CV is found in DB
-        const saved = localStorage.getItem(`cveate_profile_${session.user.id}`)
-        if (saved) {
-          const parsed = JSON.parse(saved)
-          setCvData((prev) => ({
-            ...prev,
-            fullName: parsed.fullName ? parsed.fullName.toUpperCase() : prev.fullName,
-            headline: parsed.headline || prev.headline,
-            email: parsed.email || prev.email,
-            phone: parsed.phone || prev.phone,
-            city: parsed.city || prev.city,
-            state: parsed.state || prev.state,
-            pincode: parsed.pincode || prev.pincode,
-            linkedin: parsed.linkedin || prev.linkedin,
-            portfolio: parsed.portfolio || prev.portfolio,
-            bio: parsed.bio || prev.bio,
-            experiences: parsed.experiences && parsed.experiences.length > 0 ? parsed.experiences : prev.experiences,
-            qualifications: parsed.qualifications && parsed.qualifications.length > 0 ? parsed.qualifications : prev.qualifications,
-            technicalSkills: parsed.technicalSkills || prev.technicalSkills,
-            softSkills: parsed.softSkills || prev.softSkills,
-            hobbies: parsed.hobbies || prev.hobbies,
-            languages: parsed.languages || prev.languages,
-          }))
+        if (primaryCv?.cv_data) {
+          setCvData(primaryCv.cv_data)
         }
       }
   
@@ -260,26 +243,31 @@ export default function DashboardPage() {
     }
 
     addText('SKILLS & ADDITIONAL INFORMATION', 10, true, [79, 70, 229], 2)
-    const techSkillsStr = Array.isArray(cvData.technicalSkills) ? cvData.technicalSkills.join(', ') : cvData.technicalSkills
-    if (techSkillsStr) {
-      addText('Technical Skills', 9, true, [15, 23, 42], 0.5)
-      addText(techSkillsStr, 9, false, [51, 65, 85], 2)
-    }
 
-    if (cvData.softSkills) {
-      addText('Soft Skills', 9, true, [15, 23, 42], 0.5)
-      addText(cvData.softSkills, 9, false, [51, 65, 85], 2)
-    }
+// Fix: check technicalSkills (matching onboarding state) instead of skills
+const techSkillsStr = Array.isArray(cvData.technicalSkills) 
+  ? cvData.technicalSkills.join(', ') 
+  : (cvData.technicalSkills ||'')
 
-    if (cvData.hobbies) {
-      addText('Hobbies & Interests', 9, true, [15, 23, 42], 0.5)
-      addText(cvData.hobbies, 9, false, [51, 65, 85], 2)
-    }
+if (techSkillsStr) {
+  addText('Technical Skills', 9, true, [15, 23, 42], 0.5)
+  addText(techSkillsStr, 9, false, [51, 65, 85], 2)
+}
 
-    if (cvData.languages) {
-      addText('Languages Known', 9, true, [15, 23, 42], 0.5)
-      addText(cvData.languages, 9, false, [51, 65, 85], 1)
-    }
+if (cvData.softSkills) {
+  addText('Soft Skills', 9, true, [15, 23, 42], 0.5)
+  addText(cvData.softSkills, 9, false, [51, 65, 85], 2)
+}
+
+if (cvData.hobbies) {
+  addText('Hobbies & Interests', 9, true, [15, 23, 42], 0.5)
+  addText(cvData.hobbies, 9, false, [51, 65, 85], 2)
+}
+
+if (cvData.languages) {
+  addText('Languages Known', 9, true, [15, 23, 42], 0.5)
+  addText(cvData.languages, 9, false, [51, 65, 85], 1)
+}
 
     doc.save('ATS_Optimized_Resume.pdf')
   }
