@@ -388,47 +388,51 @@ export default function LandingPage() {
       </section>
 
       {/* Attractive CVeat AI Showcase Section */}
-      <section className="bg-indigo-600 py-20 px-6 text-white my-12 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.1),transparent_50%)] pointer-events-none"></div>
-        <div className="mx-auto max-w-4xl text-center space-y-6 relative z-10">
-          <span className="inline-block rounded-full bg-indigo-500/50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-indigo-100 border border-indigo-400/30">
-            Powered by CVeat AI
-          </span>
-          <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl text-white">
-            Instant ATS Match Score & Resume Optimizer
-          </h2>
-          <p className="text-sm text-indigo-100 max-w-xl mx-auto leading-relaxed">
-            Uncover why automated tracking systems filter out resumes. Let our intelligent career engine scan your CV, analyze keyword gaps, and provide instant recruiter-ready insights.
-          </p>
+<section className="bg-indigo-600 py-20 px-6 text-white my-12 relative overflow-hidden">
+  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.1),transparent_50%)] pointer-events-none"></div>
+  <div className="mx-auto max-w-4xl text-center space-y-6 relative z-10">
+    <span className="inline-block rounded-full bg-indigo-500/50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-indigo-100 border border-indigo-400/30">
+      Powered by CVeat AI
+    </span>
+    <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl text-white">
+      Instant ATS Match Score & Resume Optimizer
+    </h2>
+    <p className="text-sm text-indigo-100 max-w-xl mx-auto leading-relaxed">
+      Uncover why automated tracking systems filter out resumes. Let our intelligent career engine scan your CV, analyze keyword gaps, and provide instant recruiter-ready insights.
+    </p>
 
-          <div className="mt-8 bg-white rounded-3xl p-8 sm:p-10 text-slate-900 shadow-2xl max-w-2xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6 text-left">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse"></span>
-                <span className="text-xs font-bold uppercase tracking-wider text-indigo-600">Live AI Scanner Ready</span>
-              </div>
-              <h3 className="text-lg font-bold text-slate-900">Check Your Resume Against Any Job</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Drop your document and paste the job description in our dedicated workspace to get instant feedback.
-              </p>
-            </div>
+    {/* ATS Card Container */}
+    <div className="mt-8 bg-white rounded-3xl p-8 sm:p-10 text-slate-900 shadow-2xl max-w-2xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
+      
+      {/* Text Content - Added items-center sm:items-start and text-center sm:text-left */}
+      <div className="space-y-2 flex flex-col items-center sm:items-start text-center sm:text-left">
+        <div className="flex items-center gap-2 justify-center sm:justify-start">
+          <span className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse"></span>
+          <span className="text-xs font-bold uppercase tracking-wider text-indigo-600">Live AI Scanner Ready</span>
+        </div>
+        <h3 className="text-lg font-bold text-slate-900">Check Your Resume Against Any Job</h3>
+        <p className="text-xs text-slate-500 leading-relaxed">
+          Drop your document and paste the job description in our dedicated workspace to get instant feedback.
+        </p>
+      </div>
 
-            {/* Glowing Siri Orb & Action Button */}
-            <div className="flex flex-col items-center gap-4 shrink-0">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-pink-500 siri-orb flex items-center justify-center shadow-lg">
-                <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-indigo-600 font-bold text-sm">
-                  AI
-                </div>
-              </div>
-              <Link href="/ats-checker">
-                <button className="rounded-xl bg-indigo-600 px-6 py-3 text-xs font-bold text-white shadow-md hover:bg-indigo-500 transition-all cursor-pointer whitespace-nowrap">
-                  Launch ATS Checker 
-                </button>
-              </Link>
-            </div>
+      {/* Glowing Siri Orb & Action Button */}
+      <div className="flex flex-col items-center gap-4 shrink-0">
+        <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-pink-500 siri-orb flex items-center justify-center shadow-lg">
+          <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-indigo-600 font-bold text-sm">
+            AI
           </div>
         </div>
-      </section>
+        <Link href="/ats-checker">
+          <button className="rounded-xl bg-indigo-600 px-6 py-3 text-xs font-bold text-white shadow-md hover:bg-indigo-500 transition-all cursor-pointer whitespace-nowrap">
+            Launch ATS Checker 
+          </button>
+        </Link>
+      </div>
+
+    </div>
+  </div>
+</section>
 
       {/* About Section */}
       <section id="about" className="mx-auto max-w-6xl px-6 py-20 border-t border-slate-100 text-center">

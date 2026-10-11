@@ -41,6 +41,7 @@ export default function AtsCheckerPage() {
   // Profile Dropdown State
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement | null>(null)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
  
 // Reliable Canvas Network Animation Effect (Triggered when auth finishes loading)
@@ -345,80 +346,105 @@ useEffect(() => {
       `}</style>
 
       {/* Main Nav */}
-      <nav className="sticky top-0 z-50 bg-white shadow-sm text-slate-900 border-b border-slate-100">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div className="flex items-center">
-            <Link href="/" className="text-2xl font-black tracking-tight text-indigo-600">
-              CVeate
-            </Link>
-          </div>
-          
-          <div className="flex items-center gap-6">
-            <div className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
-              <Link href="/about" className="hover:text-indigo-600 transition-colors">About Us</Link>
-              <Link href="/blog" className="hover:text-indigo-600 transition-colors">Blog</Link>
-              <Link href="/pricing" className="hover:text-indigo-600 transition-colors">Pricing</Link>
-              <Link href="/ats-checker" className="text-indigo-600 font-bold transition-colors">ATS Checker</Link>
+<nav className="sticky top-0 z-50 bg-white shadow-sm text-slate-900 border-b border-slate-100">
+  <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+    <div className="flex items-center">
+      <Link href="/" className="text-2xl font-black tracking-tight text-indigo-600">
+        CVeate
+      </Link>
+    </div>
+    
+    <div className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
+      <Link href="/about" className="hover:text-indigo-600 transition-colors">About Us</Link>
+      <Link href="/blog" className="hover:text-indigo-600 transition-colors">Blog</Link>
+      <Link href="/pricing" className="hover:text-indigo-600 transition-colors">Pricing</Link>
+      <Link href="/ats-checker" className="text-indigo-600 font-bold transition-colors">ATS Checker</Link>
+    </div>
+
+    <div className="flex items-center gap-3">
+      {user ? (
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={() => setIsProfileOpen(!isProfileOpen)}
+            className="flex items-center gap-2 rounded-xl bg-indigo-50 border border-indigo-200 px-4 py-2 text-xs font-bold text-indigo-600 hover:bg-indigo-100 transition-all cursor-pointer"
+          >
+            <div className="h-6 w-6 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-[10px]">
+              {user.user_metadata?.full_name ? user.user_metadata.full_name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}
             </div>
+            <span>{profile?.plan_name ? profile.plan_name.toUpperCase() : 'FREEMIUM'} ({profile?.ats_chances_remaining ?? 0} Left)</span>
+          </button>
 
-            <div className="flex items-center gap-3">
-              {user ? (
-                <div className="relative" ref={dropdownRef}>
-                  <button
-                    onClick={() => setIsProfileOpen(!isProfileOpen)}
-                    className="flex items-center gap-2 rounded-xl bg-indigo-50 border border-indigo-200 px-4 py-2 text-xs font-bold text-indigo-600 hover:bg-indigo-100 transition-all cursor-pointer"
-                  >
-                    <div className="h-6 w-6 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-[10px]">
-                      {user.user_metadata?.full_name ? user.user_metadata.full_name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}
-                    </div>
-                    <span>{profile?.plan_name ? profile.plan_name.toUpperCase() : 'FREEMIUM'} ({profile?.ats_chances_remaining ?? 0} Left)</span>
-                  </button>
-
-                  {/* Profile Dropdown Menu */}
-                  {isProfileOpen && (
-                    <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-white border border-slate-200 shadow-xl py-2 text-slate-900 text-xs z-50">
-                      <div className="px-4 py-3 border-b border-slate-100">
-                        <p className="font-bold text-slate-900 truncate">{user.user_metadata?.full_name || 'My Account'}</p>
-                        <p className="text-[11px] text-slate-500 truncate mt-0.5">{user.email}</p>
-                      </div>
-                      <div className="py-1">
-                        <Link 
-                          href="/profile" 
-                          onClick={() => setIsProfileOpen(false)}
-                          className="block px-4 py-2.5 hover:bg-slate-50 font-medium text-slate-700 transition-colors"
-                        >
-                          Profile Settings
-                        </Link>
-                        <Link 
-                          href="/history" 
-                          onClick={() => setIsProfileOpen(false)}
-                          className="block px-4 py-2.5 hover:bg-slate-50 font-medium text-slate-700 transition-colors"
-                        >
-                          CV History
-                        </Link>
-                      </div>
-                      <div className="border-t border-slate-100 my-1"></div>
-                      <button
-                        onClick={handleLogout}
-                        className="w-full text-left px-4 py-2.5 text-red-600 hover:bg-red-50 font-semibold transition-colors flex items-center justify-between cursor-pointer"
-                      >
-                        <span>Log Out</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <button
-                  onClick={() => openAuth('signup')}
-                  className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:shadow-lg hover:shadow-indigo-600/30 hover:-translate-y-0.5 transition-all cursor-pointer"
+          {/* Profile Dropdown Menu */}
+          {isProfileOpen && (
+            <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-white border border-slate-200 shadow-xl py-2 text-slate-900 text-xs z-50">
+              <div className="px-4 py-3 border-b border-slate-100">
+                <p className="font-bold text-slate-900 truncate">{user.user_metadata?.full_name || 'My Account'}</p>
+                <p className="text-[11px] text-slate-500 truncate mt-0.5">{user.email}</p>
+              </div>
+              <div className="py-1">
+                <Link 
+                  href="/profile" 
+                  onClick={() => setIsProfileOpen(false)}
+                  className="block px-4 py-2.5 hover:bg-slate-50 font-medium text-slate-700 transition-colors"
                 >
-                  Get Started
-                </button>
-              )}
+                  Profile Settings
+                </Link>
+                <Link 
+                  href="/history" 
+                  onClick={() => setIsProfileOpen(false)}
+                  className="block px-4 py-2.5 hover:bg-slate-50 font-medium text-slate-700 transition-colors"
+                >
+                  CV History
+                </Link>
+              </div>
+              <div className="border-t border-slate-100 my-1"></div>
+              <button
+                onClick={handleLogout}
+                className="w-full text-left px-4 py-2.5 text-red-600 hover:bg-red-50 font-semibold transition-colors flex items-center justify-between cursor-pointer"
+              >
+                <span>Log Out</span>
+              </button>
             </div>
-          </div>
+          )}
         </div>
-      </nav>
+      ) : (
+        <button
+          onClick={() => openAuth('signup')}
+          className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:shadow-lg hover:shadow-indigo-600/30 hover:-translate-y-0.5 transition-all cursor-pointer"
+        >
+          Get Started
+        </button>
+      )}
+
+      {/* Mobile Hamburger Button */}
+      <button
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        className="md:hidden rounded-xl bg-slate-100 p-2.5 text-slate-700 hover:bg-slate-200 transition-colors focus:outline-none cursor-pointer"
+        aria-label="Toggle Menu"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          {isMobileMenuOpen ? (
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          ) : (
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          )}
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  {/* Mobile Dropdown Menu Drawer */}
+  {isMobileMenuOpen && (
+    <div className="md:hidden bg-white border-t border-slate-200 px-6 py-6 space-y-4 shadow-xl">
+      <div className="flex flex-col space-y-3 font-semibold text-sm text-slate-700">
+        <Link href="/about" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-indigo-600 transition-colors py-1.5">About Us</Link>
+        <Link href="/blog" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-indigo-600 transition-colors py-1.5">Blog</Link>
+        <Link href="/pricing" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-indigo-600 transition-colors py-1.5">Pricing</Link>
+        <Link href="/ats-checker" onClick={() => setIsMobileMenuOpen(false)} className="text-indigo-600 py-1.5">ATS Checker</Link>
+      </div>
+    </div>
+  )}
+</nav>
 
       {/* Main Content Area */}
       <div className="flex-grow flex items-center justify-center px-6 py-12 z-10">

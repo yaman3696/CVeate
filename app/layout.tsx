@@ -153,7 +153,7 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
             msg.includes('user already registered') ||
             error.status === 422
           ) {
-            throw new Error('This email address is already registered. Please sign in using Google or your password.')
+            throw new Error('This email address is already registered. Please sign in using Google or any other email id.')
           }
           throw error
         }
@@ -246,7 +246,7 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
   return (
     <>
       {/* Global Navigation Bar */}
-      
+      {!isAtsCheckerPage && (
         <nav className="sticky top-0 z-50 bg-indigo-600 shadow-md">
           <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
             <div className="flex items-center">
@@ -400,7 +400,7 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
             </div>
           )}
         </nav>
-      
+      )}
 
       <main>{children}</main>
 
