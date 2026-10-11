@@ -182,41 +182,63 @@ useEffect(() => {
     setLoading(true)
     setErrorMessage('')
     setSuccessMessage('')
-
+  
     try {
       if (authMode === 'signup') {
         const mobileRegex = /^[0-9]{10}$/
         if (!mobileRegex.test(contactNumber)) {
           throw new Error('Please enter a valid 10-digit mobile number.')
         }
-
+  
         if (password !== confirmPassword) {
           throw new Error('Passwords do not match.')
         }
-
+  
         if (!agreeTerms) {
           throw new Error('You must agree to the terms and conditions to sign up.')
         }
-
+  
         const { data, error } = await supabase.auth.signUp({ email, password })
-        if (error) throw error
-
+  
+        if (data?.user && (!data.user.identities || data.user.identities.length === 0)) {
+          throw new Error('This email address is already registered. Please sign in using Google or your password.')
+        }
+  
+        if (error) {
+          const msg = error.message.toLowerCase()
+          if (
+            msg.includes('already registered') || 
+            msg.includes('already exists') || 
+            msg.includes('user already registered') ||
+            error.status === 422
+          ) {
+            throw new Error('This email address is already registered. Please sign in using Google or your password.')
+          }
+          throw error
+        }
+  
         if (data?.user) {
           await supabase.from('profiles').upsert({
             id: data.user.id,
             email: email,
             full_name: fullName,
             contact_number: contactNumber,
-            phone: contactNumber
+            phone: contactNumber,
+            plan_name: 'Freemium',
+            ats_chances_remaining: 2
           })
         }
         setSuccessMessage('Account created successfully! Please check your email for verification.')
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
-        if (error) throw error
+        if (error) {
+          if (error.message.toLowerCase().includes('invalid login credentials')) {
+            throw new Error('Invalid email or password. Please check your credentials.')
+          }
+          throw error
+        }
         setSuccessMessage('Signed in successfully!')
         
-        // Capture current path and stay on the ATS checker page after login
         const currentPath = window.location.pathname
         setTimeout(() => {
           setIsAuthOpen(false)
@@ -346,15 +368,16 @@ useEffect(() => {
       `}</style>
 
       {/* Main Nav */}
-<nav className="sticky top-0 z-50 bg-white shadow-sm text-slate-900 border-b border-slate-100">
+      <nav className="sticky top-0 z-50 bg-white shadow-sm text-slate-900 border-b border-slate-100">
   <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
     <div className="flex items-center">
       <Link href="/" className="text-2xl font-black tracking-tight text-indigo-600">
-        CVeate
+        CVeat
       </Link>
     </div>
     
-    <div className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
+    {/* Desktop Navigation Links - Pushed to the right using ml-auto mr-6 */}
+    <div className="hidden md:flex items-center gap-6 ml-auto mr-6 text-sm font-medium text-slate-600">
       <Link href="/about" className="hover:text-indigo-600 transition-colors">About Us</Link>
       <Link href="/blog" className="hover:text-indigo-600 transition-colors">Blog</Link>
       <Link href="/pricing" className="hover:text-indigo-600 transition-colors">Pricing</Link>
@@ -382,26 +405,11 @@ useEffect(() => {
                 <p className="text-[11px] text-slate-500 truncate mt-0.5">{user.email}</p>
               </div>
               <div className="py-1">
-                <Link 
-                  href="/profile" 
-                  onClick={() => setIsProfileOpen(false)}
-                  className="block px-4 py-2.5 hover:bg-slate-50 font-medium text-slate-700 transition-colors"
-                >
-                  Profile Settings
-                </Link>
-                <Link 
-                  href="/history" 
-                  onClick={() => setIsProfileOpen(false)}
-                  className="block px-4 py-2.5 hover:bg-slate-50 font-medium text-slate-700 transition-colors"
-                >
-                  CV History
-                </Link>
+                <Link href="/profile" onClick={() => setIsProfileOpen(false)} className="block px-4 py-2.5 hover:bg-slate-50 font-medium text-slate-700 transition-colors">Profile Settings</Link>
+                <Link href="/history" onClick={() => setIsProfileOpen(false)} className="block px-4 py-2.5 hover:bg-slate-50 font-medium text-slate-700 transition-colors">CV History</Link>
               </div>
               <div className="border-t border-slate-100 my-1"></div>
-              <button
-                onClick={handleLogout}
-                className="w-full text-left px-4 py-2.5 text-red-600 hover:bg-red-50 font-semibold transition-colors flex items-center justify-between cursor-pointer"
-              >
+              <button onClick={handleLogout} className="w-full text-left px-4 py-2.5 text-red-600 hover:bg-red-50 font-semibold transition-colors flex items-center justify-between cursor-pointer">
                 <span>Log Out</span>
               </button>
             </div>
@@ -693,7 +701,7 @@ useEffect(() => {
 
             <div className="text-center mb-6">
               <h3 className="text-2xl font-extrabold text-slate-900">
-                {authMode === 'signin' ? 'Welcome Back to CVeate' : 'Create Your Account'}
+                {authMode === 'signin' ? 'Welcome Back to CVeat' : 'Create Your Account'}
               </h3>
               <p className="text-xs text-slate-500 mt-1">
                 {authMode === 'signin' ? 'Sign in to access your saved resumes & ATS history' : 'Join thousands of professionals landing interviews faster'}

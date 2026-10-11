@@ -142,7 +142,7 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
         
         // If Supabase returns a user but identities array is empty or null (duplicate sign-up)
         if (data?.user && (!data.user.identities || data.user.identities.length === 0)) {
-          throw new Error('This email address is already registered. Please sign in using Google or your password.')
+          throw new Error('This email address is already registered. Please sign in using Google or new email ID.')
         }
         
         if (error) {
@@ -153,7 +153,7 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
             msg.includes('user already registered') ||
             error.status === 422
           ) {
-            throw new Error('This email address is already registered. Please sign in using Google or any other email id.')
+            throw new Error('This email address is already registered. Please sign in using Google or new email ID.')
           }
           throw error
         }
