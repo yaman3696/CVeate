@@ -139,7 +139,7 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
           email,
           password,
         })
-
+        
         if (error) {
           const msg = error.message.toLowerCase()
           if (
@@ -151,6 +151,11 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
             throw new Error('This email address is already registered. Please sign in using Google or your password.')
           }
           throw error
+        }
+        
+        // Supabase returns 200 OK for duplicate sign-ups with an empty identities array
+        if (data?.user && data.user.identities && data.user.identities.length === 0) {
+          throw new Error('This email address is already registered. Please sign in using Google or your password.')
         }
 
         if (data?.user) {
