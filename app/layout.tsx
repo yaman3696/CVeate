@@ -148,7 +148,7 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
             msg.includes('user already registered') ||
             error.status === 422
           ) {
-            throw new Error('This email address is already registered. Please sign in using Google or your password.')
+            throw new Error('This email address is already registered. Please sign in or use another email id.')
           }
           throw error
         }
@@ -489,29 +489,29 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
                   </>
                 )}
 
-                <div>
-                  <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Email Address</label>
-                  <input 
-                    type="email" 
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required 
-                    placeholder="name@example.com" 
-                    className="w-full rounded-xl border border-slate-200 px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white" 
-                  />
-                </div>
+<div>
+  <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Email Address</label>
+  <input 
+    type="email" 
+    value={email}
+    onChange={(e) => setEmail(e.target.value)}
+    required 
+    placeholder="name@example.com" 
+    className="w-full rounded-xl border border-slate-200 px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white" 
+  />
+</div>
 
                 <div>
                   <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Password</label>
                   <div className="relative">
-                    <input 
-                      type={showPassword ? 'text' : 'password'} 
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required 
-                      placeholder="••••••••" 
-                      className="w-full rounded-xl border border-slate-200 px-4 py-2 pr-10 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white" 
-                    />
+                  <input 
+      type={showPassword ? 'text' : 'password'} 
+      value={password}
+      onChange={(e) => setPassword(e.target.value)}
+      required 
+      placeholder="••••••••" 
+      className="w-full rounded-xl border border-slate-200 px-4 py-2 pr-10 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white" 
+    />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
