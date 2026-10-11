@@ -1,26 +1,143 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@layer utilities {
+  @keyframes blob-anim {
+    0% {
+      transform: translate(0px, 0px) scale(1);
+    }
+    33% {
+      transform: translate(30px, -50px) scale(1.1);
+    }
+    66% {
+      transform: translate(-20px, 20px) scale(0.9);
+    }
+    100% {
+      transform: translate(0px, 0px) scale(1);
+    }
+  }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  @layer base {
+    :root {
+      --background: 255 255 255;
+      --foreground: 15 23 42;
+      --primary: 79 70 229;
+      --primary-foreground: 255 255 255;
+    }
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  .animate-blob {
+    animation: blob-anim 7s infinite ease-in-out;
+  }
+
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
+
+  .animation-delay-4000 {
+    animation-delay: 4s;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Rich Text List Formatting for Dashboard */
+ul {
+  list-style-type: disc !important;
+  padding-left: 1.25rem !important;
+  margin-top: 0.25rem !important;
+  margin-bottom: 0.25rem !important;
+}
+
+ol {
+  list-style-type: decimal !important;
+  padding-left: 1.25rem !important;
+}
+
+li {
+  margin-bottom: 0.15rem !important;
+}
+
+b, strong {
+  font-weight: 700 !important;
+}
+
+i, em {
+  font-style: italic !important;
+}
+
+/* Button Shine Animation */
+@keyframes btn-shine {
+  0% {
+    left: -150%;
+  }
+  40% {
+    left: 250%;
+  }
+  100% {
+    left: 250%;
+  }
+}
+
+.shine-wrapper {
+  position: relative;
+  overflow: hidden;
+}
+
+.shine-wrapper .shine-element {
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.45),
+    transparent
+  );
+  transform: skewX(-20deg);
+  animation: btn-shine 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printable-resume, #printable-resume * {
+    visibility: visible;
+  }
+  #printable-resume {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 20px;
+    background: white !important;
+    color: black !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
+
+@keyframes dotTravel {
+  0% {
+    transform: translate(-50px, -50px);
+  }
+  50% {
+    transform: translate(calc(100vw + 50px), calc(100vh + 50px));
+  }
+  100% {
+    transform: translate(-50px, -50px);
+  }
+}
+
+.moving-glowing-dot {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background-color: #3b82f6;
+  border-radius: 50%;
+  box-shadow: 0 0 15px 4px rgba(59, 130, 246, 0.7);
+  animation: dotTravel 12s linear infinite;
 }
