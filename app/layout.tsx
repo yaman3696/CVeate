@@ -140,6 +140,11 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
           password,
         })
         
+        // If Supabase returns a user but identities array is empty or null (duplicate sign-up)
+        if (data?.user && (!data.user.identities || data.user.identities.length === 0)) {
+          throw new Error('This email address is already registered. Please sign in using Google or your password.')
+        }
+        
         if (error) {
           const msg = error.message.toLowerCase()
           if (
@@ -148,14 +153,9 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
             msg.includes('user already registered') ||
             error.status === 422
           ) {
-            throw new Error('This email address is already registered. Please sign in or use another email id.')
+            throw new Error('This email address is already registered. Please sign in using Google or your password.')
           }
           throw error
-        }
-        
-        // Supabase returns 200 OK for duplicate sign-ups with an empty identities array
-        if (data?.user && data.user.identities && data.user.identities.length === 0) {
-          throw new Error('This email address is already registered. Please sign in using Google or your password.')
         }
 
         if (data?.user) {
@@ -246,7 +246,7 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
   return (
     <>
       {/* Global Navigation Bar */}
-      {!isAtsCheckerPage && (
+      
         <nav className="sticky top-0 z-50 bg-indigo-600 shadow-md">
           <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
             <div className="flex items-center">
@@ -400,7 +400,7 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
             </div>
           )}
         </nav>
-      )}
+      
 
       <main>{children}</main>
 
