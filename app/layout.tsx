@@ -141,8 +141,14 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
         })
 
         if (error) {
-          if (error.message.toLowerCase().includes('already registered') || error.status === 422) {
-            throw new Error('This email address is already registered. Please sign in instead.')
+          const msg = error.message.toLowerCase()
+          if (
+            msg.includes('already registered') || 
+            msg.includes('already exists') || 
+            msg.includes('user already registered') ||
+            error.status === 422
+          ) {
+            throw new Error('This email address is already registered. Please sign in using Google or your password.')
           }
           throw error
         }
@@ -240,7 +246,7 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
           <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
             <div className="flex items-center">
               <Link href="/" className="text-2xl font-black tracking-tight text-white">
-                CVeate
+                CVeat
               </Link>
             </div>
             
@@ -406,7 +412,7 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
 
             <div className="text-center mb-6">
               <h3 className="text-2xl font-extrabold text-slate-900">
-                {authMode === 'signin' ? 'Welcome Back to CVeate' : 'Create Your Account'}
+                {authMode === 'signin' ? 'Welcome Back to CVeat' : 'Create Your Account'}
               </h3>
               <p className="text-xs text-slate-500 mt-1">
                 {authMode === 'signin' ? 'Sign in to access your saved resumes & ATS history' : 'Join thousands of professionals landing interviews faster'}

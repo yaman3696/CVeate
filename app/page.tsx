@@ -6,8 +6,6 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { unstable_noStore as noStore } from 'next/cache';
 
-
-
 export default function LandingPage() {
   noStore();
   const router = useRouter()
@@ -107,7 +105,7 @@ export default function LandingPage() {
           name: 'Rahul M.',
           profession: 'Frontend Software Engineer',
           rating: 5,
-          text: 'Most resume builders trap your data behind paywalls or output messy code. Cveate is lightning fast and gets straight to the point.',
+          text: 'Most resume builders trap your data behind paywalls or output messy code. Cveat is lightning fast and gets straight to the point.',
           initial: 'R'
         },
         {
@@ -389,12 +387,12 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Attractive CVeate AI Showcase Section */}
+      {/* Attractive CVeat AI Showcase Section */}
       <section className="bg-indigo-600 py-20 px-6 text-white my-12 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.1),transparent_50%)] pointer-events-none"></div>
         <div className="mx-auto max-w-4xl text-center space-y-6 relative z-10">
           <span className="inline-block rounded-full bg-indigo-500/50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-indigo-100 border border-indigo-400/30">
-            Powered by CVeate AI
+            Powered by CVeat AI
           </span>
           <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl text-white">
             Instant ATS Match Score & Resume Optimizer
@@ -436,7 +434,7 @@ export default function LandingPage() {
       <section id="about" className="mx-auto max-w-6xl px-6 py-20 border-t border-slate-100 text-center">
         <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">About Cveate</h2>
         <p className="mt-4 text-base text-slate-600 max-w-6xl mx-auto leading-relaxed">
-        Cveate was born out of a universal job-seeking frustration: qualified professionals losing career opportunities simply because automated Applicant Tracking Systems (ATS) reject beautifully styled resumes over hidden formatting elements. We built Cveate to bridge this gap, combining a sleek, modern web experience with strict, recruiter-approved document exporting. By fixing common resume issues like columns and graphic text that cause your CV to fail ATS scans, our platform ensures your true skills and professional achievements always shine through to human hiring managers.
+        Cveat was born out of a universal job-seeking frustration: qualified professionals losing career opportunities simply because automated Applicant Tracking Systems (ATS) reject beautifully styled resumes over hidden formatting elements. We built Cveat to bridge this gap, combining a sleek, modern web experience with strict, recruiter-approved document exporting. By fixing common resume issues like columns and graphic text that cause your CV to fail ATS scans, our platform ensures your true skills and professional achievements always shine through to human hiring managers.
         </p>
       </section>
 
@@ -466,7 +464,7 @@ export default function LandingPage() {
         <div className="flex flex-col sm:flex-row items-center justify-between mb-10 gap-4">
           <div className="text-center sm:text-left">
             <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Trusted by Modern Professionals</h2>
-            <p className="mt-1 text-sm text-slate-600">See how Cveate helped job seekers land interviews faster.</p>
+            <p className="mt-1 text-sm text-slate-600">See how Cveat helped job seekers land interviews faster.</p>
           </div>
           <div className="flex items-center gap-3 flex-wrap justify-center">
             <button
@@ -531,7 +529,7 @@ export default function LandingPage() {
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div>
                 <h3 className="text-2xl font-extrabold text-slate-900">All Community Testimonials</h3>
-                <p className="text-xs text-slate-500">Read what professionals are saying about CVeate.</p>
+                <p className="text-xs text-slate-500">Read what professionals are saying about CVeat.</p>
               </div>
               <button
                 onClick={() => setIsAllTestimonialsOpen(false)}
@@ -630,7 +628,7 @@ export default function LandingPage() {
               {isEditing ? 'Edit Your Testimonial' : 'Share Your Experience'}
             </h3>
             <p className="text-xs text-slate-500 mb-6">
-              {isEditing ? 'Update your review for the Cveate community.' : 'Add your testimonial to the Cveate community.'}
+              {isEditing ? 'Update your review for the Cveat community.' : 'Add your testimonial to the Cveat community.'}
             </p>
 
             {formError && (
@@ -688,7 +686,7 @@ export default function LandingPage() {
                   rows={4}
                   value={newTestimonial.text}
                   onChange={(e) => setNewTestimonial({ ...newTestimonial, text: e.target.value })}
-                  placeholder="How did Cveate help your job search or resume building?"
+                  placeholder="How did Cveat help your job search or resume building?"
                   className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-slate-900 resize-none"
                 />
               </div>
@@ -769,7 +767,7 @@ export default function LandingPage() {
       <footer className="bg-slate-950 text-slate-400 py-16 px-6 border-t border-slate-800">
         <div className="mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
           <div className="space-y-4 md:col-span-1">
-            <h3 className="text-xl font-black tracking-tight text-white">CVeate</h3>
+            <h3 className="text-xl font-black tracking-tight text-white">CVeat</h3>
             <p className="text-xs text-slate-400 leading-relaxed">Empowering experienced professionals to bypass automated ATS filters and land interviews faster.</p>
           </div>
           <div className="space-y-3">
@@ -800,7 +798,7 @@ export default function LandingPage() {
           </div>
         </div>
         <div className="mx-auto max-w-6xl pt-8 border-t border-slate-900 text-xs text-slate-500">
-          <p>© 2026 CVeate. All rights reserved.</p>
+          <p>© 2026 CVeat. All rights reserved.</p>
         </div>
       </footer>
     </div>
