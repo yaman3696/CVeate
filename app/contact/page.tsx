@@ -39,7 +39,13 @@ export default function ContactPage() {
         body: JSON.stringify(formData),
       })
 
-      const data = await res.json()
+      const contentType = res.headers.get("content-type")
+      let data
+      if (contentType && contentType.includes("application/json")) {
+        data = await res.json()
+      } else {
+        throw new Error(`Server error (${res.status}): Please ensure your API route exists.`)
+      }
 
       if (!res.ok) {
         throw new Error(data.error || 'Failed to submit form.')
@@ -51,9 +57,9 @@ export default function ContactPage() {
     } finally {
       setLoading(false)
     }
-  }
+  } // <-- FIXED: handleSubmit now properly closes here!
 
-  // Canvas Network Animation Effect
+  // Canvas Network Animation Effect (Now cleanly outside handleSubmit)
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -133,7 +139,7 @@ export default function ContactPage() {
         
         <div>
           <Link href="/" className="text-xs font-bold text-indigo-600 hover:underline">
-            ← Back to Home
+             ← Back to Home
           </Link>
           <h1 className="text-3xl font-extrabold tracking-tight mt-3">Contact Support</h1>
           <p className="text-sm text-slate-600 mt-1">Have questions about ATS optimization, your account, or custom resume formatting? We're here to help.</p>
