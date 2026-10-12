@@ -4,10 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 
-export const metadata = {
-  title: 'Career Advice & ATS Strategies Blog | CVeat',
-  description: 'Explore expert guides, resume tips, and actionable ATS strategies to beat recruitment filters and land more interviews.',
-}
+
 
 export default function BlogPage() {
   const [blogs, setBlogs] = useState<any[]>([])
