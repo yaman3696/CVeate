@@ -15,6 +15,7 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
 
   const [isAuthOpen, setIsAuthOpen] = useState(false)
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin')
+  const [isResetMode, setIsResetMode] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   
   // Form States
@@ -52,11 +53,38 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
     }
   }
 
+  // Sync profile data on login, preserving email signup names against Google OAuth overwrites
+  const syncGoogleProfile = async (sessionUser: any) => {
+    if (!sessionUser) return
+    const { data: existingProfile } = await supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('id', sessionUser.id)
+      .single()
+
+    const googleName = sessionUser.user_metadata?.full_name || sessionUser.user_metadata?.name || ''
+
+    if (!existingProfile) {
+      await supabase.from('profiles').upsert({
+        id: sessionUser.id,
+        email: sessionUser.email,
+        full_name: googleName,
+        plan_name: 'Freemium',
+        ats_chances_remaining: 2
+      })
+    } else if (!existingProfile.full_name && googleName) {
+      await supabase.from('profiles')
+        .update({ full_name: googleName })
+        .eq('id', sessionUser.id)
+    }
+  }
+
   // Check active session on load & listen for auth changes
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
       if (session?.user) {
+        syncGoogleProfile(session.user)
         fetchUserProfile(session.user.id)
       }
     })
@@ -64,6 +92,7 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
       if (session?.user) {
+        syncGoogleProfile(session.user)
         fetchUserProfile(session.user.id)
       } else {
         setUserProfile(null)
@@ -88,6 +117,7 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
       if (e.detail) setAuthMode(e.detail)
       setErrorMessage('')
       setSuccessMessage('')
+      setIsResetMode(false)
       setIsAuthOpen(true)
     }
 
@@ -108,6 +138,7 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
 
   const openAuth = (mode: 'signin' | 'signup') => {
     setAuthMode(mode)
+    setIsResetMode(false)
     setErrorMessage('')
     setSuccessMessage('')
     setIsAuthOpen(true)
@@ -135,12 +166,18 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
           throw new Error('You must agree to the terms and conditions to sign up.')
         }
 
+        // Pass full_name to Supabase Auth metadata table
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            data: {
+              full_name: fullName,
+              contact_number: contactNumber
+            }
+          }
         })
         
-        // If Supabase returns a user but identities array is empty or null (duplicate sign-up)
         if (data?.user && (!data.user.identities || data.user.identities.length === 0)) {
           throw new Error('This email address is already registered. Please sign in using Google or new email ID.')
         }
@@ -181,7 +218,6 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
         }
         setSuccessMessage('Signed in successfully!')
         
-        // Capture current path and stay on the exact page after login
         const currentPath = window.location.pathname
         setTimeout(() => {
           setIsAuthOpen(false)
@@ -190,6 +226,29 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
       }
     } catch (err: any) {
       setErrorMessage(err.message || 'Authentication failed.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email) {
+      setErrorMessage('Please enter your email address first.')
+      return
+    }
+    setLoading(true)
+    setErrorMessage('')
+    setSuccessMessage('')
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/update-password`,
+      })
+      if (error) throw error
+      setSuccessMessage('Password reset link sent! Check your email inbox.')
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Failed to send reset link.')
     } finally {
       setLoading(false)
     }
@@ -215,8 +274,6 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
     sessionStorage.clear()
     setUser(null)
     setUserProfile(null)
-    
-    // Force a complete browser reload to clear caches and hide user components instantly
     window.location.href = '/'
   }
 
@@ -255,7 +312,6 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
               </Link>
             </div>
             
-            {/* Desktop Navigation Links */}
             <div className="hidden md:flex items-center gap-6 ml-auto mr-6 text-sm font-medium text-indigo-100">
               <Link href="/about" className="hover:text-white transition-colors">About Us</Link>
               <Link href="/blog" className="hover:text-white transition-colors">Blog</Link>
@@ -289,14 +345,12 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
                     <span className="hidden sm:inline">Profile</span>
                   </button>
 
-                  {/* Profile Dropdown Menu with Plan & Credits Info */}
                   {isProfileOpen && (
                     <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-white border border-slate-200 shadow-xl py-2 text-slate-900 text-xs">
                       <div className="px-4 py-3 border-b border-slate-100">
                         <p className="font-bold text-slate-900 truncate">{userProfile?.full_name || 'My Account'}</p>
                         <p className="text-[11px] text-slate-500 truncate mt-0.5">{user.email}</p>
                         
-                        {/* Active Plan & ATS Credits Badge */}
                         <div className="mt-3 flex items-center justify-between bg-indigo-50 border border-indigo-100 rounded-xl px-3 py-2">
                           <div>
                             <p className="text-[10px] uppercase font-bold text-indigo-600 tracking-wider">Active Plan</p>
@@ -347,7 +401,6 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
                 </button>
               )}
 
-              {/* Mobile Hamburger Button */}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className="md:hidden rounded-xl bg-indigo-700 p-2.5 text-white hover:bg-indigo-800 transition-colors focus:outline-none cursor-pointer"
@@ -364,38 +417,13 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
             </div>
           </div>
 
-          {/* Mobile Dropdown Navigation Drawer */}
           {isMobileMenuOpen && (
             <div className="md:hidden bg-indigo-700 border-t border-indigo-500 px-6 py-6 space-y-4 shadow-xl text-white">
               <div className="flex flex-col space-y-3 font-semibold text-sm">
-                <Link 
-                  href="/about" 
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="hover:text-indigo-200 transition-colors py-1.5"
-                >
-                  About Us
-                </Link>
-                <Link 
-                  href="/blog" 
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="hover:text-indigo-200 transition-colors py-1.5"
-                >
-                  Blog
-                </Link>
-                <Link 
-                  href="/pricing" 
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="hover:text-indigo-200 transition-colors py-1.5"
-                >
-                  Pricing
-                </Link>
-                <Link 
-                  href="/ats-checker" 
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="hover:text-indigo-200 transition-colors py-1.5"
-                >
-                  ATS Checker
-                </Link>
+                <Link href="/about" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-indigo-200 transition-colors py-1.5">About Us</Link>
+                <Link href="/blog" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-indigo-200 transition-colors py-1.5">Blog</Link>
+                <Link href="/pricing" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-indigo-200 transition-colors py-1.5">Pricing</Link>
+                <Link href="/ats-checker" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-indigo-200 transition-colors py-1.5">ATS Checker</Link>
               </div>
             </div>
           )}
@@ -417,10 +445,10 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
 
             <div className="text-center mb-6">
               <h3 className="text-2xl font-extrabold text-slate-900">
-                {authMode === 'signin' ? 'Welcome Back to CVeat' : 'Create Your Account'}
+                {isResetMode ? 'Reset Password' : (authMode === 'signin' ? 'Welcome Back to CVeat' : 'Create Your Account')}
               </h3>
               <p className="text-xs text-slate-500 mt-1">
-                {authMode === 'signin' ? 'Sign in to access your saved resumes & ATS history' : 'Join thousands of professionals landing interviews faster'}
+                {isResetMode ? 'Enter your email to receive a secure recovery link' : (authMode === 'signin' ? 'Sign in to access your saved resumes & ATS history' : 'Join thousands of professionals landing interviews faster')}
               </p>
             </div>
 
@@ -436,114 +464,119 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
               </div>
             )}
 
-            <div className="space-y-4">
-              <button
-                type="button"
-                onClick={handleGoogleAuth}
-                className="w-full flex items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white py-3 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-all cursor-pointer"
-              >
-                <svg className="w-4 h-4" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
-                  <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.13 0-5.78-2.11-6.73-4.96H1.18v3.15C3.15 21.32 7.22 24 12 24z"/>
-                  <path fill="#FBBC05" d="M5.27 14.24c-.25-.72-.39-1.49-.39-2.24s.14-1.52.39-2.24V6.61H1.18C.43 8.13 0 9.85 0 11.69s.43 3.56 1.18 5.08l4.09-2.53z"/>
-                  <path fill="#EA4335" d="M12 4.75c1.76 0 3.34.6 4.59 1.77l3.43-3.43C17.95 1.18 15.24 0 12 0 7.22 0 3.15 2.68 1.18 6.61l4.09 3.15c.95-2.85 3.6-4.96 6.73-4.96z"/>
-                </svg>
-                Continue with Google
-              </button>
-
-              <div className="relative flex py-2 items-center">
-                <div className="flex-grow border-t border-slate-200"></div>
-                <span className="flex-shrink mx-4 text-[10px] uppercase font-bold tracking-wider text-slate-400">or email</span>
-                <div className="flex-grow border-t border-slate-200"></div>
-              </div>
-
-              <form onSubmit={handleEmailAuth} className="space-y-3 text-xs">
-                {authMode === 'signup' && (
-                  <>
-                    <div>
-                      <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Full Name</label>
-                      <input 
-                        type="text" 
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        required 
-                        placeholder="e.g. John Doe" 
-                        className="w-full rounded-xl border border-slate-200 px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white" 
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Contact Number (10 Digits)</label>
-                      <div className="flex">
-                        <span className="inline-flex items-center px-3 rounded-l-xl border border-r-0 border-slate-200 bg-slate-100 text-slate-500 text-xs">+91</span>
-                        <input 
-                          type="tel" 
-                          maxLength={10}
-                          value={contactNumber}
-                          onChange={(e) => setContactNumber(e.target.value.replace(/\D/g, ''))}
-                          required 
-                          placeholder="9876543210" 
-                          className="w-full rounded-r-xl border border-slate-200 px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white" 
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
-
-<div>
-  <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Email Address</label>
-  <input 
-    type="email" 
-    value={email}
-    onChange={(e) => setEmail(e.target.value)}
-    required 
-    placeholder="name@example.com" 
-    className="w-full rounded-xl border border-slate-200 px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white" 
-  />
-</div>
-
+            {isResetMode ? (
+              <form onSubmit={handleForgotPassword} className="space-y-4 text-xs">
                 <div>
-                  <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Password</label>
-                  <div className="relative">
+                  <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Email Address</label>
                   <input 
-      type={showPassword ? 'text' : 'password'} 
-      value={password}
-      onChange={(e) => setPassword(e.target.value)}
-      required 
-      placeholder="••••••••" 
-      className="w-full rounded-xl border border-slate-200 px-4 py-2 pr-10 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white" 
-    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
-                    >
-                      {showPassword ? (
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
-                      ) : (
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                      )}
-                    </button>
-                  </div>
+                    type="email" 
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required 
+                    placeholder="name@example.com" 
+                    className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white" 
+                  />
+                </div>
+                <button 
+                  type="submit" 
+                  disabled={loading}
+                  className="w-full rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white shadow-md hover:bg-indigo-500 cursor-pointer disabled:opacity-50"
+                >
+                  {loading ? 'Sending...' : 'Send Reset Link'}
+                </button>
+                <div className="text-center pt-2">
+                  <button 
+                    type="button" 
+                    onClick={() => { setIsResetMode(false); setErrorMessage(''); setSuccessMessage(''); }}
+                    className="text-indigo-600 font-bold hover:underline cursor-pointer"
+                  >
+                    Back to Sign In
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="space-y-4">
+                <button
+                  type="button"
+                  onClick={handleGoogleAuth}
+                  className="w-full flex items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white py-3 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-all cursor-pointer"
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+                    <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.13 0-5.78-2.11-6.73-4.96H1.18v3.15C3.15 21.32 7.22 24 12 24z"/>
+                    <path fill="#FBBC05" d="M5.27 14.24c-.25-.72-.39-1.49-.39-2.24s.14-1.52.39-2.24V6.61H1.18C.43 8.13 0 9.85 0 11.69s.43 3.56 1.18 5.08l4.09-2.53z"/>
+                    <path fill="#EA4335" d="M12 4.75c1.76 0 3.34.6 4.59 1.77l3.43-3.43C17.95 1.18 15.24 0 12 0 7.22 0 3.15 2.68 1.18 6.61l4.09 3.15c.95-2.85 3.6-4.96 6.73-4.96z"/>
+                  </svg>
+                  Continue with Google
+                </button>
+
+                <div className="relative flex py-2 items-center">
+                  <div className="flex-grow border-t border-slate-200"></div>
+                  <span className="flex-shrink mx-4 text-[10px] uppercase font-bold tracking-wider text-slate-400">or email</span>
+                  <div className="flex-grow border-t border-slate-200"></div>
                 </div>
 
-                {authMode === 'signup' && (
+                <form onSubmit={handleEmailAuth} className="space-y-3 text-xs">
+                  {authMode === 'signup' && (
+                    <>
+                      <div>
+                        <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Full Name</label>
+                        <input 
+                          type="text" 
+                          value={fullName}
+                          onChange={(e) => setFullName(e.target.value)}
+                          required 
+                          placeholder="e.g. John Doe" 
+                          className="w-full rounded-xl border border-slate-200 px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white" 
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Contact Number (10 Digits)</label>
+                        <div className="flex">
+                          <span className="inline-flex items-center px-3 rounded-l-xl border border-r-0 border-slate-200 bg-slate-100 text-slate-500 text-xs">+91</span>
+                          <input 
+                            type="tel" 
+                            maxLength={10}
+                            value={contactNumber}
+                            onChange={(e) => setContactNumber(e.target.value.replace(/\D/g, ''))}
+                            required 
+                            placeholder="9876543210" 
+                            className="w-full rounded-r-xl border border-slate-200 px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white" 
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+
                   <div>
-                    <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Confirm Password</label>
+                    <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Email Address</label>
+                    <input 
+                      type="email" 
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required 
+                      placeholder="name@example.com" 
+                      className="w-full rounded-xl border border-slate-200 px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white" 
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Password</label>
                     <div className="relative">
                       <input 
-                        type={showConfirmPassword ? 'text' : 'password'} 
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        type={showPassword ? 'text' : 'password'} 
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
                         required 
                         placeholder="••••••••" 
                         className="w-full rounded-xl border border-slate-200 px-4 py-2 pr-10 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white" 
                       />
                       <button
                         type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                       >
-                        {showConfirmPassword ? (
+                        {showPassword ? (
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
                         ) : (
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
@@ -551,40 +584,81 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
                       </button>
                     </div>
                   </div>
+
+                  {authMode === 'signup' && (
+                    <div>
+                      <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Confirm Password</label>
+                      <div className="relative">
+                        <input 
+                          type={showConfirmPassword ? 'text' : 'password'} 
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          required 
+                          placeholder="••••••••" 
+                          className="w-full rounded-xl border border-slate-200 px-4 py-2 pr-10 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white" 
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                        >
+                          {showConfirmPassword ? (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+                          ) : (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {authMode === 'signup' && (
+                    <div className="flex items-start gap-2 pt-1">
+                      <input
+                        type="checkbox"
+                        id="terms-checkbox"
+                        checked={agreeTerms}
+                        onChange={(e) => setAgreeTerms(e.target.checked)}
+                        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                      />
+                      <label htmlFor="terms-checkbox" className="text-[11px] text-slate-600 leading-relaxed cursor-pointer">
+                        I agree to the <span className="text-indigo-600 font-bold hover:underline">Terms and Conditions</span> and Privacy Policy.
+                      </label>
+                    </div>
+                  )}
+
+                  {authMode === 'signin' && (
+                    <div className="flex justify-end pt-1">
+                      <button 
+                        type="button"
+                        onClick={() => { setIsResetMode(true); setErrorMessage(''); setSuccessMessage(''); }}
+                        className="text-xs font-bold text-indigo-600 hover:underline cursor-pointer"
+                      >
+                        Forgot password?
+                      </button>
+                    </div>
+                  )}
+
+                  <button 
+                    type="submit" 
+                    disabled={loading}
+                    className="w-full mt-2 rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white shadow-md hover:bg-indigo-500 cursor-pointer disabled:opacity-50"
+                  >
+                    {loading ? 'Processing...' : (authMode === 'signin' ? 'Sign In' : 'Create Account')}
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {!isResetMode && (
+              <div className="mt-6 text-center text-xs text-slate-500">
+                {authMode === 'signin' ? (
+                  <p>Don't have an account? <button onClick={() => setAuthMode('signup')} className="text-indigo-600 font-bold hover:underline cursor-pointer">Sign up</button></p>
+                ) : (
+                  <p>Already have an account? <button onClick={() => setAuthMode('signin')} className="text-indigo-600 font-bold hover:underline cursor-pointer">Sign in</button></p>
                 )}
-
-                {authMode === 'signup' && (
-                  <div className="flex items-start gap-2 pt-1">
-                    <input
-                      type="checkbox"
-                      id="terms-checkbox"
-                      checked={agreeTerms}
-                      onChange={(e) => setAgreeTerms(e.target.checked)}
-                      className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-                    />
-                    <label htmlFor="terms-checkbox" className="text-[11px] text-slate-600 leading-relaxed cursor-pointer">
-                      I agree to the <span className="text-indigo-600 font-bold hover:underline">Terms and Conditions</span> and Privacy Policy.
-                    </label>
-                  </div>
-                )}
-
-                <button 
-                  type="submit" 
-                  disabled={loading}
-                  className="w-full mt-2 rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white shadow-md hover:bg-indigo-500 cursor-pointer disabled:opacity-50"
-                >
-                  {loading ? 'Processing...' : (authMode === 'signin' ? 'Sign In' : 'Create Account')}
-                </button>
-              </form>
-            </div>
-
-            <div className="mt-6 text-center text-xs text-slate-500">
-              {authMode === 'signin' ? (
-                <p>Don't have an account? <button onClick={() => setAuthMode('signup')} className="text-indigo-600 font-bold hover:underline cursor-pointer">Sign up</button></p>
-              ) : (
-                <p>Already have an account? <button onClick={() => setAuthMode('signin')} className="text-indigo-600 font-bold hover:underline cursor-pointer">Sign in</button></p>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       )}
