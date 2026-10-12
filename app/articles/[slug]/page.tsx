@@ -32,6 +32,7 @@ export default function ArticlePage() {
 
       if (data) {
         setBlog(data)
+        document.title = `${data.title} | CVeat Blog`
       }
       setLoading(false)
     }
