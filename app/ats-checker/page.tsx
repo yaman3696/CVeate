@@ -26,6 +26,7 @@ export default function AtsCheckerPage() {
   // Auth Modal State
   const [isAuthOpen, setIsAuthOpen] = useState(false)
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signup')
+  const [isResetMode, setIsResetMode] = useState(false)
   const [fullName, setFullName] = useState('')
   const [contactNumber, setContactNumber] = useState('')
   const [email, setEmail] = useState('')
@@ -43,165 +44,183 @@ export default function AtsCheckerPage() {
   const dropdownRef = useRef<HTMLDivElement | null>(null)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
- 
-// Reliable Canvas Network Animation Effect (Triggered when auth finishes loading)
-useEffect(() => {
-  if (authLoading) return // Wait until loading screen is gone and canvas is in the DOM
+  // Sync Google Profile with name preservation logic
+  const syncGoogleProfile = async (sessionUser: any) => {
+    if (!sessionUser) return
+    const { data: existingProfile } = await supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('id', sessionUser.id)
+      .single()
 
-  const canvas = canvasRef.current
-  if (!canvas) return
-  const ctx = canvas.getContext('2d')
-  if (!ctx) return
+    const googleName = sessionUser.user_metadata?.full_name || sessionUser.user_metadata?.name || ''
 
-  let animationFrameId: number
-  let running = true
+    if (!existingProfile) {
+      await supabase.from('profiles').upsert({
+        id: sessionUser.id,
+        email: sessionUser.email,
+        full_name: googleName,
+        plan_name: 'Freemium',
+        ats_chances_remaining: 2
+      })
+    } else if (!existingProfile.full_name && googleName) {
+      await supabase.from('profiles')
+        .update({ full_name: googleName })
+        .eq('id', sessionUser.id)
+    }
+  }
 
-  const initCanvas = () => {
-    if (!running || !canvas) return
+  // Reliable Canvas Network Animation Effect
+  useEffect(() => {
+    if (authLoading) return
 
-    const width = window.innerWidth || 1920
-    const height = window.innerHeight || 1080
-    const dpr = window.devicePixelRatio || 1
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
 
-    canvas.width = width * dpr
-    canvas.height = height * dpr
-    canvas.style.width = `${width}px`
-    canvas.style.height = `${height}px`
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+    let animationFrameId: number
+    let running = true
 
-    const particles = Array.from({ length: 45 }, () => ({
-      x: Math.random() * width,
-      y: Math.random() * height,
-      vx: (Math.random() - 0.5) * 0.8,
-      vy: (Math.random() - 0.5) * 0.8,
-      radius: Math.random() * 1.5 + 1,
-    }))
+    const initCanvas = () => {
+      if (!running || !canvas) return
 
-    const animate = () => {
-      if (!running) return
-      ctx.clearRect(0, 0, width, height)
+      const width = window.innerWidth || 1920
+      const height = window.innerHeight || 1080
+      const dpr = window.devicePixelRatio || 1
 
-      for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x
-          const dy = particles[i].y - particles[j].y
-          const dist = Math.sqrt(dx * dx + dy * dy)
-          if (dist < 110) {
-            ctx.strokeStyle = `rgba(255, 255, 255, ${0.18 * (1 - dist / 110)})`
-            ctx.lineWidth = 1
-            ctx.beginPath()
-            ctx.moveTo(particles[i].x, particles[i].y)
-            ctx.lineTo(particles[j].x, particles[j].y)
-            ctx.stroke()
+      canvas.width = width * dpr
+      canvas.height = height * dpr
+      canvas.style.width = `${width}px`
+      canvas.style.height = `${height}px`
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+
+      const particles = Array.from({ length: 45 }, () => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        vx: (Math.random() - 0.5) * 0.8,
+        vy: (Math.random() - 0.5) * 0.8,
+        radius: Math.random() * 1.5 + 1,
+      }))
+
+      const animate = () => {
+        if (!running) return
+        ctx.clearRect(0, 0, width, height)
+
+        for (let i = 0; i < particles.length; i++) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x
+            const dy = particles[i].y - particles[j].y
+            const dist = Math.sqrt(dx * dx + dy * dy)
+            if (dist < 110) {
+              ctx.strokeStyle = `rgba(255, 255, 255, ${0.18 * (1 - dist / 110)})`
+              ctx.lineWidth = 1
+              ctx.beginPath()
+              ctx.moveTo(particles[i].x, particles[i].y)
+              ctx.lineTo(particles[j].x, particles[j].y)
+              ctx.stroke()
+            }
+          }
+        }
+
+        particles.forEach((p) => {
+          p.x += p.vx
+          p.y += p.vy
+          if (p.x < 0 || p.x > width) p.vx *= -1
+          if (p.y < 0 || p.y > height) p.vy *= -1
+
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.4)'
+          ctx.beginPath()
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2)
+          ctx.fill()
+        })
+
+        animationFrameId = requestAnimationFrame(animate)
+      }
+
+      animate()
+    }
+
+    const timer = setTimeout(initCanvas, 50)
+    const handleResize = () => { initCanvas() }
+    window.addEventListener('resize', handleResize)
+
+    return () => {
+      running = false
+      clearTimeout(timer)
+      cancelAnimationFrame(animationFrameId)
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [authLoading])
+
+  // Check Session on Load, Verify Credits Timer, & Listen for Auth Changes
+  useEffect(() => {
+    const checkUserSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        setUser(session.user)
+        syncGoogleProfile(session.user)
+
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+
+        if (profileData) {
+          const now = new Date().getTime()
+          const lastReset = profileData.ats_last_reset 
+            ? new Date(profileData.ats_last_reset).getTime() 
+            : now
+          const hoursElapsed = (now - lastReset) / (1000 * 60 * 60)
+          const daysElapsed = hoursElapsed / 24
+
+          let updatedCredits = profileData.ats_chances_remaining
+          let updatedPlan = profileData.plan_name
+          let shouldUpdate = false
+
+          if (profileData.plan_name === 'Freemium' && hoursElapsed >= 24) {
+            updatedCredits = 2
+            shouldUpdate = true
+          } else if (profileData.plan_name === 'Daily Pass' && hoursElapsed >= 24) {
+            updatedCredits = 2
+            updatedPlan = 'Freemium'
+            shouldUpdate = true
+          } else if (profileData.plan_name === 'Monthly' && daysElapsed >= 30) {
+            updatedCredits = 2
+            updatedPlan = 'Freemium'
+            shouldUpdate = true
+          }
+
+          if (shouldUpdate) {
+            const { data: refreshedProfile } = await supabase
+              .from('profiles')
+              .update({
+                ats_chances_remaining: updatedCredits,
+                plan_name: updatedPlan,
+                ats_last_reset: new Date().toISOString()
+              })
+              .eq('id', session.user.id)
+              .select()
+              .single()
+
+            setProfile(refreshedProfile || profileData)
+          } else {
+            setProfile(profileData)
           }
         }
       }
-
-      particles.forEach((p) => {
-        p.x += p.vx
-        p.y += p.vy
-        if (p.x < 0 || p.x > width) p.vx *= -1
-        if (p.y < 0 || p.y > height) p.vy *= -1
-
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)'
-        ctx.beginPath()
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2)
-        ctx.fill()
-      })
-
-      animationFrameId = requestAnimationFrame(animate)
+      setAuthLoading(false)
     }
+    checkUserSession()
 
-    animate()
-  }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      if (session?.user) syncGoogleProfile(session.user)
+    })
 
-  const timer = setTimeout(initCanvas, 50)
-
-  const handleResize = () => {
-    initCanvas()
-  }
-  window.addEventListener('resize', handleResize)
-
-  return () => {
-    running = false
-    clearTimeout(timer)
-    cancelAnimationFrame(animationFrameId)
-    window.removeEventListener('resize', handleResize)
-  }
-}, [authLoading]) // <--- Re-runs as soon as session verification completes and canvas mounts
-
-
-  // Check Session on Load, Verify Credits Timer, & Listen for Auth Changes
-useEffect(() => {
-  const checkUserSession = async () => {
-    const { data: { session } } = await supabase.auth.getSession()
-    if (session) {
-      setUser(session.user)
-
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .single()
-
-      if (profileData) {
-        const now = new Date().getTime()
-        const lastReset = profileData.ats_last_reset 
-          ? new Date(profileData.ats_last_reset).getTime() 
-          : now
-        const hoursElapsed = (now - lastReset) / (1000 * 60 * 60)
-        const daysElapsed = hoursElapsed / 24
-
-        let updatedCredits = profileData.ats_chances_remaining
-        let updatedPlan = profileData.plan_name
-        let shouldUpdate = false
-
-        // 1. FREEMIUM: Refresh to 2 credits every 24 hours
-        if (profileData.plan_name === 'Freemium' && hoursElapsed >= 24) {
-          updatedCredits = 2
-          shouldUpdate = true
-        }
-        // 2. DAILY PASS: Drop to 2 credits after 24 hours (whether used or not) & revert to Freemium
-        else if (profileData.plan_name === 'Daily Pass' && hoursElapsed >= 24) {
-          updatedCredits = 2
-          updatedPlan = 'Freemium'
-          shouldUpdate = true
-        }
-        // 3. MONTHLY: Drop to 2 credits after 30 days & revert to Freemium
-        else if (profileData.plan_name === 'Monthly' && daysElapsed >= 30) {
-          updatedCredits = 2
-          updatedPlan = 'Freemium'
-          shouldUpdate = true
-        }
-
-        if (shouldUpdate) {
-          const { data: refreshedProfile } = await supabase
-            .from('profiles')
-            .update({
-              ats_chances_remaining: updatedCredits,
-              plan_name: updatedPlan,
-              ats_last_reset: new Date().toISOString()
-            })
-            .eq('id', session.user.id)
-            .select()
-            .single()
-
-          setProfile(refreshedProfile || profileData)
-        } else {
-          setProfile(profileData)
-        }
-      }
-    }
-    setAuthLoading(false)
-  }
-  checkUserSession()
-
-  const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-    setUser(session?.user ?? null)
-  })
-
-  return () => subscription.unsubscribe()
-}, [])
+    return () => subscription.unsubscribe()
+  }, [])
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -216,6 +235,7 @@ useEffect(() => {
 
   const openAuth = (mode: 'signin' | 'signup') => {
     setAuthMode(mode)
+    setIsResetMode(false)
     setErrorMessage('')
     setSuccessMessage('')
     setIsAuthOpen(true)
@@ -242,7 +262,16 @@ useEffect(() => {
           throw new Error('You must agree to the terms and conditions to sign up.')
         }
   
-        const { data, error } = await supabase.auth.signUp({ email, password })
+        const { data, error } = await supabase.auth.signUp({ 
+          email, 
+          password,
+          options: {
+            data: {
+              full_name: fullName,
+              contact_number: contactNumber
+            }
+          }
+        })
   
         if (data?.user && (!data.user.identities || data.user.identities.length === 0)) {
           throw new Error('This email address is already registered. Please sign in using Google or your password.')
@@ -296,6 +325,29 @@ useEffect(() => {
     }
   }
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email) {
+      setErrorMessage('Please enter your email address first.')
+      return
+    }
+    setLoading(true)
+    setErrorMessage('')
+    setSuccessMessage('')
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/update-password`,
+      })
+      if (error) throw error
+      setSuccessMessage('Password reset link sent! Check your email inbox.')
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Failed to send reset link.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleGoogleAuth = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -315,8 +367,6 @@ useEffect(() => {
     localStorage.clear()
     sessionStorage.clear()
     setIsProfileOpen(false)
-    
-    // Force complete browser reload to clear caches and hide user components instantly
     window.location.href = '/'
   }
 
@@ -396,7 +446,6 @@ useEffect(() => {
   return (
     <div className="min-h-screen bg-indigo-600 text-white flex flex-col relative overflow-hidden">
       
-      {/* Connected Network Canvas Background */}
       <canvas
         ref={canvasRef}
         className="fixed inset-0 w-full h-full pointer-events-none z-0"
@@ -413,90 +462,86 @@ useEffect(() => {
 
       {/* Main Nav */}
       <nav className="sticky top-0 z-50 bg-white shadow-sm text-slate-900 border-b border-slate-100">
-  <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-    <div className="flex items-center">
-      <Link href="/" className="text-2xl font-black tracking-tight text-indigo-600">
-        CVeat
-      </Link>
-    </div>
-    
-    {/* Desktop Navigation Links - Pushed to the right using ml-auto mr-6 */}
-    <div className="hidden md:flex items-center gap-6 ml-auto mr-6 text-sm font-medium text-slate-600">
-      <Link href="/about" className="hover:text-indigo-600 transition-colors">About Us</Link>
-      <Link href="/blog" className="hover:text-indigo-600 transition-colors">Blog</Link>
-      <Link href="/pricing" className="hover:text-indigo-600 transition-colors">Pricing</Link>
-      <Link href="/ats-checker" className="text-indigo-600 font-bold transition-colors">ATS Checker</Link>
-    </div>
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+          <div className="flex items-center">
+            <Link href="/" className="text-2xl font-black tracking-tight text-indigo-600">
+              CVeat
+            </Link>
+          </div>
+          
+          <div className="hidden md:flex items-center gap-6 ml-auto mr-6 text-sm font-medium text-slate-600">
+            <Link href="/about" className="hover:text-indigo-600 transition-colors">About Us</Link>
+            <Link href="/blog" className="hover:text-indigo-600 transition-colors">Blog</Link>
+            <Link href="/pricing" className="hover:text-indigo-600 transition-colors">Pricing</Link>
+            <Link href="/ats-checker" className="text-indigo-600 font-bold transition-colors">ATS Checker</Link>
+          </div>
 
-    <div className="flex items-center gap-3">
-      {user ? (
-        <div className="relative" ref={dropdownRef}>
-          <button
-            onClick={() => setIsProfileOpen(!isProfileOpen)}
-            className="flex items-center gap-2 rounded-xl bg-indigo-50 border border-indigo-200 px-4 py-2 text-xs font-bold text-indigo-600 hover:bg-indigo-100 transition-all cursor-pointer"
-          >
-            <div className="h-6 w-6 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-[10px]">
-              {user.user_metadata?.full_name ? user.user_metadata.full_name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}
-            </div>
-            <span>{profile?.plan_name ? profile.plan_name.toUpperCase() : 'FREEMIUM'} ({profile?.ats_chances_remaining ?? 0} Left)</span>
-          </button>
+          <div className="flex items-center gap-3">
+            {user ? (
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="flex items-center gap-2 rounded-xl bg-indigo-50 border border-indigo-200 px-4 py-2 text-xs font-bold text-indigo-600 hover:bg-indigo-100 transition-all cursor-pointer"
+                >
+                  <div className="h-6 w-6 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-[10px]">
+                    {user.user_metadata?.full_name ? user.user_metadata.full_name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}
+                  </div>
+                  <span>{profile?.plan_name ? profile.plan_name.toUpperCase() : 'FREEMIUM'} ({profile?.ats_chances_remaining ?? 0} Left)</span>
+                </button>
 
-          {/* Profile Dropdown Menu */}
-          {isProfileOpen && (
-            <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-white border border-slate-200 shadow-xl py-2 text-slate-900 text-xs z-50">
-              <div className="px-4 py-3 border-b border-slate-100">
-                <p className="font-bold text-slate-900 truncate">{user.user_metadata?.full_name || 'My Account'}</p>
-                <p className="text-[11px] text-slate-500 truncate mt-0.5">{user.email}</p>
+                {isProfileOpen && (
+                  <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-white border border-slate-200 shadow-xl py-2 text-slate-900 text-xs z-50">
+                    <div className="px-4 py-3 border-b border-slate-100">
+                      <p className="font-bold text-slate-900 truncate">{user.user_metadata?.full_name || 'My Account'}</p>
+                      <p className="text-[11px] text-slate-500 truncate mt-0.5">{user.email}</p>
+                    </div>
+                    <div className="py-1">
+                      <Link href="/profile" onClick={() => setIsProfileOpen(false)} className="block px-4 py-2.5 hover:bg-slate-50 font-medium text-slate-700 transition-colors">Profile Settings</Link>
+                      <Link href="/history" onClick={() => setIsProfileOpen(false)} className="block px-4 py-2.5 hover:bg-slate-50 font-medium text-slate-700 transition-colors">CV History</Link>
+                    </div>
+                    <div className="border-t border-slate-100 my-1"></div>
+                    <button onClick={handleLogout} className="w-full text-left px-4 py-2.5 text-red-600 hover:bg-red-50 font-semibold transition-colors flex items-center justify-between cursor-pointer">
+                      <span>Log Out</span>
+                    </button>
+                  </div>
+                )}
               </div>
-              <div className="py-1">
-                <Link href="/profile" onClick={() => setIsProfileOpen(false)} className="block px-4 py-2.5 hover:bg-slate-50 font-medium text-slate-700 transition-colors">Profile Settings</Link>
-                <Link href="/history" onClick={() => setIsProfileOpen(false)} className="block px-4 py-2.5 hover:bg-slate-50 font-medium text-slate-700 transition-colors">CV History</Link>
-              </div>
-              <div className="border-t border-slate-100 my-1"></div>
-              <button onClick={handleLogout} className="w-full text-left px-4 py-2.5 text-red-600 hover:bg-red-50 font-semibold transition-colors flex items-center justify-between cursor-pointer">
-                <span>Log Out</span>
+            ) : (
+              <button
+                onClick={() => openAuth('signup')}
+                className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:shadow-lg hover:shadow-indigo-600/30 hover:-translate-y-0.5 transition-all cursor-pointer"
+              >
+                Get Started
               </button>
-            </div>
-          )}
+            )}
+
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="md:hidden rounded-xl bg-slate-100 p-2.5 text-slate-700 hover:bg-slate-200 transition-colors focus:outline-none cursor-pointer"
+              aria-label="Toggle Menu"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                {isMobileMenuOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
+          </div>
         </div>
-      ) : (
-        <button
-          onClick={() => openAuth('signup')}
-          className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:shadow-lg hover:shadow-indigo-600/30 hover:-translate-y-0.5 transition-all cursor-pointer"
-        >
-          Get Started
-        </button>
-      )}
 
-      {/* Mobile Hamburger Button */}
-      <button
-        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        className="md:hidden rounded-xl bg-slate-100 p-2.5 text-slate-700 hover:bg-slate-200 transition-colors focus:outline-none cursor-pointer"
-        aria-label="Toggle Menu"
-      >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-          {isMobileMenuOpen ? (
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          ) : (
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-          )}
-        </svg>
-      </button>
-    </div>
-  </div>
-
-  {/* Mobile Dropdown Menu Drawer */}
-  {isMobileMenuOpen && (
-    <div className="md:hidden bg-white border-t border-slate-200 px-6 py-6 space-y-4 shadow-xl">
-      <div className="flex flex-col space-y-3 font-semibold text-sm text-slate-700">
-        <Link href="/about" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-indigo-600 transition-colors py-1.5">About Us</Link>
-        <Link href="/blog" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-indigo-600 transition-colors py-1.5">Blog</Link>
-        <Link href="/pricing" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-indigo-600 transition-colors py-1.5">Pricing</Link>
-        <Link href="/ats-checker" onClick={() => setIsMobileMenuOpen(false)} className="text-indigo-600 py-1.5">ATS Checker</Link>
-      </div>
-    </div>
-  )}
-</nav>
+        {isMobileMenuOpen && (
+          <div className="md:hidden bg-white border-t border-slate-200 px-6 py-6 space-y-4 shadow-xl">
+            <div className="flex flex-col space-y-3 font-semibold text-sm text-slate-700">
+              <Link href="/about" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-indigo-600 transition-colors py-1.5">About Us</Link>
+              <Link href="/blog" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-indigo-600 transition-colors py-1.5">Blog</Link>
+              <Link href="/pricing" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-indigo-600 transition-colors py-1.5">Pricing</Link>
+              <Link href="/ats-checker" onClick={() => setIsMobileMenuOpen(false)} className="text-indigo-600 py-1.5">ATS Checker</Link>
+            </div>
+          </div>
+        )}
+      </nav>
 
       {/* Main Content Area */}
       <div className="flex-grow flex items-center justify-center px-6 py-12 z-10">
@@ -677,7 +722,7 @@ useEffect(() => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
           <div className="w-full max-w-sm rounded-3xl bg-white p-8 shadow-2xl border border-slate-100 text-center space-y-4 text-slate-900">
             <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto text-xl font-bold">
-              🔒
+              ℹ
             </div>
             <div className="space-y-1">
               <h3 className="text-lg font-bold text-slate-900">Authentication Required</h3>
@@ -709,7 +754,7 @@ useEffect(() => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
           <div className="w-full max-w-sm rounded-3xl bg-white p-8 shadow-2xl border border-slate-100 text-center space-y-4 text-slate-900">
             <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto text-xl font-bold">
-              ⏳
+              ⚡
             </div>
             <div className="space-y-1">
               <h3 className="text-lg font-bold text-slate-900">ATS Check Chances Over!</h3>
@@ -732,7 +777,7 @@ useEffect(() => {
         </div>
       )}
 
-      {/* Local Auth Modal for ATS Checker (Matches Homepage Styling) */}
+      {/* Local Auth Modal for ATS Checker */}
       {isAuthOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
           <div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl border border-slate-100 relative text-slate-900">
@@ -745,10 +790,10 @@ useEffect(() => {
 
             <div className="text-center mb-6">
               <h3 className="text-2xl font-extrabold text-slate-900">
-                {authMode === 'signin' ? 'Welcome Back to CVeat' : 'Create Your Account'}
+                {isResetMode ? 'Reset Password' : (authMode === 'signin' ? 'Welcome Back to CVeat' : 'Create Your Account')}
               </h3>
               <p className="text-xs text-slate-500 mt-1">
-                {authMode === 'signin' ? 'Sign in to access your saved resumes & ATS history' : 'Join thousands of professionals landing interviews faster'}
+                {isResetMode ? 'Enter your email to receive a secure recovery link' : (authMode === 'signin' ? 'Sign in to access your saved resumes & ATS history' : 'Join thousands of professionals landing interviews faster')}
               </p>
             </div>
 
@@ -764,59 +809,8 @@ useEffect(() => {
               </div>
             )}
 
-            <div className="space-y-4">
-              <button
-                type="button"
-                onClick={handleGoogleAuth}
-                className="w-full flex items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white py-3 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-all cursor-pointer"
-              >
-                <svg className="w-4 h-4" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
-                  <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.13 0-5.78-2.11-6.73-4.96H1.18v3.15C3.15 21.32 7.22 24 12 24z"/>
-                  <path fill="#FBBC05" d="M5.27 14.24c-.25-.72-.39-1.49-.39-2.24s.14-1.52.39-2.24V6.61H1.18C.43 8.13 0 9.85 0 11.69s.43 3.56 1.18 5.08l4.09-2.53z"/>
-                  <path fill="#EA4335" d="M12 4.75c1.76 0 3.34.6 4.59 1.77l3.43-3.43C17.95 1.18 15.24 0 12 0 7.22 0 3.15 2.68 1.18 6.61l4.09 3.15c.95-2.85 3.6-4.96 6.73-4.96z"/>
-                </svg>
-                Continue with Google
-              </button>
-
-              <div className="relative flex py-2 items-center">
-                <div className="flex-grow border-t border-slate-200"></div>
-                <span className="flex-shrink mx-4 text-[10px] uppercase font-bold tracking-wider text-slate-400">or email</span>
-                <div className="flex-grow border-t border-slate-200"></div>
-              </div>
-
-              <form onSubmit={handleEmailAuth} className="space-y-3 text-xs">
-                {authMode === 'signup' && (
-                  <>
-                    <div>
-                      <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Full Name</label>
-                      <input 
-                        type="text" 
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        required 
-                        placeholder="e.g. John Doe" 
-                        className="w-full rounded-xl border border-slate-200 px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white" 
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Contact Number (10 Digits)</label>
-                      <div className="flex">
-                        <span className="inline-flex items-center px-3 rounded-l-xl border border-r-0 border-slate-200 bg-slate-100 text-slate-500 text-xs">+91</span>
-                        <input 
-                          type="tel" 
-                          maxLength={10}
-                          value={contactNumber}
-                          onChange={(e) => setContactNumber(e.target.value.replace(/\D/g, ''))}
-                          required 
-                          placeholder="9876543210" 
-                          className="w-full rounded-r-xl border border-slate-200 px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white" 
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
-
+            {isResetMode ? (
+              <form onSubmit={handleForgotPassword} className="space-y-4 text-xs">
                 <div>
                   <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Email Address</label>
                   <input 
@@ -825,94 +819,191 @@ useEffect(() => {
                     onChange={(e) => setEmail(e.target.value)}
                     required 
                     placeholder="name@example.com" 
-                    className="w-full rounded-xl border border-slate-200 px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white" 
+                    className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white" 
                   />
                 </div>
+                <button 
+                  type="submit" 
+                  disabled={loading}
+                  className="w-full rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white shadow-md hover:bg-indigo-500 cursor-pointer disabled:opacity-50"
+                >
+                  {loading ? 'Sending...' : 'Send Reset Link'}
+                </button>
+                <div className="text-center pt-2">
+                  <button 
+                    type="button" 
+                    onClick={() => { setIsResetMode(false); setErrorMessage(''); setSuccessMessage(''); }}
+                    className="text-indigo-600 font-bold hover:underline cursor-pointer"
+                  >
+                    Back to Sign In
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="space-y-4">
+                <button
+                  type="button"
+                  onClick={handleGoogleAuth}
+                  className="w-full flex items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white py-3 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-all cursor-pointer"
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+                    <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.13 0-5.78-2.11-6.73-4.96H1.18v3.15C3.15 21.32 7.22 24 12 24z"/>
+                    <path fill="#FBBC05" d="M5.27 14.24c-.25-.72-.39-1.49-.39-2.24s.14-1.52.39-2.24V6.61H1.18C.43 8.13 0 9.85 0 11.69s.43 3.56 1.18 5.08l4.09-2.53z"/>
+                    <path fill="#EA4335" d="M12 4.75c1.76 0 3.34.6 4.59 1.77l3.43-3.43C17.95 1.18 15.24 0 12 0 7.22 0 3.15 2.68 1.18 6.61l4.09 3.15c.95-2.85 3.6-4.96 6.73-4.96z"/>
+                  </svg>
+                  Continue with Google
+                </button>
 
-                <div>
-                  <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Password</label>
-                  <div className="relative">
-                    <input 
-                      type={showPassword ? 'text' : 'password'} 
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required 
-                      placeholder="••••••••" 
-                      className="w-full rounded-xl border border-slate-200 px-4 py-2 pr-10 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white" 
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
-                    >
-                      {showPassword ? (
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
-                      ) : (
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                      )}
-                    </button>
-                  </div>
+                <div className="relative flex py-2 items-center">
+                  <div className="flex-grow border-t border-slate-200"></div>
+                  <span className="flex-shrink mx-4 text-[10px] uppercase font-bold tracking-wider text-slate-400">or email</span>
+                  <div className="flex-grow border-t border-slate-200"></div>
                 </div>
 
-                {authMode === 'signup' && (
+                <form onSubmit={handleEmailAuth} className="space-y-3 text-xs">
+                  {authMode === 'signup' && (
+                    <>
+                      <div>
+                        <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Full Name</label>
+                        <input 
+                          type="text" 
+                          value={fullName}
+                          onChange={(e) => setFullName(e.target.value)}
+                          required 
+                          placeholder="e.g. John Doe" 
+                          className="w-full rounded-xl border border-slate-200 px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white" 
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Contact Number (10 Digits)</label>
+                        <div className="flex">
+                          <span className="inline-flex items-center px-3 rounded-l-xl border border-r-0 border-slate-200 bg-slate-100 text-slate-500 text-xs">+91</span>
+                          <input 
+                            type="tel" 
+                            maxLength={10}
+                            value={contactNumber}
+                            onChange={(e) => setContactNumber(e.target.value.replace(/\D/g, ''))}
+                            required 
+                            placeholder="9876543210" 
+                            className="w-full rounded-r-xl border border-slate-200 px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white" 
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+
                   <div>
-                    <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Confirm Password</label>
+                    <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Email Address</label>
+                    <input 
+                      type="email" 
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required 
+                      placeholder="name@example.com" 
+                      className="w-full rounded-xl border border-slate-200 px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white" 
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Password</label>
                     <div className="relative">
                       <input 
-                        type={showConfirmPassword ? 'text' : 'password'} 
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        type={showPassword ? 'text' : 'password'} 
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
                         required 
                         placeholder="••••••••" 
                         className="w-full rounded-xl border border-slate-200 px-4 py-2 pr-10 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white" 
                       />
                       <button
                         type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                       >
-                        {showConfirmPassword ? (
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3,3l3.59 3.59m0,0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0,0L21 21" /></svg>
+                        {showPassword ? (
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
                         ) : (
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                         )}
                       </button>
                     </div>
                   </div>
+
+                  {authMode === 'signup' && (
+                    <div>
+                      <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Confirm Password</label>
+                      <div className="relative">
+                        <input 
+                          type={showConfirmPassword ? 'text' : 'password'} 
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          required 
+                          placeholder="••••••••" 
+                          className="w-full rounded-xl border border-slate-200 px-4 py-2 pr-10 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white" 
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                        >
+                          {showConfirmPassword ? (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+                          ) : (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {authMode === 'signup' && (
+                    <div className="flex items-start gap-2 pt-1">
+                      <input
+                        type="checkbox"
+                        id="terms-checkbox"
+                        checked={agreeTerms}
+                        onChange={(e) => setAgreeTerms(e.target.checked)}
+                        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                      />
+                      <label htmlFor="terms-checkbox" className="text-[11px] text-slate-600 leading-relaxed cursor-pointer">
+                        I agree to the <span className="text-indigo-600 font-bold hover:underline">Terms and Conditions</span> and Privacy Policy.
+                      </label>
+                    </div>
+                  )}
+
+                  {authMode === 'signin' && (
+                    <div className="flex justify-end pt-1">
+                      <button 
+                        type="button"
+                        onClick={() => { setIsResetMode(true); setErrorMessage(''); setSuccessMessage(''); }}
+                        className="text-xs font-bold text-indigo-600 hover:underline cursor-pointer"
+                      >
+                        Forgot password?
+                      </button>
+                    </div>
+                  )}
+
+                  <button 
+                    type="submit" 
+                    disabled={loading}
+                    className="w-full mt-2 rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white shadow-md hover:bg-indigo-500 cursor-pointer disabled:opacity-50"
+                  >
+                    {loading ? 'Processing...' : (authMode === 'signin' ? 'Sign In' : 'Create Account')}
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {!isResetMode && (
+              <div className="mt-6 text-center text-xs text-slate-500">
+                {authMode === 'signin' ? (
+                  <p>Don't have an account? <button onClick={() => setAuthMode('signup')} className="text-indigo-600 font-bold hover:underline cursor-pointer">Sign up</button></p>
+                ) : (
+                  <p>Already have an account? <button onClick={() => setAuthMode('signin')} className="text-indigo-600 font-bold hover:underline cursor-pointer">Sign in</button></p>
                 )}
-
-                {authMode === 'signup' && (
-                  <div className="flex items-start gap-2 pt-1">
-                    <input
-                      type="checkbox"
-                      id="terms-checkbox"
-                      checked={agreeTerms}
-                      onChange={(e) => setAgreeTerms(e.target.checked)}
-                      className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-                    />
-                    <label htmlFor="terms-checkbox" className="text-[11px] text-slate-600 leading-relaxed cursor-pointer">
-                      I agree to the <span className="text-indigo-600 font-bold hover:underline">Terms and Conditions</span> and Privacy Policy.
-                    </label>
-                  </div>
-                )}
-
-                <button 
-                  type="submit" 
-                  disabled={loading}
-                  className="w-full mt-2 rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white shadow-md hover:bg-indigo-500 cursor-pointer disabled:opacity-50"
-                >
-                  {loading ? 'Processing...' : (authMode === 'signin' ? 'Sign In' : 'Create Account')}
-                </button>
-              </form>
-            </div>
-
-            <div className="mt-6 text-center text-xs text-slate-500">
-              {authMode === 'signin' ? (
-                <p>Don't have an account? <button onClick={() => setAuthMode('signup')} className="text-indigo-600 font-bold hover:underline cursor-pointer">Sign up</button></p>
-              ) : (
-                <p>Already have an account? <button onClick={() => setAuthMode('signin')} className="text-indigo-600 font-bold hover:underline cursor-pointer">Sign in</button></p>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       )}
