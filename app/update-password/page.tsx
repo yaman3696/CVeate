@@ -1,3 +1,4 @@
+'app/update-password/page.tsx'
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -11,26 +12,29 @@ export default function UpdatePasswordPage() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
-  const [isReady, setIsReady] = useState(false)
+  const [isAuthorized, setIsAuthorized] = useState(false)
 
   useEffect(() => {
-    // Check if the URL contains recovery tokens (Supabase appends them as a hash or query param)
+    // Check if user arrived via proper Supabase recovery trigger (hash or query token)
     const hash = window.location.hash
     const query = window.location.search
 
-    if (hash.includes('type=recovery') || query.includes('type=recovery') || hash.includes('access_token')) {
-      setIsReady(true)
+    const hasRecoveryToken = 
+      hash.includes('type=recovery') || 
+      query.includes('type=recovery') || 
+      hash.includes('token_hash=') || 
+      query.includes('token_hash=')
+
+    if (hasRecoveryToken) {
+      setIsAuthorized(true)
     } else {
-      // Also check if a session was already established via recovery
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session) {
-          setIsReady(true)
-        } else {
-          setError('Invalid or expired password reset link. Please request a new one.')
-        }
-      })
+      // If someone typed the URL manually without a token, redirect them away immediately
+      setError('Unauthorized access. Please use the secure link sent to your email.')
+      setTimeout(() => {
+        router.push('/')
+      }, 3000)
     }
-  }, [])
+  }, [router])
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -55,7 +59,7 @@ export default function UpdatePasswordPage() {
 
       setMessage('Password updated successfully! Redirecting to login...')
       setTimeout(() => {
-        supabase.auth.signOut() // Clear recovery session
+        supabase.auth.signOut()
         router.push('/')
       }, 2000)
     } catch (err: any) {
@@ -85,7 +89,7 @@ export default function UpdatePasswordPage() {
           </div>
         )}
 
-        {isReady ? (
+        {isAuthorized ? (
           <form onSubmit={handleUpdatePassword} className="space-y-4 text-xs">
             <div>
               <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">New Password</label>
@@ -121,7 +125,7 @@ export default function UpdatePasswordPage() {
           </form>
         ) : (
           <div className="text-center py-4">
-            <p className="text-xs text-slate-500">Verifying reset session...</p>
+            <p className="text-xs text-slate-500">Validating recovery link...</p>
           </div>
         )}
       </div>
