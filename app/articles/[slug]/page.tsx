@@ -103,7 +103,7 @@ export default function ArticlePage() {
         <div className="mt-16 p-8 rounded-3xl bg-indigo-50/70 border border-indigo-100 text-center space-y-4">
           <h3 className="text-xl font-bold text-slate-900">Ready to build your ATS-optimized resume?</h3>
           <p className="text-xs text-slate-600 max-w-lg mx-auto leading-relaxed">
-            Stop letting automated recruitment filters reject your applications. Use Cveate's guided wizard to generate a clean, recruiter-approved CV in minutes.
+            Stop letting automated recruitment filters reject your applications. Use Cveat's guided wizard to generate a clean, recruiter-approved CV in minutes.
           </p>
           <Link href="/onboard">
             <button className="rounded-xl bg-indigo-600 px-8 py-3.5 text-xs font-bold text-white shadow-md hover:bg-indigo-500 transition-all cursor-pointer inline-block">

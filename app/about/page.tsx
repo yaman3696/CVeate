@@ -22,10 +22,10 @@ export default function AboutPage() {
           <div className="space-y-4">
             <h2 className="text-2xl font-bold tracking-tight text-slate-900">When & Why We Started</h2>
             <p className="text-sm text-slate-600 leading-relaxed">
-              Cveate was founded out of a glaring industry reality: highly skilled, experienced professionals with years of corporate excellence were getting rejected instantly during job applications. 
+              Cveat was founded out of a glaring industry reality: highly skilled, experienced professionals with years of corporate excellence were getting rejected instantly during job applications. 
             </p>
             <p className="text-sm text-slate-600 leading-relaxed">
-              The culprit wasn't their lack of talent—it was Applicant Tracking Systems (ATS). Complex multi-column layouts, custom graphics, and unoptimized bullet points were causing corporate software to discard stellar resumes before a human recruiter ever saw them. We built Cveate to level the playing field.
+              The culprit wasn't their lack of talent—it was Applicant Tracking Systems (ATS). Complex multi-column layouts, custom graphics, and unoptimized bullet points were causing corporate software to discard stellar resumes before a human recruiter ever saw them. We built Cveat to level the playing field.
             </p>
           </div>
           <div className="rounded-2xl bg-indigo-50/50 border border-indigo-100 p-8 space-y-4">
@@ -38,7 +38,7 @@ export default function AboutPage() {
                 <span className="text-red-500 font-bold">✕</span> High-performing professionals struggle to translate daily impact into keyword-rich achievements.
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-indigo-600 font-bold">✓</span> Cveate bridges visual polish with rigid ATS compliance and instant PDF generation.
+                <span className="text-indigo-600 font-bold">✓</span> Cveat bridges visual polish with rigid ATS compliance and instant PDF generation.
               </li>
             </ul>
           </div>

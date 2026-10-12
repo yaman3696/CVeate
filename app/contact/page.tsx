@@ -24,7 +24,6 @@ export default function ContactPage() {
       return
     }
 
-    // Validate 10-digit phone number
     const phoneRegex = /^[0-9]{10}$/
     if (!phoneRegex.test(formData.phone)) {
       setError('Please enter a valid 10-digit contact number.')
@@ -33,12 +32,25 @@ export default function ContactPage() {
 
     setLoading(true)
 
-    // Simulate sending query to your designated support email (support@cveate.in)
-    // You can connect this to an API route (e.g. Resend, SendGrid, or Supabase Edge Function) later if needed.
-    setTimeout(() => {
-      setLoading(false)
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to submit form.')
+      }
+
       setSubmitted(true)
-    }, 800)
+    } catch (err: any) {
+      setError(err.message || 'Something went wrong. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   // Canvas Network Animation Effect
@@ -112,7 +124,6 @@ export default function ContactPage() {
   return (
     <div className="relative min-h-[calc(100vh-73px)] bg-slate-50 py-12 px-6 text-slate-900 flex flex-col justify-center overflow-hidden">
       
-      {/* Connected Network Canvas Background */}
       <canvas
         ref={canvasRef}
         className="absolute inset-0 pointer-events-none h-full w-full opacity-90"
@@ -120,7 +131,6 @@ export default function ContactPage() {
 
       <div className="relative z-10 mx-auto max-w-5xl w-full space-y-8">
         
-        {/* Top Header */}
         <div>
           <Link href="/" className="text-xs font-bold text-indigo-600 hover:underline">
             ← Back to Home
@@ -131,14 +141,13 @@ export default function ContactPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           
-          {/* Left Column: Query Form */}
           <div className="md:col-span-2 bg-white/95 backdrop-blur-md rounded-3xl border border-slate-200 p-8 shadow-sm">
             {submitted ? (
               <div className="py-12 text-center space-y-4">
                 <div className="h-16 w-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto text-2xl font-bold">✓</div>
                 <h3 className="text-xl font-bold text-slate-900">Message Sent Successfully!</h3>
                 <p className="text-xs text-slate-600 max-w-sm mx-auto">
-                  Thank you, <strong>{formData.name}</strong>. Your query has been forwarded to <strong>support@cveate.in</strong>. Our team will get back to you at <strong>{formData.email}</strong> within 24 hours.
+                  Thank you, <strong>{formData.name}</strong>. Your query has been forwarded to <strong>support@cveat.in</strong>. Our team will get back to you at <strong>{formData.email}</strong> within 24 hours.
                 </p>
                 <button
                   onClick={() => {
@@ -220,7 +229,6 @@ export default function ContactPage() {
             )}
           </div>
 
-          {/* Right Column: Office Address & Support Details */}
           <div className="bg-slate-900 text-white rounded-3xl p-8 shadow-xl flex flex-col justify-between space-y-6">
             <div className="space-y-6">
               <div>
@@ -232,7 +240,7 @@ export default function ContactPage() {
                 <div>
                   <strong className="block uppercase tracking-wider text-indigo-400 mb-1 text-[10px]">Office Address</strong>
                   <p className="text-slate-300 leading-relaxed">
-                    CVeate Headquarters<br />
+                    CVeat Headquarters<br />
                     Mayur Vihar Phase 1<br />
                     New Delhi, Delhi, 110001, India
                   </p>
@@ -245,7 +253,7 @@ export default function ContactPage() {
 
                 <div>
                   <strong className="block uppercase tracking-wider text-indigo-400 mb-1 text-[10px]">Email Support</strong>
-                  <p className="text-slate-300">support@cveate.in</p>
+                  <p className="text-slate-300">support@cveat.in</p>
                 </div>
               </div>
             </div>

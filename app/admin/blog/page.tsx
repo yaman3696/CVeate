@@ -53,7 +53,7 @@ export default function AdminBlogPage() {
 
   // Insert or wrap selected text with a hyperlink
   const insertLink = () => {
-    const url = prompt('Enter the link URL (e.g. https://cveate.com/onboard or /ats-checker):', 'https://')
+    const url = prompt('Enter the link URL (e.g. https://cveat.in/onboard or /ats-checker):', 'https://')
     if (!url) return
     document.execCommand('createLink', false, url)
   }
