@@ -772,7 +772,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
           <div className="space-y-4 md:col-span-1">
             <h3 className="text-xl font-black tracking-tight text-white">CVeat</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">Empowering experienced professionals to bypass automated ATS filters and land interviews faster.</p>
+            <p className="text-xs text-slate-400 leading-relaxed">Empowering experienced professionals to bypass automated ATS filters and land interviews faster. CVeat provides a free ATS resume scanning and optimization tool designed for job seekers.</p>
           </div>
           <div className="space-y-3">
             <h4 className="text-xs font-bold uppercase tracking-wider text-white">Navigation</h4>
