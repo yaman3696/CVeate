@@ -32,8 +32,7 @@ export async function POST(req: Request) {
 
       Task:
       1. Evaluate match score, strengths, weaknesses, and actionable suggestions.
-      2. Produce an "extractedProfile" containing the candidate's details. 
-      CRITICAL: In this extractedProfile, actively rewrite and optimize the summary, professional headline, work experience bullet points, and technical skills to explicitly incorporate the missing keywords and improvement suggestions identified for this job description so that the resulting CV is fully ATS-optimized.
+      2. Produce an "extractedProfile" containing the candidate's details optimized for this job description.
 
       Provide your evaluation in strict JSON format with the following keys:
       - "matchScore": number (percentage between 0 and 100)
@@ -43,7 +42,7 @@ export async function POST(req: Request) {
       - "suggestions": array of strings (3 actionable bullet points)
       - "extractedProfile": object containing:
         - "fullName": string
-        - "headline": string (optimized for the target job title)
+        - "headline": string
         - "email": string
         - "phone": string
         - "city": string
@@ -51,10 +50,10 @@ export async function POST(req: Request) {
         - "pincode": string
         - "linkedin": string
         - "portfolio": string
-        - "bio": string (optimized summary incorporating key JD skills)
-        - "experiences": array of objects, each having { "role": string, "company": string, "duration": string, "bullets": string (optimized achievement bullets with metrics/keywords) }
+        - "bio": string
+        - "experiences": array of objects, each having { "role": string, "company": string, "duration": string, "bullets": string }
         - "qualifications": array of objects, each having { "degree": string, "institution": string, "year": string }
-        - "technicalSkills": string (comma-separated, including newly integrated missing keywords)
+        - "technicalSkills": string
         - "softSkills": string
         - "hobbies": string
         - "languages": string
@@ -70,7 +69,7 @@ export async function POST(req: Request) {
       try {
         attempts++;
         response = await ai.models.generateContent({
-          model: 'gemini-3.5-flash',
+          model: 'gemini-3.8-flash', // Updated to latest stable high-capacity model
           contents: [
             {
               inlineData: {
@@ -86,7 +85,8 @@ export async function POST(req: Request) {
         break;
       } catch (err: any) {
         if (attempts >= maxAttempts) throw err;
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+        // Wait longer on each retry for high-demand spikes to clear
+        await new Promise((resolve) => setTimeout(resolve, 2500 * attempts));
       }
     }
 
@@ -99,7 +99,7 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error('Gemini ATS Multimodal Analysis Error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to analyze resume with Gemini AI.' },
+      { error: error.message || 'AI servers are experiencing high traffic. Please try again in a few moments.' },
       { status: 500 }
     );
   }

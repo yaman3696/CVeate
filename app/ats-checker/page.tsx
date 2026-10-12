@@ -370,6 +370,8 @@ export default function AtsCheckerPage() {
     window.location.href = '/'
   }
 
+  const [loadingProgress, setLoadingProgress] = useState(0)
+
   const handleAnalyze = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -394,9 +396,24 @@ export default function AtsCheckerPage() {
 
     setIsAnalyzing(true)
     setLoadingStep(1)
+    setLoadingProgress(15)
 
-    const timer1 = setTimeout(() => setLoadingStep(2), 1500)
-    const timer2 = setTimeout(() => setLoadingStep(3), 3200)
+    // Smooth progress simulation so the bar never gets stuck at 99% artificially
+    const progressInterval = setInterval(() => {
+      setLoadingProgress((prev) => {
+        if (prev < 40) {
+          setLoadingStep(1)
+          return prev + 10
+        } else if (prev < 75) {
+          setLoadingStep(2)
+          return prev + 8
+        } else if (prev < 90) {
+          setLoadingStep(3)
+          return prev + 3
+        }
+        return prev
+      })
+    }, 600)
 
     try {
       const newChances = profile.ats_chances_remaining - 1
@@ -418,8 +435,8 @@ export default function AtsCheckerPage() {
 
       const data = await res.json()
 
-      clearTimeout(timer1)
-      clearTimeout(timer2)
+      clearInterval(progressInterval)
+      setLoadingProgress(100)
 
       if (!res.ok) {
         throw new Error(data.error || 'Something went wrong during analysis.')
@@ -427,10 +444,12 @@ export default function AtsCheckerPage() {
 
       setAnalysisResult(data)
     } catch (err: any) {
+      clearInterval(progressInterval)
       alert(err.message || 'Failed to connect to CVeat AI backend.')
     } finally {
       setIsAnalyzing(false)
       setLoadingStep(0)
+      setLoadingProgress(0)
     }
   }
 
@@ -547,7 +566,7 @@ export default function AtsCheckerPage() {
       <div className="flex-grow flex items-center justify-center px-6 py-12 z-10">
         <div className="w-full max-w-3xl">
           
-          {isAnalyzing ? (
+        {isAnalyzing ? (
             <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-12 text-center text-white shadow-2xl space-y-8 my-auto">
               <div className="relative flex items-center justify-center py-6">
                 <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-400 to-pink-400 siri-orb flex items-center justify-center shadow-2xl">
@@ -558,7 +577,7 @@ export default function AtsCheckerPage() {
               </div>
 
               <div className="space-y-2">
-                <h2 className="text-xl font-bold tracking-tight">CVeat AI is scanning your resume</h2>
+                <h2 className="text-xl font-bold tracking-tight">CVeat AI is scanning your resume ({loadingProgress}%)</h2>
                 <p className="text-xs text-indigo-100 min-h-[20px]">
                   {loadingStep === 1 && 'Extracting text and layout layers from PDF...'}
                   {loadingStep === 2 && 'Comparing skills against target job description...'}
@@ -566,10 +585,10 @@ export default function AtsCheckerPage() {
                 </p>
               </div>
 
-              <div className="w-full bg-black/20 rounded-full h-1.5 overflow-hidden max-w-sm mx-auto">
+              <div className="w-full bg-black/25 rounded-full h-2 overflow-hidden max-w-sm mx-auto p-0.5">
                 <div 
-                  className="bg-gradient-to-r from-cyan-300 to-pink-300 h-full transition-all duration-700 rounded-full"
-                  style={{ width: loadingStep === 1 ? '35%' : loadingStep === 2 ? '70%' : '95%' }}
+                  className="bg-gradient-to-r from-cyan-300 to-pink-300 h-full transition-all duration-500 rounded-full"
+                  style={{ width: `${loadingProgress}%` }}
                 ></div>
               </div>
             </div>
