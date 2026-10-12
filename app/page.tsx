@@ -364,7 +364,7 @@ export default function LandingPage() {
             Craft Resumes That <span className="text-indigo-600">Beat ATS Bots</span> & Land Interviews.
           </h1>
           <p className="mt-6 text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
-            Build a professional, recruiter-approved CV in minutes with our guided 4-step wizard and export clean, ATS-ready PDFs instantly.
+            Build a FREE professional, recruiter-approved CV in minutes and export clean, ATS-ready PDFs instantly. No login required to create your CV.
           </p>
 
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
