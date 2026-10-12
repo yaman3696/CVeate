@@ -11,17 +11,24 @@ export default function UpdatePasswordPage() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [isReady, setIsReady] = useState(false)
 
-  // Listen for the password recovery session event
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        // User arrived via recovery link, ready to update password
-      }
-    })
+    // Check if the URL contains recovery tokens (Supabase appends them as a hash or query param)
+    const hash = window.location.hash
+    const query = window.location.search
 
-    return () => {
-      authListener.subscription.unsubscribe()
+    if (hash.includes('type=recovery') || query.includes('type=recovery') || hash.includes('access_token')) {
+      setIsReady(true)
+    } else {
+      // Also check if a session was already established via recovery
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+          setIsReady(true)
+        } else {
+          setError('Invalid or expired password reset link. Please request a new one.')
+        }
+      })
     }
   }, [])
 
@@ -48,6 +55,7 @@ export default function UpdatePasswordPage() {
 
       setMessage('Password updated successfully! Redirecting to login...')
       setTimeout(() => {
+        supabase.auth.signOut() // Clear recovery session
         router.push('/')
       }, 2000)
     } catch (err: any) {
@@ -77,39 +85,45 @@ export default function UpdatePasswordPage() {
           </div>
         )}
 
-        <form onSubmit={handleUpdatePassword} className="space-y-4 text-xs">
-          <div>
-            <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">New Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              placeholder="••••••••"
-              className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white"
-            />
-          </div>
+        {isReady ? (
+          <form onSubmit={handleUpdatePassword} className="space-y-4 text-xs">
+            <div>
+              <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">New Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                placeholder="••••••••"
+                className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white"
+              />
+            </div>
 
-          <div>
-            <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Confirm New Password</label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              placeholder="••••••••"
-              className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white"
-            />
-          </div>
+            <div>
+              <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Confirm New Password</label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                placeholder="••••••••"
+                className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white"
+              />
+            </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white shadow-md hover:bg-indigo-500 cursor-pointer disabled:opacity-50"
-          >
-            {loading ? 'Updating...' : 'Update Password'}
-          </button>
-        </form>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white shadow-md hover:bg-indigo-500 cursor-pointer disabled:opacity-50"
+            >
+              {loading ? 'Updating...' : 'Update Password'}
+            </button>
+          </form>
+        ) : (
+          <div className="text-center py-4">
+            <p className="text-xs text-slate-500">Verifying reset session...</p>
+          </div>
+        )}
       </div>
     </div>
   )
