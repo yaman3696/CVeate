@@ -47,21 +47,26 @@ export default function AtsCheckerPage() {
   // Sync Google Profile with name preservation logic
   const syncGoogleProfile = async (sessionUser: any) => {
     if (!sessionUser) return
+
     const { data: existingProfile } = await supabase
       .from('profiles')
-      .select('full_name')
+      .select('id, full_name, plan_name, ats_chances_remaining')
       .eq('id', sessionUser.id)
-      .single()
+      .maybeSingle()
 
     const googleName = sessionUser.user_metadata?.full_name || sessionUser.user_metadata?.name || ''
+    const contactNo = sessionUser.user_metadata?.contact_number || sessionUser.user_metadata?.phone || ''
 
     if (!existingProfile) {
       await supabase.from('profiles').upsert({
         id: sessionUser.id,
         email: sessionUser.email,
         full_name: googleName,
+        phone: contactNo,
+        contact_number: contactNo,
         plan_name: 'Freemium',
-        ats_chances_remaining: 2
+        ats_chances_remaining: 2,
+        ats_last_reset: new Date().toISOString()
       })
     } else if (!existingProfile.full_name && googleName) {
       await supabase.from('profiles')
@@ -153,61 +158,28 @@ export default function AtsCheckerPage() {
     }
   }, [authLoading])
 
-  // Check Session on Load, Verify Credits Timer, & Listen for Auth Changes
+  // Check Session on Load, Verify Credits Timer via Secure RPC, & Listen for Auth Changes
   useEffect(() => {
     const checkUserSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (session) {
         setUser(session.user)
-        syncGoogleProfile(session.user)
+        await syncGoogleProfile(session.user)
 
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
+        // Call the secure Supabase function to automatically evaluate and refresh credits & plan rules
+        const { data: refreshedProfile, error } = await supabase
+          .rpc('get_or_refresh_user_profile', { user_id: session.user.id })
 
-        if (profileData) {
-          const now = new Date().getTime()
-          const lastReset = profileData.ats_last_reset 
-            ? new Date(profileData.ats_last_reset).getTime() 
-            : now
-          const hoursElapsed = (now - lastReset) / (1000 * 60 * 60)
-          const daysElapsed = hoursElapsed / 24
+        if (!error && refreshedProfile && Array.isArray(refreshedProfile) && refreshedProfile.length > 0) {
+          setProfile(refreshedProfile[0])
+        } else {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single()
 
-          let updatedCredits = profileData.ats_chances_remaining
-          let updatedPlan = profileData.plan_name
-          let shouldUpdate = false
-
-          if (profileData.plan_name === 'Freemium' && hoursElapsed >= 24) {
-            updatedCredits = 2
-            shouldUpdate = true
-          } else if (profileData.plan_name === 'Daily Pass' && hoursElapsed >= 24) {
-            updatedCredits = 2
-            updatedPlan = 'Freemium'
-            shouldUpdate = true
-          } else if (profileData.plan_name === 'Monthly' && daysElapsed >= 30) {
-            updatedCredits = 2
-            updatedPlan = 'Freemium'
-            shouldUpdate = true
-          }
-
-          if (shouldUpdate) {
-            const { data: refreshedProfile } = await supabase
-              .from('profiles')
-              .update({
-                ats_chances_remaining: updatedCredits,
-                plan_name: updatedPlan,
-                ats_last_reset: new Date().toISOString()
-              })
-              .eq('id', session.user.id)
-              .select()
-              .single()
-
-            setProfile(refreshedProfile || profileData)
-          } else {
-            setProfile(profileData)
-          }
+          if (profileData) setProfile(profileData)
         }
       }
       setAuthLoading(false)
@@ -298,7 +270,8 @@ export default function AtsCheckerPage() {
             contact_number: contactNumber,
             phone: contactNumber,
             plan_name: 'Freemium',
-            ats_chances_remaining: 2
+            ats_chances_remaining: 2,
+            ats_last_reset: new Date().toISOString()
           })
         }
         setSuccessMessage('Account created successfully! Please check your email for verification.')
@@ -310,12 +283,12 @@ export default function AtsCheckerPage() {
           }
           throw error
         }
+        
         setSuccessMessage('Signed in successfully!')
         
-        const currentPath = window.location.pathname
         setTimeout(() => {
           setIsAuthOpen(false)
-          window.location.href = currentPath
+          window.location.reload()
         }, 800)
       }
     } catch (err: any) {
@@ -398,7 +371,6 @@ export default function AtsCheckerPage() {
     setLoadingStep(1)
     setLoadingProgress(15)
 
-    // Smooth progress simulation so the bar never gets stuck at 99% artificially
     const progressInterval = setInterval(() => {
       setLoadingProgress((prev) => {
         if (prev < 40) {
@@ -741,7 +713,7 @@ export default function AtsCheckerPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
           <div className="w-full max-w-sm rounded-3xl bg-white p-8 shadow-2xl border border-slate-100 text-center space-y-4 text-slate-900">
             <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto text-xl font-bold">
-              ℹ
+              !
             </div>
             <div className="space-y-1">
               <h3 className="text-lg font-bold text-slate-900">Authentication Required</h3>
@@ -773,7 +745,7 @@ export default function AtsCheckerPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
           <div className="w-full max-w-sm rounded-3xl bg-white p-8 shadow-2xl border border-slate-100 text-center space-y-4 text-slate-900">
             <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto text-xl font-bold">
-              ⚡
+              !
             </div>
             <div className="space-y-1">
               <h3 className="text-lg font-bold text-slate-900">ATS Check Chances Over!</h3>

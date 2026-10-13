@@ -56,23 +56,31 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
   // Sync profile data on login, preserving email signup names against Google OAuth overwrites
   const syncGoogleProfile = async (sessionUser: any) => {
     if (!sessionUser) return
+  
+    // Check if profile already exists
     const { data: existingProfile } = await supabase
       .from('profiles')
-      .select('full_name')
+      .select('id, full_name, plan_name, ats_chances_remaining')
       .eq('id', sessionUser.id)
-      .single()
-
+      .maybeSingle()
+  
     const googleName = sessionUser.user_metadata?.full_name || sessionUser.user_metadata?.name || ''
-
+    const contactNo = sessionUser.user_metadata?.contact_number || sessionUser.user_metadata?.phone || ''
+  
     if (!existingProfile) {
+      // Insert fresh record matching your exact schema columns
       await supabase.from('profiles').upsert({
         id: sessionUser.id,
         email: sessionUser.email,
         full_name: googleName,
+        phone: contactNo,
+        contact_number: contactNo,
         plan_name: 'Freemium',
-        ats_chances_remaining: 2
+        ats_chances_remaining: 2,
+        ats_last_reset: new Date().toISOString()
       })
     } else if (!existingProfile.full_name && googleName) {
+      // Preserve custom name if Google name is newer/available
       await supabase.from('profiles')
         .update({ full_name: googleName })
         .eq('id', sessionUser.id)
