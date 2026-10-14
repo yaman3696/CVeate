@@ -30,8 +30,6 @@ export default function InterviewPrepPage() {
   
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
-  const audioChunksRef = useRef<Blob[]>([])
   const recognitionRef = useRef<any>(null)
 
   const [evaluating, setEvaluating] = useState(false)
@@ -105,77 +103,76 @@ export default function InterviewPrepPage() {
     utterance.onstart = () => setIsSpeaking(true)
     utterance.onend = () => {
       setIsSpeaking(false)
-      startRecording()
     }
     window.speechSynthesis.speak(utterance)
   }
 
-  const startRecording = async () => {
-    audioChunksRef.current = []
-
-    // Live speech-to-text recognition
+  // Robust live speech-to-text initialization using webkitSpeechRecognition
+  const startLiveSpeechRecognition = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-    if (SpeechRecognition) {
-      try {
-        const recognition = new SpeechRecognition()
-        recognition.continuous = true
-        recognition.interimResults = true
-        recognition.lang = 'en-US'
+    if (!SpeechRecognition) {
+      alert('Speech Recognition is not supported in this browser. Please use Google Chrome.')
+      return
+    }
 
-        recognition.onresult = (event: any) => {
-          let interimTranscript = ''
-          let finalTranscript = ''
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop() } catch (e) {}
+    }
 
-          for (let i = event.resultIndex; i < event.results.length; ++i) {
-            if (event.results[i].isFinal) {
-              finalTranscript += event.results[i][0].transcript
-            } else {
-              interimTranscript += event.results[i][0].transcript
-            }
-          }
+    const recognition = new SpeechRecognition()
+    recognition.continuous = true
+    recognition.interimResults = true
+    recognition.lang = 'en-US'
 
-          if (finalTranscript || interimTranscript) {
-            setCurrentAnswer(prev => {
-              const base = prev.replace(/[Voice Answer Recorded]/g, '').trim()
-              return (base ? base + ' ' : '') + (finalTranscript || interimTranscript)
-            })
-          }
+    recognition.onstart = () => {
+      setIsRecording(true)
+    }
+
+    recognition.onresult = (event: any) => {
+      let interimTranscript = ''
+      let finalTranscript = ''
+
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript
+        } else {
+          interimTranscript += event.results[i][0].transcript
         }
-
-        recognition.start()
-        recognitionRef.current = recognition
-      } catch (err) {
-        console.log('Speech recognition start error:', err)
       }
+
+      if (finalTranscript || interimTranscript) {
+        setCurrentAnswer(prev => {
+          const base = prev.trim()
+          return (base ? base + ' ' : '') + (finalTranscript || interimTranscript)
+        })
+      }
+    }
+
+    recognition.onerror = (event: any) => {
+      console.warn('Speech recognition error:', event.error)
+    }
+
+    recognition.onend = () => {
+      setIsRecording(false)
     }
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const mediaRecorder = new MediaRecorder(stream)
-      mediaRecorderRef.current = mediaRecorder
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) audioChunksRef.current.push(event.data)
-      }
-      mediaRecorder.start()
-      setIsRecording(true)
+      recognition.start()
+      recognitionRef.current = recognition
     } catch (err) {
-      console.log('Mic note: ', err)
+      console.error('Could not start recognition:', err)
+      setIsRecording(false)
     }
   }
 
-  const stopRecording = () => {
+  const stopLiveSpeechRecognition = () => {
     if (recognitionRef.current) {
       try {
         recognitionRef.current.stop()
       } catch (e) {}
       recognitionRef.current = null
     }
-
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop()
-      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop())
-      setIsRecording(false)
-    }
+    setIsRecording(false)
   }
 
   useEffect(() => {
@@ -184,6 +181,9 @@ export default function InterviewPrepPage() {
     }
     return () => {
       if ('speechSynthesis' in window) window.speechSynthesis.cancel()
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop() } catch (e) {}
+      }
     }
   }, [currentIndex, questions])
 
@@ -209,12 +209,12 @@ export default function InterviewPrepPage() {
       canvas.style.height = `${height}px`
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
 
-      const particles = Array.from({ length: 55 }, () => ({
+      const particles = Array.from({ length: 60 }, () => ({
         x: Math.random() * width,
         y: Math.random() * height,
-        vx: (Math.random() - 0.5) * 0.8,
-        vy: (Math.random() - 0.5) * 0.8,
-        radius: Math.random() * 1.8 + 1,
+        vx: (Math.random() - 0.5) * 1.0,
+        vy: (Math.random() - 0.5) * 1.0,
+        radius: Math.random() * 2 + 1,
       }))
 
       const animate = () => {
@@ -226,9 +226,9 @@ export default function InterviewPrepPage() {
             const dx = particles[i].x - particles[j].x
             const dy = particles[i].y - particles[j].y
             const dist = Math.sqrt(dx * dx + dy * dy)
-            if (dist < 130) {
-              ctx.strokeStyle = `rgba(99, 102, 241, ${0.25 * (1 - dist / 130)})`
-              ctx.lineWidth = 1
+            if (dist < 140) {
+              ctx.strokeStyle = `rgba(99, 102, 241, ${0.35 * (1 - dist / 140)})`
+              ctx.lineWidth = 1.2
               ctx.beginPath()
               ctx.moveTo(particles[i].x, particles[i].y)
               ctx.lineTo(particles[j].x, particles[j].y)
@@ -243,7 +243,7 @@ export default function InterviewPrepPage() {
           if (p.x < 0 || p.x > width) p.vx *= -1
           if (p.y < 0 || p.y > height) p.vy *= -1
 
-          ctx.fillStyle = 'rgba(99, 102, 241, 0.6)'
+          ctx.fillStyle = 'rgba(99, 102, 241, 0.7)'
           ctx.beginPath()
           ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2)
           ctx.fill()
@@ -380,7 +380,7 @@ export default function InterviewPrepPage() {
   }
 
   const handleNextOrSkipQuestion = (isSkipped = false) => {
-    if (isRecording) stopRecording()
+    if (isRecording) stopLiveSpeechRecognition()
     if ('speechSynthesis' in window) window.speechSynthesis.cancel()
 
     const updatedAnswers = [...userAnswers]
@@ -396,6 +396,7 @@ export default function InterviewPrepPage() {
   }
 
   const evaluateInterviewTranscript = async (finalAnswers: string[]) => {
+    if (isRecording) stopLiveSpeechRecognition()
     setEvaluating(true)
     try {
       const { data: { session } } = await supabase.auth.getSession()
@@ -451,8 +452,8 @@ export default function InterviewPrepPage() {
   if (authLoading) return <div className="min-h-screen flex items-center justify-center text-slate-600">Verifying session...</div>
 
   return (
-    <div className="min-h-screen bg-transparent text-slate-900 relative overflow-hidden flex flex-col">
-      <canvas ref={canvasRef} className="fixed inset-0 w-full h-full pointer-events-none z-0" />
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-indigo-50/20 to-slate-100 text-slate-900 relative overflow-hidden flex flex-col">
+      <canvas ref={canvasRef} className="fixed inset-0 w-full h-full pointer-events-none z-0 opacity-90" />
 
       <style jsx>{`
         @keyframes siriPulse {
@@ -465,18 +466,18 @@ export default function InterviewPrepPage() {
 
       <div className="flex-grow z-10 max-w-6xl mx-auto px-6 py-16 w-full">
 
-        {/* TOP BACK BUTTON FOR ACTIVE INTERVIEW OR RESULTS */}
+        {/* TOP BACK BUTTON */}
         {(questions.length > 0 || interviewResult) && !generating && !evaluating && (
           <div className="mb-6">
             <button
               onClick={() => {
-                if (isRecording) stopRecording()
+                if (isRecording) stopLiveSpeechRecognition()
                 if ('speechSynthesis' in window) window.speechSynthesis.cancel()
                 setQuestions([])
                 setInterviewResult(null)
                 setSelectedCategory('')
               }}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white/90 backdrop-blur-sm px-4 py-2 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-all cursor-pointer"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white/95 backdrop-blur-md px-4 py-2 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-all cursor-pointer"
             >
               ← Back to Categories
             </button>
@@ -486,7 +487,7 @@ export default function InterviewPrepPage() {
         {!generating && questions.length === 0 && !interviewResult && (
           <div className="space-y-16">
             <div className="text-center space-y-4 max-w-3xl mx-auto">
-              <span className="inline-block rounded-full bg-indigo-50 px-4 py-1 text-xs font-bold uppercase tracking-wider text-indigo-600 border border-indigo-100">
+              <span className="inline-block rounded-full bg-indigo-50 px-4 py-1 text-xs font-bold uppercase tracking-wider text-indigo-600 border border-indigo-100 shadow-sm">
                 AI Career Companion
               </span>
               <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-6xl sm:leading-tight">
@@ -506,7 +507,7 @@ export default function InterviewPrepPage() {
                   <button
                     key={cat.tag}
                     onClick={() => handleCategorySelect(cat.name)}
-                    className="group rounded-2xl border border-slate-200 bg-white/90 backdrop-blur-md p-6 shadow-sm hover:border-indigo-600 hover:shadow-md transition-all text-left flex items-center gap-4 cursor-pointer"
+                    className="group rounded-2xl border border-slate-200/80 bg-white/95 backdrop-blur-md p-6 shadow-md hover:border-indigo-600 hover:shadow-xl transition-all text-left flex items-center gap-4 cursor-pointer"
                   >
                     <span className="p-3 rounded-xl border border-slate-100 bg-slate-50 group-hover:scale-105 transition-transform">
                       {cat.icon}
@@ -579,7 +580,7 @@ export default function InterviewPrepPage() {
                 {!isRecording ? (
                   <button
                     type="button"
-                    onClick={startRecording}
+                    onClick={startLiveSpeechRecognition}
                     className="inline-flex items-center gap-1.5 rounded-lg bg-red-50 border border-red-200 px-3 py-1 text-xs font-bold text-red-600 hover:bg-red-100 transition-all cursor-pointer"
                   >
                     <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse"></span>
@@ -588,10 +589,10 @@ export default function InterviewPrepPage() {
                 ) : (
                   <button
                     type="button"
-                    onClick={stopRecording}
+                    onClick={stopLiveSpeechRecognition}
                     className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-1 text-xs font-bold text-white hover:bg-slate-800 transition-all cursor-pointer"
                   >
-                    Stop Recording
+                    Stop Listening
                   </button>
                 )}
               </div>
