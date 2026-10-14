@@ -432,6 +432,7 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
                 <Link href="/blog" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-indigo-200 transition-colors py-1.5">Blog</Link>
                 <Link href="/pricing" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-indigo-200 transition-colors py-1.5">Pricing</Link>
                 <Link href="/ats-checker" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-indigo-200 transition-colors py-1.5">ATS Checker</Link>
+                <Link href="/interview-prep" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-indigo-200 transition-colors py-1.5">Interview-Prep</Link>
               </div>
             </div>
           )}
