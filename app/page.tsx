@@ -337,6 +337,32 @@ export default function LandingPage() {
     }
   }, [])
 
+  // FAQ Accordion State
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null)
+
+  const faqs = [
+    {
+      question: 'What is an ATS optimized resume and why do I need one?',
+      answer: 'An Applicant Tracking System is software used by corporate recruiters to automatically scan, parse, and rank job applications before a human ever reads them. If your resume contains heavy graphic design elements, multi column layouts, or missing keyword terms, the software will filter you out automatically. Cveat formats your career details into clean structured layouts that pass corporate filters seamlessly.'
+    },
+    {
+      question: 'Can I build and download my resume for free on Cveat?',
+      answer: 'Yes. You can use our guided 4 step resume builder completely free without any mandatory login or hidden paywalls. When you finish, you can instantly export your document into a professional PDF that prints cleanly and maintains strict typographic standards.'
+    },
+    {
+      question: 'How does the AI ATS resume checker work?',
+      answer: 'Our AI scanner allows you to paste any target job description and upload your resume document. It evaluates your skills against the job requirements, detects missing critical keywords, calculates your recruiter match score, and gives you a step by step optimization plan.'
+    },
+    {
+      question: 'How do the free daily check credits renew?',
+      answer: 'Every user starts on our Freemium plan with 2 free ATS check credits that automatically refresh every 24 hours. If you upgrade to a Daily Pass or Monthly Pass, your credits are scaled accordingly and will safely transition back to your standard freemium limits once your pass duration ends.'
+    },
+    {
+      question: 'Is my personal data and resume content secure?',
+      answer: 'Your privacy and data security are our top priorities. All data transmitted through Cveat is encrypted, stored securely in database profiles, and never sold or shared with third party advertisers or recruiters without your explicit permission.'
+    }
+  ]
+
   return (
     <div className="min-h-screen bg-white text-slate-900">
       <style jsx>{`
@@ -714,6 +740,48 @@ export default function LandingPage() {
           </div>
         </div>
       )}
+
+      {/* SEO Optimized FAQ Section */}
+      <section className="mx-auto max-w-4xl px-6 py-20 border-t border-slate-100">
+        <div className="text-center space-y-3 mb-12">
+          <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
+            Got Questions
+          </span>
+          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+            Frequently Asked Questions
+          </h2>
+          <p className="text-sm text-slate-600 max-w-lg mx-auto">
+            Everything you need to know about our resume builder, AI ATS checker, and credit plans.
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          {faqs.map((faq, index) => {
+            const isOpen = openFaqIndex === index
+            return (
+              <div 
+                key={index}
+                className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm transition-all"
+              >
+                <button
+                  onClick={() => setOpenFaqIndex(isOpen ? null : index)}
+                  className="w-full flex items-center justify-between p-6 text-left font-bold text-slate-900 hover:text-indigo-600 transition-colors cursor-pointer"
+                >
+                  <span className="text-base">{faq.question}</span>
+                  <span className={`transform transition-transform duration-300 text-indigo-600 font-bold text-lg ${isOpen ? 'rotate-45' : ''}`}>
+                    +
+                  </span>
+                </button>
+                {isOpen && (
+                  <div className="px-6 pb-6 text-sm text-slate-600 leading-relaxed border-t border-slate-50 pt-4">
+                    {faq.answer}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </section>
 
       {/* Blog Section with Dynamic Supabase Articles */}
       <section id="blog" className="mx-auto max-w-6xl px-6 py-20 border-t border-slate-100">
