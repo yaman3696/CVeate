@@ -4,11 +4,6 @@ import { createClient } from '@supabase/supabase-js'
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
 async function generateWithFallback(prompt: string, retries = 3, delay = 2000): Promise<string> {
   const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash']
   
@@ -36,7 +31,11 @@ async function generateWithFallback(prompt: string, retries = 3, delay = 2000): 
 export async function POST(request: Request) {
   try {
     const authHeader = request.headers.get('authorization')
-    if (authHeader) {
+    if (authHeader && process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      const supabaseAdmin = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+      )
       const token = authHeader.replace('Bearer ', '')
       const { data: { user } } = await supabaseAdmin.auth.getUser(token)
       if (user) {
