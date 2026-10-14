@@ -4,11 +4,11 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { useSpeechRecognition, useSpeechSynthesis } from '@/hooks/useSpeech'
 
 export default function InterviewPrepPage() {
   const router = useRouter()
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
-  const waveformCanvasRef = useRef<HTMLCanvasElement | null>(null)
 
   const [user, setUser] = useState<any>(null)
   const [authLoading, setAuthLoading] = useState(true)
@@ -27,15 +27,17 @@ export default function InterviewPrepPage() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [userAnswers, setUserAnswers] = useState<string[]>([])
   const [currentAnswer, setCurrentAnswer] = useState('')
-  
-  const [isSpeaking, setIsSpeaking] = useState(false)
-  const [isRecording, setIsRecording] = useState(false)
-  const recognitionRef = useRef<any>(null)
 
   const [evaluating, setEvaluating] = useState(false)
   const [interviewResult, setInterviewResult] = useState<any>(null)
   const [saving, setSaving] = useState(false)
   const [savedSuccess, setSavedSuccess] = useState(false)
+
+  // Speech hooks for TTS and live STT
+  const { speaking, speak, cancel: cancelSpeech } = useSpeechSynthesis()
+  const { listening, error: speechError, start: startSpeech, stop: stopSpeech, abort: abortSpeech } = useSpeechRecognition((text) => {
+    setCurrentAnswer(text)
+  })
 
   const professionCategories = [
     { 
@@ -96,98 +98,7 @@ export default function InterviewPrepPage() {
 
   const seniorityOptions = ['Internship', 'Junior', 'Intermediate', 'Senior', 'Team Lead', 'Manager', 'HOD']
 
-  const speakQuestion = (text: string) => {
-    if (!('speechSynthesis' in window)) return
-    window.speechSynthesis.cancel()
-    const utterance = new SpeechSynthesisUtterance(text)
-    utterance.onstart = () => setIsSpeaking(true)
-    utterance.onend = () => {
-      setIsSpeaking(false)
-    }
-    window.speechSynthesis.speak(utterance)
-  }
-
-  // Robust live speech-to-text initialization using webkitSpeechRecognition
-  const startLiveSpeechRecognition = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-    if (!SpeechRecognition) {
-      alert('Speech Recognition is not supported in this browser. Please use Google Chrome.')
-      return
-    }
-
-    if (recognitionRef.current) {
-      try { recognitionRef.current.stop() } catch (e) {}
-    }
-
-    const recognition = new SpeechRecognition()
-    recognition.continuous = true
-    recognition.interimResults = true
-    recognition.lang = 'en-US'
-
-    recognition.onstart = () => {
-      setIsRecording(true)
-    }
-
-    recognition.onresult = (event: any) => {
-      let interimTranscript = ''
-      let finalTranscript = ''
-
-      for (let i = event.resultIndex; i < event.results.length; ++i) {
-        if (event.results[i].isFinal) {
-          finalTranscript += event.results[i][0].transcript
-        } else {
-          interimTranscript += event.results[i][0].transcript
-        }
-      }
-
-      if (finalTranscript || interimTranscript) {
-        setCurrentAnswer(prev => {
-          const base = prev.trim()
-          return (base ? base + ' ' : '') + (finalTranscript || interimTranscript)
-        })
-      }
-    }
-
-    recognition.onerror = (event: any) => {
-      console.warn('Speech recognition error:', event.error)
-    }
-
-    recognition.onend = () => {
-      setIsRecording(false)
-    }
-
-    try {
-      recognition.start()
-      recognitionRef.current = recognition
-    } catch (err) {
-      console.error('Could not start recognition:', err)
-      setIsRecording(false)
-    }
-  }
-
-  const stopLiveSpeechRecognition = () => {
-    if (recognitionRef.current) {
-      try {
-        recognitionRef.current.stop()
-      } catch (e) {}
-      recognitionRef.current = null
-    }
-    setIsRecording(false)
-  }
-
-  useEffect(() => {
-    if (questions.length > 0 && currentIndex < questions.length) {
-      speakQuestion(questions[currentIndex])
-    }
-    return () => {
-      if ('speechSynthesis' in window) window.speechSynthesis.cancel()
-      if (recognitionRef.current) {
-        try { recognitionRef.current.stop() } catch (e) {}
-      }
-    }
-  }, [currentIndex, questions])
-
-  // Canvas Network Background Animation Effect
+  // Exact Dotted Network Particle Animation Effect from Pricing Page[cite: 15]
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -195,83 +106,84 @@ export default function InterviewPrepPage() {
     if (!ctx) return
 
     let animationFrameId: number
-    let running = true
+    let width = (canvas.width = canvas.offsetWidth)
+    let height = (canvas.height = canvas.offsetHeight)
 
-    const initCanvas = () => {
-      if (!running || !canvas) return
-      const width = window.innerWidth
-      const height = window.innerHeight
-      const dpr = window.devicePixelRatio || 1
-
-      canvas.width = width * dpr
-      canvas.height = height * dpr
-      canvas.style.width = `${width}px`
-      canvas.style.height = `${height}px`
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-
-      const particles = Array.from({ length: 60 }, () => ({
-        x: Math.random() * width,
-        y: Math.random() * height,
-        vx: (Math.random() - 0.5) * 1.0,
-        vy: (Math.random() - 0.5) * 1.0,
-        radius: Math.random() * 2 + 1,
-      }))
-
-      const animate = () => {
-        if (!running) return
-        ctx.clearRect(0, 0, width, height)
-
-        for (let i = 0; i < particles.length; i++) {
-          for (let j = i + 1; j < particles.length; j++) {
-            const dx = particles[i].x - particles[j].x
-            const dy = particles[i].y - particles[j].y
-            const dist = Math.sqrt(dx * dx + dy * dy)
-            if (dist < 140) {
-              ctx.strokeStyle = `rgba(99, 102, 241, ${0.35 * (1 - dist / 140)})`
-              ctx.lineWidth = 1.2
-              ctx.beginPath()
-              ctx.moveTo(particles[i].x, particles[i].y)
-              ctx.lineTo(particles[j].x, particles[j].y)
-              ctx.stroke()
-            }
-          }
-        }
-
-        particles.forEach((p) => {
-          p.x += p.vx
-          p.y += p.vy
-          if (p.x < 0 || p.x > width) p.vx *= -1
-          if (p.y < 0 || p.y > height) p.vy *= -1
-
-          ctx.fillStyle = 'rgba(99, 102, 241, 0.7)'
-          ctx.beginPath()
-          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2)
-          ctx.fill()
-        })
-
-        animationFrameId = requestAnimationFrame(animate)
-      }
-
-      animate()
+    const handleResize = () => {
+      if (!canvas) return
+      width = canvas.width = canvas.offsetWidth
+      height = canvas.height = canvas.offsetHeight
     }
-
-    initCanvas()
-    const handleResize = () => { initCanvas() }
     window.addEventListener('resize', handleResize)
 
+    const particles = Array.from({ length: 25 }, () => ({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      vx: (Math.random() - 0.5) * 0.5,
+      vy: (Math.random() - 0.5) * 0.5,
+      radius: Math.random() * 2 + 1.5,
+    }))
+
+    const render = () => {
+      ctx.clearRect(0, 0, width, height)
+
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x
+          const dy = particles[i].y - particles[j].y
+          const dist = Math.sqrt(dx * dx + dy * dy)
+          if (dist < 120) {
+            ctx.strokeStyle = `rgba(99, 102, 241, ${0.15 * (1 - dist / 120)})`
+            ctx.lineWidth = 1
+            ctx.beginPath()
+            ctx.moveTo(particles[i].x, particles[i].y)
+            ctx.lineTo(particles[j].x, particles[j].y)
+            ctx.stroke()
+          }
+        }
+      }
+
+      particles.forEach((p) => {
+        p.x += p.vx
+        p.y += p.vy
+        if (p.x < 0 || p.x > width) p.vx *= -1
+        if (p.y < 0 || p.y > height) p.vy *= -1
+
+        ctx.fillStyle = 'rgba(99, 102, 241, 0.3)'
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2)
+        ctx.fill()
+      })
+
+      animationFrameId = requestAnimationFrame(render)
+    }
+
+    render()
+
     return () => {
-      running = false
-      cancelAnimationFrame(animationFrameId)
       window.removeEventListener('resize', handleResize)
+      cancelAnimationFrame(animationFrameId)
     }
   }, [])
+
+  // Speak question and automatically initiate listening when active
+  useEffect(() => {
+    if (questions.length > 0 && currentIndex < questions.length) {
+      speak(questions[currentIndex], () => {
+        startSpeech(currentAnswer)
+      })
+    }
+    return () => {
+      cancelSpeech()
+      abortSpeech()
+    }
+  }, [currentIndex, questions])
 
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (session) {
         setUser(session.user)
-
         const { data: profileData } = await supabase
           .from('profiles')
           .select('*')
@@ -320,15 +232,12 @@ export default function InterviewPrepPage() {
   const handleCategorySelect = (categoryName: string) => {
     if (!user) {
       const globalAuthBtn = document.querySelector('nav button') as HTMLButtonElement
-      if (globalAuthBtn) {
-        globalAuthBtn.click()
-      } else {
-        alert('Please sign in using the top navigation bar to start mock interviews.')
-      }
+      if (globalAuthBtn) globalAuthBtn.click()
+      else router.push('/ats-checker')
       return
     }
 
-    const isOwnerOrAdmin = user?.email === 'yaman.kashyap@gmail.com' || profile?.role === 'admin' || profile?.role === '`admin`'
+    const isOwnerOrAdmin = user?.email === process.env.NEXT_PUBLIC_OWNER_EMAIL || profile?.role === 'admin' || profile?.role === '`admin`'
     const hasPaidPass = profile?.plan_name === 'Daily Pass' || profile?.plan_name === 'Monthly'
 
     if (!isOwnerOrAdmin && !hasPaidPass) {
@@ -379,12 +288,12 @@ export default function InterviewPrepPage() {
     }
   }
 
-  const handleNextOrSkipQuestion = (isSkipped = false) => {
-    if (isRecording) stopLiveSpeechRecognition()
-    if ('speechSynthesis' in window) window.speechSynthesis.cancel()
+  const handleNextOrSkipQuestion = async (isSkipped = false) => {
+    cancelSpeech()
+    const finalTxt = await stopSpeech()
 
     const updatedAnswers = [...userAnswers]
-    updatedAnswers[currentIndex] = isSkipped ? '[Skipped]' : currentAnswer
+    updatedAnswers[currentIndex] = isSkipped ? '[Skipped]' : (finalTxt ?? currentAnswer)
     setUserAnswers(updatedAnswers)
 
     if (currentIndex < questions.length - 1) {
@@ -396,8 +305,10 @@ export default function InterviewPrepPage() {
   }
 
   const evaluateInterviewTranscript = async (finalAnswers: string[]) => {
-    if (isRecording) stopLiveSpeechRecognition()
+    cancelSpeech()
+    await stopSpeech()
     setEvaluating(true)
+
     try {
       const { data: { session } } = await supabase.auth.getSession()
       const token = session?.access_token
@@ -452,8 +363,12 @@ export default function InterviewPrepPage() {
   if (authLoading) return <div className="min-h-screen flex items-center justify-center text-slate-600">Verifying session...</div>
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-indigo-50/20 to-slate-100 text-slate-900 relative overflow-hidden flex flex-col">
-      <canvas ref={canvasRef} className="fixed inset-0 w-full h-full pointer-events-none z-0 opacity-90" />
+    <div className="min-h-screen bg-slate-50 py-16 px-6 text-slate-900 flex flex-col justify-center relative overflow-hidden">
+      {/* Dotted Network Canvas Background from Pricing Page[cite: 15] */}
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 pointer-events-none h-full w-full opacity-60 z-0"
+      />
 
       <style jsx>{`
         @keyframes siriPulse {
@@ -464,15 +379,15 @@ export default function InterviewPrepPage() {
         .siri-orb { animation: siriPulse 2.8s infinite cubic-bezier(0.4, 0, 0.6, 1); }
       `}</style>
 
-      <div className="flex-grow z-10 max-w-6xl mx-auto px-6 py-16 w-full">
+      <div className="mx-auto max-w-6xl w-full space-y-12 relative z-10">
 
-        {/* TOP BACK BUTTON */}
+        {/* TOP BACK NAVIGATION BUTTON */}
         {(questions.length > 0 || interviewResult) && !generating && !evaluating && (
           <div className="mb-6">
             <button
               onClick={() => {
-                if (isRecording) stopLiveSpeechRecognition()
-                if ('speechSynthesis' in window) window.speechSynthesis.cancel()
+                cancelSpeech()
+                abortSpeech()
                 setQuestions([])
                 setInterviewResult(null)
                 setSelectedCategory('')
@@ -487,7 +402,7 @@ export default function InterviewPrepPage() {
         {!generating && questions.length === 0 && !interviewResult && (
           <div className="space-y-16">
             <div className="text-center space-y-4 max-w-3xl mx-auto">
-              <span className="inline-block rounded-full bg-indigo-50 px-4 py-1 text-xs font-bold uppercase tracking-wider text-indigo-600 border border-indigo-100 shadow-sm">
+              <span className="inline-block rounded-full bg-indigo-50 px-4 py-1 text-xs font-bold uppercase tracking-wider text-indigo-600 border border-indigo-100">
                 AI Career Companion
               </span>
               <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-6xl sm:leading-tight">
@@ -507,7 +422,7 @@ export default function InterviewPrepPage() {
                   <button
                     key={cat.tag}
                     onClick={() => handleCategorySelect(cat.name)}
-                    className="group rounded-2xl border border-slate-200/80 bg-white/95 backdrop-blur-md p-6 shadow-md hover:border-indigo-600 hover:shadow-xl transition-all text-left flex items-center gap-4 cursor-pointer"
+                    className="group rounded-2xl border border-slate-200 bg-white/90 backdrop-blur-sm p-6 shadow-sm hover:border-indigo-600 hover:shadow-md transition-all text-left flex items-center gap-4 cursor-pointer"
                   >
                     <span className="p-3 rounded-xl border border-slate-100 bg-slate-50 group-hover:scale-105 transition-transform">
                       {cat.icon}
@@ -538,14 +453,14 @@ export default function InterviewPrepPage() {
               </div>
               <div className="space-y-2">
                 <h2 className="text-xl font-bold text-slate-900">CVeat AI is generating your interview questions...</h2>
-                <p className="text-xs text-slate-500">Tailoring technical and behavioral questions to your experience level.</p>
+                <p className="text-xs text-slate-500">Tailoring questions to your seniority and experience.</p>
               </div>
             </div>
           </div>
         )}
 
         {!generating && questions.length > 0 && !interviewResult && (
-          <div className="max-w-3xl mx-auto bg-white/95 backdrop-blur-md rounded-3xl p-8 sm:p-10 shadow-2xl border border-slate-100 space-y-6">
+          <div className="max-w-3xl mx-auto bg-white/95 backdrop-blur-sm rounded-3xl p-8 sm:p-10 shadow-2xl border border-slate-100 space-y-6">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-3 py-1 rounded-md">
                 Question {currentIndex + 1} of {questions.length} ({selectedCategory})
@@ -555,17 +470,14 @@ export default function InterviewPrepPage() {
 
             <div className="rounded-2xl bg-slate-900 p-6 text-center text-white space-y-3 relative overflow-hidden shadow-inner">
               <div className="flex items-center justify-center gap-2">
-                <span className={`h-2.5 w-2.5 rounded-full ${isSpeaking ? 'bg-indigo-400 animate-ping' : (isRecording ? 'bg-red-500 animate-pulse' : 'bg-slate-500')}`}></span>
+                <span className={`h-2.5 w-2.5 rounded-full ${speaking ? 'bg-indigo-400 animate-ping' : (listening ? 'bg-red-500 animate-pulse' : 'bg-slate-500')}`}></span>
                 <span className="text-xs font-bold uppercase tracking-widest text-slate-300">
-                  {isSpeaking ? 'CVeat AI Speaking...' : (isRecording ? 'Listening & Transcribing Live...' : 'Ready / Paused')}
+                  {speaking ? 'CVeat AI Speaking...' : (listening ? 'Listening Live...' : 'Ready / Paused')}
                 </span>
-              </div>
-              <div className="h-16 flex items-center justify-center">
-                <canvas ref={waveformCanvasRef} width={500} height={60} className="w-full max-w-md h-12" />
               </div>
               <button
                 type="button"
-                onClick={() => speakQuestion(questions[currentIndex])}
+                onClick={() => speak(questions[currentIndex])}
                 className="text-xs font-semibold text-indigo-300 hover:text-white transition-colors cursor-pointer"
               >
                 [ Replay Question Audio ]
@@ -574,25 +486,29 @@ export default function InterviewPrepPage() {
 
             <h2 className="text-lg font-bold text-slate-900 leading-snug">{questions[currentIndex]}</h2>
 
+            {speechError && (
+              <p className="text-xs text-red-500 bg-red-50 p-3 rounded-xl border border-red-200">{speechError}</p>
+            )}
+
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">Your Answer (Live Transcribed)</label>
-                {!isRecording ? (
+                {!listening ? (
                   <button
                     type="button"
-                    onClick={startLiveSpeechRecognition}
+                    onClick={() => startSpeech(currentAnswer)}
                     className="inline-flex items-center gap-1.5 rounded-lg bg-red-50 border border-red-200 px-3 py-1 text-xs font-bold text-red-600 hover:bg-red-100 transition-all cursor-pointer"
                   >
                     <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse"></span>
-                    Start Live Speech-to-Text
+                    Resume Listening
                   </button>
                 ) : (
                   <button
                     type="button"
-                    onClick={stopLiveSpeechRecognition}
+                    onClick={async () => { await stopSpeech() }}
                     className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-1 text-xs font-bold text-white hover:bg-slate-800 transition-all cursor-pointer"
                   >
-                    Stop Listening
+                    Pause Listening
                   </button>
                 )}
               </div>
@@ -642,7 +558,7 @@ export default function InterviewPrepPage() {
         )}
 
         {interviewResult && (
-          <div className="max-w-3xl mx-auto bg-white/95 backdrop-blur-md rounded-3xl p-8 sm:p-10 shadow-2xl border border-slate-100 space-y-8">
+          <div className="max-w-3xl mx-auto bg-white/95 backdrop-blur-sm rounded-3xl p-8 sm:p-10 shadow-2xl border border-slate-100 space-y-8">
             <div className="flex items-center justify-between border-b border-slate-100 pb-6">
               <div>
                 <h2 className="text-2xl font-extrabold text-slate-900">Mock Interview Evaluation Report</h2>
