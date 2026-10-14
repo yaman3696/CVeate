@@ -8,12 +8,13 @@ import Link from 'next/link'
 export default function InterviewPrepPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
-  const [accessStatus, setAccessStatus] = useState<'allowed' | 'upgrade_required' | 'device_limit_exceeded' | 'guest'>('guest')
+  const [accessType, setAccessType] = useState<'admin' | 'full_access' | 'freemium' | 'guest'>('guest')
   const [user, setUser] = useState<any>(null)
   const [userProfile, setUserProfile] = useState<any>(null)
 
-  // Auth / Login Prompt Modal State for Guests
+  // Modals
   const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false)
+  const [isPricingModalOpen, setIsPricingModalOpen] = useState(false)
 
   // Interview Setup & Configuration State
   const [isSetupModalOpen, setIsSetupModalOpen] = useState(false)
@@ -29,30 +30,41 @@ export default function InterviewPrepPage() {
   const [evaluating, setEvaluating] = useState(false)
   const [feedback, setFeedback] = useState<any>(null)
 
-  // FAQ Accordion State for Guest View
+  // FAQ Accordion State for Landing View
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null)
 
   useEffect(() => {
-    const checkAccessAndProfile = async () => {
+    const checkUserAndAccess = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       
       if (!session) {
-        setAccessStatus('guest')
+        setAccessType('guest')
         setLoading(false)
         return
       }
 
-      setUser(session.user)
+      const currentUser = session.user
+      setUser(currentUser)
+
+      // Admin special privilege check
+      const OWNER_EMAIL = 'yaman.kashyap@gmail.com'
+      if (currentUser.email === OWNER_EMAIL) {
+        setAccessType('admin')
+        setUserProfile({ plan_name: 'Admin Pass (Full Access)', full_name: currentUser.user_metadata?.full_name || 'Admin' })
+        setTargetRole(currentUser.user_metadata?.profession || 'Senior Creative Specialist')
+        setLoading(false)
+        return
+      }
 
       // Fetch user profile
       const { data: profile } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', session.user.id)
+        .eq('id', currentUser.id)
         .single()
 
       if (!profile) {
-        setAccessStatus('upgrade_required')
+        setAccessType('freemium')
         setLoading(false)
         return
       }
@@ -64,57 +76,26 @@ export default function InterviewPrepPage() {
 
       // Check if user holds an active paid pass
       const hasPaidPass = profile.plan_name === 'Daily Pass' || profile.plan_name === 'Monthly'
-      if (!hasPaidPass) {
-        setAccessStatus('upgrade_required')
-        setLoading(false)
-        return
-      }
-
-      // 3-Device Security Check
-      const deviceTokenKey = 'cveat_device_token'
-      let deviceToken = localStorage.getItem(deviceTokenKey)
-      if (!deviceToken) {
-        deviceToken = crypto.randomUUID()
-        localStorage.setItem(deviceTokenKey, deviceToken)
-      }
-
-      const { data: devices } = await supabase
-        .from('user_devices')
-        .select('id, device_token')
-        .eq('user_id', session.user.id)
-
-      const existingDevice = devices?.find(d => d.device_token === deviceToken)
-
-      if (!existingDevice) {
-        if (devices && devices.length >= 3) {
-          setAccessStatus('device_limit_exceeded')
-          setLoading(false)
-          return
-        } else {
-          await supabase.from('user_devices').insert({
-            user_id: session.user.id,
-            device_token: deviceToken,
-            last_active_at: new Date().toISOString()
-          })
-        }
+      if (hasPaidPass) {
+        setAccessType('full_access')
       } else {
-        await supabase.from('user_devices')
-          .update({ last_active_at: new Date().toISOString() })
-          .eq('id', existingDevice.id)
+        setAccessType('freemium')
       }
 
-      setAccessStatus('allowed')
       setLoading(false)
-      setIsSetupModalOpen(true)
     }
 
-    checkAccessAndProfile()
+    checkUserAndAccess()
   }, [])
 
-  // Action handler when guests click restricted buttons
-  const handleProtectedAction = (actionCallback?: () => void) => {
-    if (accessStatus === 'guest') {
+  // Interaction trigger when clicking buttons on the page
+  const handleProtectedInteraction = (actionCallback?: () => void) => {
+    if (accessType === 'guest') {
       setIsLoginPromptOpen(true)
+      return
+    }
+    if (accessType === 'freemium') {
+      setIsPricingModalOpen(true)
       return
     }
     if (actionCallback) actionCallback()
@@ -213,270 +194,249 @@ export default function InterviewPrepPage() {
   ]
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center text-slate-600 bg-slate-50 font-medium">Loading AI Interview Workspace...</div>
+    return <div className="min-h-screen flex items-center justify-center text-slate-600 bg-slate-50 font-medium">Loading Interview Prep Workspace...</div>
   }
 
-  // Guest Landing Experience with USPs and FAQs
-  if (accessStatus === 'guest') {
-    return (
-      <div className="min-h-screen bg-white text-slate-900">
-        <nav className="bg-white border-b border-slate-200 px-6 py-4">
-          <div className="max-w-6xl mx-auto flex items-center justify-between">
-            <Link href="/" className="text-2xl font-black text-indigo-600">CVeat</Link>
-            <div className="flex items-center gap-4">
-              <Link href="/pricing">
-                <button className="text-xs font-semibold text-slate-600 hover:text-indigo-600 cursor-pointer">Pricing</button>
-              </Link>
+  // Public Landing View (Shown to Guests & Freemium users so they can inspect the page)
+  const isPublicLanding = accessType === 'guest' || accessType === 'freemium'
+
+  return (
+    <div className="min-h-screen bg-white text-slate-900">
+      <nav className="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-40">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <Link href="/" className="text-2xl font-black text-indigo-600">CVeat</Link>
+          <div className="flex items-center gap-4">
+            <Link href="/pricing">
+              <button className="text-xs font-semibold text-slate-600 hover:text-indigo-600 cursor-pointer">Pricing</button>
+            </Link>
+            {accessType === 'guest' ? (
               <button
                 onClick={() => setIsLoginPromptOpen(true)}
                 className="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-500 transition-all cursor-pointer"
               >
                 Sign In
               </button>
-            </div>
-          </div>
-        </nav>
-
-        {/* Hero Section */}
-        <section className="bg-gradient-to-b from-indigo-50/60 to-white px-6 py-20 text-center">
-          <div className="max-w-4xl mx-auto space-y-6">
-            <span className="inline-block rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-indigo-600 border border-indigo-100">
-              AI Career Companion
-            </span>
-            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-6xl">
-              Master Your Next Interview with <span className="text-indigo-600">AI Mock Training</span>
-            </h1>
-            <p className="text-base text-slate-600 max-w-2xl mx-auto leading-relaxed">
-              Practice role specific technical and behavioral questions, paste job descriptions for tailored preparation, and receive instant recruiter grade feedback.
-            </p>
-            <button
-              onClick={() => setIsLoginPromptOpen(true)}
-              className="rounded-xl bg-indigo-600 px-8 py-4 text-base font-semibold text-white shadow-lg shadow-indigo-200 hover:bg-indigo-500 transition-all cursor-pointer"
-            >
-              Start Practicing Now
-            </button>
-          </div>
-        </section>
-
-        {/* USPs Section */}
-        <section className="max-w-6xl mx-auto px-6 py-16 border-t border-slate-100">
-          <div className="text-center mb-12 space-y-2">
-            <h2 className="text-3xl font-extrabold text-slate-900">Why Use CVeat Interview Preparation?</h2>
-            <p className="text-sm text-slate-500">Designed specifically for professionals looking to ace corporate hiring rounds.</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm space-y-3">
-              <div className="h-10 w-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">01</div>
-              <h3 className="text-lg font-bold text-slate-900">Profile Integrated</h3>
-              <p className="text-sm text-slate-600">Pulls your professional title and experience details directly from your profile settings for contextual accuracy.</p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm space-y-3">
-              <div className="h-10 w-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">02</div>
-              <h3 className="text-lg font-bold text-slate-900">Job Description Parsing</h3>
-              <p className="text-sm text-slate-600">Paste any target job description to instantly curate questions addressing exact company requirements.</p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm space-y-3">
-              <div className="h-10 w-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">03</div>
-              <h3 className="text-lg font-bold text-slate-900">Instant AI Scoring</h3>
-              <p className="text-sm text-slate-600">Get constructive feedback, scoring out of 10, and improvement tips immediately after every response.</p>
-            </div>
-          </div>
-        </section>
-
-        {/* FAQ Section */}
-        <section className="max-w-4xl mx-auto px-6 py-16 border-t border-slate-100">
-          <div className="text-center space-y-2 mb-12">
-            <h2 className="text-3xl font-extrabold text-slate-900">Frequently Asked Questions</h2>
-            <p className="text-sm text-slate-500">Everything you need to know about interview preparation access.</p>
-          </div>
-          <div className="space-y-4">
-            {faqs.map((faq, index) => {
-              const isOpen = openFaqIndex === index
-              return (
-                <div key={index} className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-                  <button
-                    onClick={() => setOpenFaqIndex(isOpen ? null : index)}
-                    className="w-full flex items-center justify-between p-6 text-left font-bold text-slate-900 hover:text-indigo-600 transition-colors cursor-pointer"
-                  >
-                    <span className="text-base">{faq.question}</span>
-                    <span className="text-indigo-600 font-bold text-lg">{isOpen ? '-' : '+'}</span>
-                  </button>
-                  {isOpen && (
-                    <div className="px-6 pb-6 text-sm text-slate-600 leading-relaxed border-t border-slate-50 pt-4">
-                      {faq.answer}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        </section>
-
-        {/* Login Prompt Modal for Guests */}
-        {isLoginPromptOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
-            <div className="w-full max-w-sm rounded-3xl bg-white p-8 shadow-2xl border border-slate-100 text-center space-y-4">
-              <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto text-xl font-bold">!</div>
-              <h3 className="text-lg font-bold text-slate-900">Authentication Required</h3>
-              <p className="text-xs text-slate-500">Please sign in with a Daily Pass or Monthly Pass account to access mock interview practice.</p>
-              <div className="pt-2 flex flex-col gap-2.5">
-                <Link href="/ats-checker">
-                  <button className="w-full rounded-xl bg-indigo-600 py-3 text-xs font-semibold text-white shadow-md hover:bg-indigo-500 transition-all cursor-pointer">
-                    Sign In Now
-                  </button>
-                </Link>
-                <button
-                  onClick={() => setIsLoginPromptOpen(false)}
-                  className="w-full rounded-xl border border-slate-200 bg-white py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-all cursor-pointer"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    )
-  }
-
-  if (accessStatus === 'upgrade_required') {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 px-6">
-        <div className="max-w-md w-full bg-white rounded-3xl p-8 shadow-xl border border-slate-100 text-center space-y-4">
-          <h2 className="text-xl font-extrabold text-slate-900">Pass Required for Interview Prep</h2>
-          <p className="text-xs text-slate-500 leading-relaxed">
-            Interview preparation is an exclusive benefit included with our Daily and Monthly Passes. Upgrade your plan to unlock full access.
-          </p>
-          <Link href="/pricing">
-            <button className="w-full mt-2 rounded-xl bg-indigo-600 py-3 text-xs font-semibold text-white shadow-md hover:bg-indigo-500 transition-all cursor-pointer">
-              View Pricing Plans
-            </button>
-          </Link>
-        </div>
-      </div>
-    )
-  }
-
-  if (accessStatus === 'device_limit_exceeded') {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 px-6">
-        <div className="max-w-md w-full bg-white rounded-3xl p-8 shadow-xl border border-slate-100 text-center space-y-4">
-          <h2 className="text-xl font-extrabold text-slate-900">Device Limit Reached</h2>
-          <p className="text-xs text-slate-500 leading-relaxed">
-            You have reached the maximum active device limit (3 devices) allowed for this account. Please log out from another device to continue.
-          </p>
-          <Link href="/">
-            <button className="w-full mt-2 rounded-xl border border-slate-200 bg-white py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-all cursor-pointer">
-              Return Home
-            </button>
-          </Link>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <nav className="bg-white border-b border-slate-200 px-6 py-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <Link href="/" className="text-2xl font-black text-indigo-600">CVeat</Link>
-          <div className="flex items-center gap-4">
-            <span className="text-xs font-bold bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full border border-indigo-100">
-              Pass Active: {userProfile?.plan_name}
-            </span>
-            <button
-              onClick={() => setIsSetupModalOpen(true)}
-              className="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-500 transition-all cursor-pointer"
-            >
-              New Interview Setup
-            </button>
+            ) : (
+              <span className="text-xs font-bold bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full border border-indigo-100">
+                Plan: {userProfile?.plan_name || 'Freemium'} {accessType === 'admin' ? '(Admin)' : ''}
+              </span>
+            )}
           </div>
         </div>
       </nav>
 
-      <div className="max-w-4xl mx-auto px-6 py-12">
-        {!isSessionActive ? (
-          <div className="text-center bg-white rounded-3xl p-12 shadow-xl border border-slate-100 space-y-6">
-            <div className="w-16 h-16 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto text-2xl font-bold">AI</div>
-            <div className="space-y-2">
-              <h1 className="text-3xl font-extrabold text-slate-900">AI Mock Interview Trainer</h1>
-              <p className="text-sm text-slate-500 max-w-lg mx-auto">
-                Train with custom questions tailored to your professional profile settings and target job descriptions.
-              </p>
-            </div>
-            <button
-              onClick={() => setIsSetupModalOpen(true)}
-              className="rounded-xl bg-indigo-600 px-8 py-3.5 text-sm font-semibold text-white shadow-md hover:bg-indigo-500 transition-all cursor-pointer"
-            >
-              Configure & Start Interview
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            <div className="bg-white rounded-3xl p-8 shadow-lg border border-slate-100 space-y-6">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-3 py-1 rounded-md">
-                  Question {currentQuestionIndex + 1} of {questions.length} ({questions[currentQuestionIndex].type})
-                </span>
-                <span className="text-xs font-semibold text-slate-400">Target Role: {targetRole}</span>
-              </div>
+      {/* Hero Section */}
+      <section className="bg-gradient-to-b from-indigo-50/60 to-white px-6 py-20 text-center">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <span className="inline-block rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-indigo-600 border border-indigo-100">
+            AI Career Companion
+          </span>
+          <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-6xl">
+            Master Your Next Interview with <span className="text-indigo-600">AI Mock Training</span>
+          </h1>
+          <p className="text-base text-slate-600 max-w-2xl mx-auto leading-relaxed">
+            Practice role specific technical and behavioral questions, paste job descriptions for tailored preparation, and receive instant recruiter grade feedback.
+          </p>
+          <button
+            onClick={() => handleProtectedInteraction(() => setIsSetupModalOpen(true))}
+            className="rounded-xl bg-indigo-600 px-8 py-4 text-base font-semibold text-white shadow-lg shadow-indigo-200 hover:bg-indigo-500 transition-all cursor-pointer"
+          >
+            {accessType === 'guest' ? 'Start Practicing Now' : (accessType === 'freemium' ? 'Upgrade Pass to Start Practicing' : 'Launch Interview Workspace')}
+          </button>
+        </div>
+      </section>
 
-              <div className="space-y-3">
-                <h2 className="text-lg font-bold text-slate-900 leading-snug">
-                  {questions[currentQuestionIndex].question}
-                </h2>
-                <p className="text-xs text-indigo-600 bg-indigo-50/60 border border-indigo-100 p-3 rounded-xl">
-                  <strong className="font-bold">Pro Tip:</strong> {questions[currentQuestionIndex].tip}
+      {/* Active Workspace for Admin & Full Access Pass Holders */}
+      {!isPublicLanding && (
+        <div className="max-w-4xl mx-auto px-6 py-12">
+          {!isSessionActive ? (
+            <div className="text-center bg-white rounded-3xl p-12 shadow-xl border border-slate-100 space-y-6">
+              <div className="w-16 h-16 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto text-2xl font-bold">AI</div>
+              <div className="space-y-2">
+                <h1 className="text-3xl font-extrabold text-slate-900">AI Mock Interview Trainer</h1>
+                <p className="text-sm text-slate-500 max-w-lg mx-auto">
+                  Train with custom questions tailored to your professional profile settings and target job descriptions.
                 </p>
               </div>
-
-              <div className="space-y-2">
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">Your Answer / Response</label>
-                <textarea
-                  rows={5}
-                  value={userAnswer}
-                  onChange={(e) => setUserAnswer(e.target.value)}
-                  placeholder="Type your spoken interview response or notes here..."
-                  className="w-full rounded-2xl border border-slate-200 p-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-slate-900 resize-none"
-                />
-              </div>
-
-              {!feedback ? (
-                <div className="flex justify-end">
-                  <button
-                    onClick={handleSubmitAnswer}
-                    disabled={evaluating}
-                    className="rounded-xl bg-indigo-600 px-6 py-3 text-xs font-semibold text-white shadow-md hover:bg-indigo-500 transition-all cursor-pointer disabled:opacity-50"
-                  >
-                    {evaluating ? 'Analyzing Answer with AI...' : 'Submit Answer for AI Feedback'}
-                  </button>
+              <button
+                onClick={() => setIsSetupModalOpen(true)}
+                className="rounded-xl bg-indigo-600 px-8 py-3.5 text-sm font-semibold text-white shadow-md hover:bg-indigo-500 transition-all cursor-pointer"
+              >
+                Configure & Start Interview
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="bg-white rounded-3xl p-8 shadow-lg border border-slate-100 space-y-6">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                  <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-3 py-1 rounded-md">
+                    Question {currentQuestionIndex + 1} of {questions.length} ({questions[currentQuestionIndex].type})
+                  </span>
+                  <span className="text-xs font-semibold text-slate-400">Target Role: {targetRole}</span>
                 </div>
-              ) : (
-                <div className="space-y-6 pt-4 border-t border-slate-100">
-                  <div className="rounded-2xl bg-indigo-50 border border-indigo-100 p-5 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-900">AI Evaluation Feedback</h4>
-                      <span className="text-sm font-black bg-indigo-600 text-white px-3 py-1 rounded-full">Score: {feedback.score}/10</span>
-                    </div>
-                    <p className="text-xs text-slate-700"><strong className="text-slate-900">Strengths:</strong> {feedback.strengths}</p>
-                    <p className="text-xs text-slate-700"><strong className="text-slate-900">Areas to Improve:</strong> {feedback.improvements}</p>
-                  </div>
 
+                <div className="space-y-3">
+                  <h2 className="text-lg font-bold text-slate-900 leading-snug">
+                    {questions[currentQuestionIndex].question}
+                  </h2>
+                  <p className="text-xs text-indigo-600 bg-indigo-50/60 border border-indigo-100 p-3 rounded-xl">
+                    <strong className="font-bold">Pro Tip:</strong> {questions[currentQuestionIndex].tip}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">Your Answer / Response</label>
+                  <textarea
+                    rows={5}
+                    value={userAnswer}
+                    onChange={(e) => setUserAnswer(e.target.value)}
+                    placeholder="Type your spoken interview response or notes here..."
+                    className="w-full rounded-2xl border border-slate-200 p-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-slate-900 resize-none"
+                  />
+                </div>
+
+                {!feedback ? (
                   <div className="flex justify-end">
                     <button
-                      onClick={handleNextQuestion}
-                      className="rounded-xl bg-indigo-600 px-6 py-3 text-xs font-semibold text-white shadow-md hover:bg-indigo-500 transition-all cursor-pointer"
+                      onClick={handleSubmitAnswer}
+                      disabled={evaluating}
+                      className="rounded-xl bg-indigo-600 px-6 py-3 text-xs font-semibold text-white shadow-md hover:bg-indigo-500 transition-all cursor-pointer disabled:opacity-50"
                     >
-                      {currentQuestionIndex < questions.length - 1 ? 'Next Question ->' : 'Complete Mock Interview'}
+                      {evaluating ? 'Analyzing Answer with AI...' : 'Submit Answer for AI Feedback'}
                     </button>
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="space-y-6 pt-4 border-t border-slate-100">
+                    <div className="rounded-2xl bg-indigo-50 border border-indigo-100 p-5 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-900">AI Evaluation Feedback</h4>
+                        <span className="text-sm font-black bg-indigo-600 text-white px-3 py-1 rounded-full">Score: {feedback.score}/10</span>
+                      </div>
+                      <p className="text-xs text-slate-700"><strong className="text-slate-900">Strengths:</strong> {feedback.strengths}</p>
+                      <p className="text-xs text-slate-700"><strong className="text-slate-900">Areas to Improve:</strong> {feedback.improvements}</p>
+                    </div>
+
+                    <div className="flex justify-end">
+                      <button
+                        onClick={handleNextQuestion}
+                        className="rounded-xl bg-indigo-600 px-6 py-3 text-xs font-semibold text-white shadow-md hover:bg-indigo-500 transition-all cursor-pointer"
+                      >
+                        {currentQuestionIndex < questions.length - 1 ? 'Next Question ->' : 'Complete Mock Interview'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* USPs Section */}
+      <section className="max-w-6xl mx-auto px-6 py-16 border-t border-slate-100">
+        <div className="text-center mb-12 space-y-2">
+          <h2 className="text-3xl font-extrabold text-slate-900">Why Use CVeat Interview Preparation?</h2>
+          <p className="text-sm text-slate-500">Designed specifically for professionals looking to ace corporate hiring rounds.</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm space-y-3">
+            <div className="h-10 w-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">01</div>
+            <h3 className="text-lg font-bold text-slate-900">Profile Integrated</h3>
+            <p className="text-sm text-slate-600">Pulls your professional title and experience details directly from your profile settings for contextual accuracy.</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm space-y-3">
+            <div className="h-10 w-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">02</div>
+            <h3 className="text-lg font-bold text-slate-900">Job Description Parsing</h3>
+            <p className="text-sm text-slate-600">Paste any target job description to instantly curate questions addressing exact company requirements.</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm space-y-3">
+            <div className="h-10 w-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">03</div>
+            <h3 className="text-lg font-bold text-slate-900">Instant AI Scoring</h3>
+            <p className="text-sm text-slate-600">Get constructive feedback, scoring out of 10, and improvement tips immediately after every response.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="max-w-4xl mx-auto px-6 py-16 border-t border-slate-100">
+        <div className="text-center space-y-2 mb-12">
+          <h2 className="text-3xl font-extrabold text-slate-900">Frequently Asked Questions</h2>
+          <p className="text-sm text-slate-500">Everything you need to know about interview preparation access.</p>
+        </div>
+        <div className="space-y-4">
+          {faqs.map((faq, index) => {
+            const isOpen = openFaqIndex === index
+            return (
+              <div key={index} className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+                <button
+                  onClick={() => setOpenFaqIndex(isOpen ? null : index)}
+                  className="w-full flex items-center justify-between p-6 text-left font-bold text-slate-900 hover:text-indigo-600 transition-colors cursor-pointer"
+                >
+                  <span className="text-base">{faq.question}</span>
+                  <span className="text-indigo-600 font-bold text-lg">{isOpen ? '-' : '+'}</span>
+                </button>
+                {isOpen && (
+                  <div className="px-6 pb-6 text-sm text-slate-600 leading-relaxed border-t border-slate-50 pt-4">
+                    {faq.answer}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </section>
+
+      {/* Guest Login Prompt Modal */}
+      {isLoginPromptOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
+          <div className="w-full max-w-sm rounded-3xl bg-white p-8 shadow-2xl border border-slate-100 text-center space-y-4">
+            <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto text-xl font-bold">!</div>
+            <h3 className="text-lg font-bold text-slate-900">Authentication Required</h3>
+            <p className="text-xs text-slate-500">Please sign in with a Daily Pass or Monthly Pass account to access mock interview practice.</p>
+            <div className="pt-2 flex flex-col gap-2.5">
+              <Link href="/ats-checker">
+                <button className="w-full rounded-xl bg-indigo-600 py-3 text-xs font-semibold text-white shadow-md hover:bg-indigo-500 transition-all cursor-pointer">
+                  Sign In Now
+                </button>
+              </Link>
+              <button
+                onClick={() => setIsLoginPromptOpen(false)}
+                className="w-full rounded-xl border border-slate-200 bg-white py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
+      {/* Freemium Pricing Pass Popup Modal */}
+      {isPricingModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
+          <div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl border border-slate-100 text-center space-y-4">
+            <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto text-xl font-bold">★</div>
+            <h3 className="text-xl font-extrabold text-slate-900">Pass Required for Interview Prep</h3>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Interview preparation is an exclusive benefit included with our Daily and Monthly Passes. Upgrade your plan to unlock full access.
+            </p>
+            <div className="pt-2 flex flex-col gap-2.5">
+              <Link href="/pricing">
+                <button className="w-full rounded-xl bg-indigo-600 py-3 text-xs font-semibold text-white shadow-md hover:bg-indigo-500 transition-all cursor-pointer">
+                  View Pricing Plans
+                </button>
+              </Link>
+              <button
+                onClick={() => setIsPricingModalOpen(false)}
+                className="w-full rounded-xl border border-slate-200 bg-white py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-all cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Configuration Modal */}
       {isSetupModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
           <div className="w-full max-w-lg rounded-3xl bg-white p-8 shadow-2xl border border-slate-100 relative text-slate-900 space-y-6">
