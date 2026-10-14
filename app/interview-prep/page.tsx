@@ -15,10 +15,7 @@ export default function InterviewPrepPage() {
   const [profile, setProfile] = useState<any>(null)
   const [isAdmin, setIsAdmin] = useState(false)
 
-  // Pricing Modal for Freemium Users
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false)
-
-  // Wizard & Interview Flow State
   const [isWizardOpen, setIsWizardOpen] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState('')
   const [experienceYears, setExperienceYears] = useState('')
@@ -31,7 +28,6 @@ export default function InterviewPrepPage() {
   const [userAnswers, setUserAnswers] = useState<string[]>([])
   const [currentAnswer, setCurrentAnswer] = useState('')
   
-  // Audio Speech & Waveform States
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
@@ -43,78 +39,25 @@ export default function InterviewPrepPage() {
   const [savedSuccess, setSavedSuccess] = useState(false)
 
   const professionCategories = [
-    { 
-      name: 'Coding & Software Development', 
-      tag: 'coding', 
-      icon: (
-        <svg className="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-        </svg>
-      ) 
-    },
-    { 
-      name: 'UI/UX & Visual Designing', 
-      tag: 'designing', 
-      icon: (
-        <svg className="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-        </svg>
-      ) 
-    },
-    { 
-      name: 'Finance & Banking', 
-      tag: 'finance', 
-      icon: (
-        <svg className="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ) 
-    },
-    { 
-      name: 'Product Management', 
-      tag: 'product', 
-      icon: (
-        <svg className="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-        </svg>
-      ) 
-    },
-    { 
-      name: 'Digital Marketing & Growth', 
-      tag: 'marketing', 
-      icon: (
-        <svg className="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
-        </svg>
-      ) 
-    },
-    { 
-      name: 'Data Science & AI', 
-      tag: 'datascience', 
-      icon: (
-        <svg className="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-        </svg>
-      ) 
-    }
+    { name: 'Coding & Software Development', tag: 'coding', icon: '💻' },
+    { name: 'UI/UX & Visual Designing', tag: 'designing', icon: '🎨' },
+    { name: 'Finance & Banking', tag: 'finance', icon: '📈' },
+    { name: 'Product Management', tag: 'product', icon: '🚀' },
+    { name: 'Digital Marketing & Growth', tag: 'marketing', icon: '📣' },
+    { name: 'Data Science & AI', tag: 'datascience', icon: '📊' }
   ]
 
   const seniorityOptions = ['Internship', 'Junior', 'Intermediate', 'Senior', 'Team Lead', 'Manager', 'HOD']
 
   const speakQuestion = (text: string) => {
     if (!('speechSynthesis' in window)) return
-
     window.speechSynthesis.cancel()
     const utterance = new SpeechSynthesisUtterance(text)
-    utterance.rate = 1.0
-    utterance.pitch = 1.0
-
     utterance.onstart = () => setIsSpeaking(true)
     utterance.onend = () => {
       setIsSpeaking(false)
       startRecording()
     }
-
     window.speechSynthesis.speak(utterance)
   }
 
@@ -124,19 +67,16 @@ export default function InterviewPrepPage() {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       const mediaRecorder = new MediaRecorder(stream)
       mediaRecorderRef.current = mediaRecorder
-
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) audioChunksRef.current.push(event.data)
       }
-
       mediaRecorder.onstop = () => {
         setCurrentAnswer(prev => prev + (prev ? ' ' : '') + '[Voice Answer Recorded]')
       }
-
       mediaRecorder.start()
       setIsRecording(true)
     } catch (err) {
-      console.log('Microphone access note: ', err)
+      console.log('Mic note: ', err)
     }
   }
 
@@ -157,49 +97,7 @@ export default function InterviewPrepPage() {
     }
   }, [currentIndex, questions])
 
-  useEffect(() => {
-    const canvas = waveformCanvasRef.current
-    if (!canvas) return
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-
-    let animId: number
-    let phase = 0
-
-    const renderWaveform = () => {
-      animId = requestAnimationFrame(renderWaveform)
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-      if (!isSpeaking && !isRecording) {
-        ctx.strokeStyle = '#cbd5e1'
-        ctx.lineWidth = 2
-        ctx.beginPath()
-        ctx.moveTo(0, canvas.height / 2)
-        ctx.lineTo(canvas.width, canvas.height / 2)
-        ctx.stroke()
-        return
-      }
-
-      ctx.lineWidth = 2.5
-      ctx.strokeStyle = isSpeaking ? '#6366f1' : '#ef4444'
-      ctx.beginPath()
-
-      const frequency = isSpeaking ? 0.04 : 0.08
-      const amplitude = isSpeaking ? 16 : 24
-
-      for (let x = 0; x < canvas.width; x++) {
-        const y = canvas.height / 2 + Math.sin(x * frequency + phase) * amplitude * Math.sin(x / (canvas.width / Math.PI))
-        if (x === 0) ctx.moveTo(x, y)
-        else ctx.lineTo(x, y)
-      }
-      ctx.stroke()
-      phase += 0.15
-    }
-
-    renderWaveform()
-    return () => cancelAnimationFrame(animId)
-  }, [isSpeaking, isRecording])
-
+  // Canvas Network Background Animation Effect
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -221,11 +119,11 @@ export default function InterviewPrepPage() {
       canvas.style.height = `${height}px`
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
 
-      const particles = Array.from({ length: 40 }, () => ({
+      const particles = Array.from({ length: 45 }, () => ({
         x: Math.random() * width,
         y: Math.random() * height,
-        vx: (Math.random() - 0.5) * 0.6,
-        vy: (Math.random() - 0.5) * 0.6,
+        vx: (Math.random() - 0.5) * 0.7,
+        vy: (Math.random() - 0.5) * 0.7,
         radius: Math.random() * 1.5 + 1,
       }))
 
@@ -233,13 +131,29 @@ export default function InterviewPrepPage() {
         if (!running) return
         ctx.clearRect(0, 0, width, height)
 
+        for (let i = 0; i < particles.length; i++) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x
+            const dy = particles[i].y - particles[j].y
+            const dist = Math.sqrt(dx * dx + dy * dy)
+            if (dist < 110) {
+              ctx.strokeStyle = `rgba(99, 102, 241, ${0.18 * (1 - dist / 110)})`
+              ctx.lineWidth = 1
+              ctx.beginPath()
+              ctx.moveTo(particles[i].x, particles[i].y)
+              ctx.lineTo(particles[j].x, particles[j].y)
+              ctx.stroke()
+            }
+          }
+        }
+
         particles.forEach((p) => {
           p.x += p.vx
           p.y += p.vy
           if (p.x < 0 || p.x > width) p.vx *= -1
           if (p.y < 0 || p.y > height) p.vy *= -1
 
-          ctx.fillStyle = 'rgba(99, 102, 241, 0.3)'
+          ctx.fillStyle = 'rgba(99, 102, 241, 0.4)'
           ctx.beginPath()
           ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2)
           ctx.fill()
@@ -268,27 +182,13 @@ export default function InterviewPrepPage() {
       const { data: { session } } = await supabase.auth.getSession()
       if (session) {
         setUser(session.user)
-        const OWNER_EMAIL = 'yaman.kashyap@gmail.com'
-        if (session.user.email === OWNER_EMAIL) setIsAdmin(true)
-
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
-
+        if (session.user.email === 'yaman.kashyap@gmail.com') setIsAdmin(true)
+        const { data: profileData } = await supabase.from('profiles').select('*').eq('id', session.user.id).single()
         if (profileData) setProfile(profileData)
       }
       setAuthLoading(false)
     }
     checkUser()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-      if (session?.user?.email === 'yaman.kashyap@gmail.com') setIsAdmin(true)
-    })
-
-    return () => subscription.unsubscribe()
   }, [])
 
   const handleCategorySelect = (categoryName: string) => {
@@ -311,10 +211,7 @@ export default function InterviewPrepPage() {
 
   const handleStartInterviewQuestions = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!experienceYears) {
-      alert('Please specify your years of experience.')
-      return
-    }
+    if (!experienceYears) return alert('Please specify experience.')
 
     setIsWizardOpen(false)
     setGenerating(true)
@@ -332,7 +229,7 @@ export default function InterviewPrepPage() {
       })
 
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Failed to generate interview questions.')
+      if (!res.ok) throw new Error(data.error || 'Failed to generate.')
 
       setQuestions(data.questions || [])
       setCurrentIndex(0)
@@ -378,10 +275,9 @@ export default function InterviewPrepPage() {
 
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Evaluation failed.')
-
       setInterviewResult(data)
     } catch (err: any) {
-      alert(err.message || 'Failed to evaluate interview answers.')
+      alert(err.message || 'Failed to evaluate.')
     } finally {
       setEvaluating(false)
     }
@@ -390,7 +286,6 @@ export default function InterviewPrepPage() {
   const handleSaveInterview = async () => {
     if (!user || !interviewResult) return
     setSaving(true)
-
     try {
       const { error } = await supabase.from('interview_history').insert({
         user_id: user.id,
@@ -399,28 +294,22 @@ export default function InterviewPrepPage() {
         experience: experienceYears,
         score: interviewResult.overallScore,
         feedback_summary: interviewResult.summary,
-        qa_transcript: questions.map((q, idx) => ({
-          question: q,
-          answer: userAnswers[idx]
-        }))
+        qa_transcript: questions.map((q, idx) => ({ question: q, answer: userAnswers[idx] }))
       })
-
       if (error) throw error
       setSavedSuccess(true)
     } catch (err: any) {
-      alert(err.message || 'Failed to save interview history.')
+      alert(err.message || 'Failed to save.')
     } finally {
       setSaving(false)
     }
   }
 
-  if (authLoading) {
-    return <div className="min-h-screen flex items-center justify-center text-slate-600">Verifying session...</div>
-  }
+  if (authLoading) return <div className="min-h-screen flex items-center justify-center text-slate-600">Verifying session...</div>
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 relative overflow-hidden flex flex-col">
-      <canvas ref={canvasRef} className="fixed inset-0 w-full h-full pointer-events-none z-0 opacity-60" />
+    <div className="min-h-screen bg-slate-50 text-slate-900 relative overflow-hidden flex flex-col">
+      <canvas ref={canvasRef} className="fixed inset-0 w-full h-full pointer-events-none z-0 opacity-70" />
 
       <div className="flex-grow z-10 max-w-6xl mx-auto px-6 py-16 w-full">
 
@@ -434,7 +323,7 @@ export default function InterviewPrepPage() {
                 Master Your Next Interview with <span className="text-indigo-600">AI Mock Training</span>
               </h1>
               <p className="text-base text-slate-600 leading-relaxed max-w-2xl mx-auto">
-                Select your profession category below to start a tailored 5-question voice interview session complete with live AI speech, dynamic waveforms, and instant recruiter feedback.
+                Select your profession category below to start a tailored 5-question voice interview session complete with live AI speech and recruiter feedback.
               </p>
             </div>
 
@@ -449,7 +338,7 @@ export default function InterviewPrepPage() {
                     onClick={() => handleCategorySelect(cat.name)}
                     className="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:border-indigo-600 hover:shadow-md transition-all text-left flex items-center gap-4 cursor-pointer"
                   >
-                    <span className="p-3 rounded-xl border border-slate-100 bg-slate-50 group-hover:scale-105 transition-transform">
+                    <span className="text-2xl p-3 rounded-xl border border-slate-100 bg-slate-50 group-hover:scale-105 transition-transform">
                       {cat.icon}
                     </span>
                     <div>
@@ -466,12 +355,18 @@ export default function InterviewPrepPage() {
         )}
 
         {generating && (
-          <div className="text-center py-24 space-y-6">
-            <div className="w-16 h-16 rounded-full bg-indigo-600 text-white flex items-center justify-center mx-auto text-xl font-bold animate-spin">
-              AI
+          <div className="bg-white/80 backdrop-blur-xl border border-slate-200 rounded-3xl p-12 text-center shadow-2xl space-y-8 max-w-xl mx-auto my-16">
+            <div className="relative flex items-center justify-center py-6">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-pink-500 animate-pulse flex items-center justify-center shadow-2xl">
+                <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center text-indigo-600 font-bold text-sm">
+                  AI
+                </div>
+              </div>
             </div>
-            <h2 className="text-2xl font-bold text-slate-900">Curating Your Custom Interview Questions...</h2>
-            <p className="text-xs text-slate-500">Gemini AI is analyzing your experience and job description.</p>
+            <div className="space-y-2">
+              <h2 className="text-xl font-bold text-slate-900">CVeat AI is generating your interview questions...</h2>
+              <p className="text-xs text-slate-500">Tailoring technical and behavioral questions to your experience level.</p>
+            </div>
           </div>
         )}
 
@@ -488,56 +383,45 @@ export default function InterviewPrepPage() {
               <div className="flex items-center justify-center gap-2">
                 <span className={`h-2.5 w-2.5 rounded-full ${isSpeaking ? 'bg-indigo-400 animate-ping' : (isRecording ? 'bg-red-500 animate-pulse' : 'bg-slate-500')}`}></span>
                 <span className="text-xs font-bold uppercase tracking-widest text-slate-300">
-                  {isSpeaking ? 'AI Interviewer Speaking...' : (isRecording ? 'Listening to Your Answer...' : 'Ready / Paused')}
+                  {isSpeaking ? 'CVeat AI Speaking...' : (isRecording ? 'Listening to Your Answer...' : 'Ready / Paused')}
                 </span>
               </div>
-              
               <div className="h-16 flex items-center justify-center">
                 <canvas ref={waveformCanvasRef} width={500} height={60} className="w-full max-w-md h-12" />
               </div>
-
-              <div className="flex items-center justify-center gap-4 pt-1">
-                <button
-                  type="button"
-                  onClick={() => speakQuestion(questions[currentIndex])}
-                  className="text-xs font-semibold text-indigo-300 hover:text-white transition-colors cursor-pointer"
-                >
-                  [ Replay Question Audio ]
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => speakQuestion(questions[currentIndex])}
+                className="text-xs font-semibold text-indigo-300 hover:text-white transition-colors cursor-pointer"
+              >
+                [ Replay Question Audio ]
+              </button>
             </div>
 
-            <div className="space-y-3">
-              <h2 className="text-lg font-bold text-slate-900 leading-snug">
-                {questions[currentIndex]}
-              </h2>
-            </div>
+            <h2 className="text-lg font-bold text-slate-900 leading-snug">{questions[currentIndex]}</h2>
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">Your Answer</label>
-                <div className="flex items-center gap-2">
-                  {!isRecording ? (
-                    <button
-                      type="button"
-                      onClick={startRecording}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-red-50 border border-red-200 px-3 py-1 text-xs font-bold text-red-600 hover:bg-red-100 transition-all cursor-pointer"
-                    >
-                      <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse"></span>
-                      Record Voice Answer
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={stopRecording}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-1 text-xs font-bold text-white hover:bg-slate-800 transition-all cursor-pointer"
-                    >
-                      Stop Recording
-                    </button>
-                  )}
-                </div>
+                {!isRecording ? (
+                  <button
+                    type="button"
+                    onClick={startRecording}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-red-50 border border-red-200 px-3 py-1 text-xs font-bold text-red-600 hover:bg-red-100 transition-all cursor-pointer"
+                  >
+                    <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse"></span>
+                    Record Voice Answer
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={stopRecording}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-1 text-xs font-bold text-white hover:bg-slate-800 transition-all cursor-pointer"
+                  >
+                    Stop Recording
+                  </button>
+                )}
               </div>
-
               <textarea
                 rows={5}
                 value={currentAnswer}
@@ -565,12 +449,18 @@ export default function InterviewPrepPage() {
         )}
 
         {evaluating && (
-          <div className="text-center py-24 space-y-6">
-            <div className="w-16 h-16 rounded-full bg-indigo-600 text-white flex items-center justify-center mx-auto text-xl font-bold animate-pulse">
-              AI
+          <div className="bg-white/80 backdrop-blur-xl border border-slate-200 rounded-3xl p-12 text-center shadow-2xl space-y-8 max-w-xl mx-auto my-16">
+            <div className="relative flex items-center justify-center py-6">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-pink-500 animate-pulse flex items-center justify-center shadow-2xl">
+                <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center text-indigo-600 font-bold text-sm">
+                  AI
+                </div>
+              </div>
             </div>
-            <h2 className="text-2xl font-bold text-slate-900">Evaluating Your Interview Responses...</h2>
-            <p className="text-xs text-slate-500">Scoring communication, technical accuracy, and structural impact.</p>
+            <div className="space-y-2">
+              <h2 className="text-xl font-bold text-slate-900">CVeat AI is evaluating your responses...</h2>
+              <p className="text-xs text-slate-500">Scoring communication, technical accuracy, and structural impact.</p>
+            </div>
           </div>
         )}
 
@@ -588,7 +478,7 @@ export default function InterviewPrepPage() {
             </div>
 
             <div className="rounded-2xl bg-indigo-50 border border-indigo-100 p-6 space-y-2">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-900">AI Performance Summary</h4>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-900">CVeat AI Performance Summary</h4>
               <p className="text-xs text-slate-700 leading-relaxed">{interviewResult.summary}</p>
             </div>
 
