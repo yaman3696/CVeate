@@ -39,12 +39,60 @@ export default function InterviewPrepPage() {
   const [savedSuccess, setSavedSuccess] = useState(false)
 
   const professionCategories = [
-    { name: 'Coding & Software Development', tag: 'coding', icon: '💻' },
-    { name: 'UI/UX & Visual Designing', tag: 'designing', icon: '🎨' },
-    { name: 'Finance & Banking', tag: 'finance', icon: '📈' },
-    { name: 'Product Management', tag: 'product', icon: '🚀' },
-    { name: 'Digital Marketing & Growth', tag: 'marketing', icon: '📣' },
-    { name: 'Data Science & AI', tag: 'datascience', icon: '📊' }
+    { 
+      name: 'Coding & Software Development', 
+      tag: 'coding', 
+      icon: (
+        <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+        </svg>
+      ) 
+    },
+    { 
+      name: 'UI/UX & Visual Designing', 
+      tag: 'designing', 
+      icon: (
+        <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+        </svg>
+      ) 
+    },
+    { 
+      name: 'Finance & Banking', 
+      tag: 'finance', 
+      icon: (
+        <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ) 
+    },
+    { 
+      name: 'Product Management', 
+      tag: 'product', 
+      icon: (
+        <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      ) 
+    },
+    { 
+      name: 'Digital Marketing & Growth', 
+      tag: 'marketing', 
+      icon: (
+        <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+        </svg>
+      ) 
+    },
+    { 
+      name: 'Data Science & AI', 
+      tag: 'datascience', 
+      icon: (
+        <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+      ) 
+    }
   ]
 
   const seniorityOptions = ['Internship', 'Junior', 'Intermediate', 'Senior', 'Team Lead', 'Manager', 'HOD']
@@ -182,9 +230,20 @@ export default function InterviewPrepPage() {
       const { data: { session } } = await supabase.auth.getSession()
       if (session) {
         setUser(session.user)
-        if (session.user.email === 'yaman.kashyap@gmail.com') setIsAdmin(true)
-        const { data: profileData } = await supabase.from('profiles').select('*').eq('id', session.user.id).single()
-        if (profileData) setProfile(profileData)
+
+        // Securely fetch profile and role from Supabase database
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+
+        if (profileData) {
+          setProfile(profileData)
+          if (profileData.role === 'admin') {
+            setIsAdmin(true)
+          }
+        }
       }
       setAuthLoading(false)
     }
@@ -308,8 +367,17 @@ export default function InterviewPrepPage() {
   if (authLoading) return <div className="min-h-screen flex items-center justify-center text-slate-600">Verifying session...</div>
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 relative overflow-hidden flex flex-col">
+    <div className="min-h-screen bg-transparent text-slate-900 relative overflow-hidden flex flex-col">
       <canvas ref={canvasRef} className="fixed inset-0 w-full h-full pointer-events-none z-0 opacity-70" />
+
+      <style jsx>{`
+        @keyframes siriPulse {
+          0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+          70% { transform: scale(1.05); box-shadow: 0 0 0 30px rgba(99, 102, 241, 0); }
+          100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+        }
+        .siri-orb { animation: siriPulse 2.8s infinite cubic-bezier(0.4, 0, 0.6, 1); }
+      `}</style>
 
       <div className="flex-grow z-10 max-w-6xl mx-auto px-6 py-16 w-full">
 
@@ -336,9 +404,9 @@ export default function InterviewPrepPage() {
                   <button
                     key={cat.tag}
                     onClick={() => handleCategorySelect(cat.name)}
-                    className="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:border-indigo-600 hover:shadow-md transition-all text-left flex items-center gap-4 cursor-pointer"
+                    className="group rounded-2xl border border-slate-200 bg-white/90 backdrop-blur-sm p-6 shadow-sm hover:border-indigo-600 hover:shadow-md transition-all text-left flex items-center gap-4 cursor-pointer"
                   >
-                    <span className="text-2xl p-3 rounded-xl border border-slate-100 bg-slate-50 group-hover:scale-105 transition-transform">
+                    <span className="p-3 rounded-xl border border-slate-100 bg-slate-50 group-hover:scale-105 transition-transform">
                       {cat.icon}
                     </span>
                     <div>
@@ -355,9 +423,9 @@ export default function InterviewPrepPage() {
         )}
 
         {generating && (
-          <div className="bg-white/80 backdrop-blur-xl border border-slate-200 rounded-3xl p-12 text-center shadow-2xl space-y-8 max-w-xl mx-auto my-16">
+          <div className="bg-white/90 backdrop-blur-xl border border-slate-200 rounded-3xl p-12 text-center shadow-2xl space-y-8 max-w-xl mx-auto my-16">
             <div className="relative flex items-center justify-center py-6">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-pink-500 animate-pulse flex items-center justify-center shadow-2xl">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-pink-500 siri-orb flex items-center justify-center shadow-2xl">
                 <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center text-indigo-600 font-bold text-sm">
                   AI
                 </div>
@@ -371,7 +439,7 @@ export default function InterviewPrepPage() {
         )}
 
         {!generating && questions.length > 0 && !interviewResult && (
-          <div className="max-w-3xl mx-auto bg-white rounded-3xl p-8 sm:p-10 shadow-2xl border border-slate-100 space-y-6">
+          <div className="max-w-3xl mx-auto bg-white/95 backdrop-blur-sm rounded-3xl p-8 sm:p-10 shadow-2xl border border-slate-100 space-y-6">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-3 py-1 rounded-md">
                 Question {currentIndex + 1} of {questions.length} ({selectedCategory})
@@ -449,9 +517,9 @@ export default function InterviewPrepPage() {
         )}
 
         {evaluating && (
-          <div className="bg-white/80 backdrop-blur-xl border border-slate-200 rounded-3xl p-12 text-center shadow-2xl space-y-8 max-w-xl mx-auto my-16">
+          <div className="bg-white/90 backdrop-blur-xl border border-slate-200 rounded-3xl p-12 text-center shadow-2xl space-y-8 max-w-xl mx-auto my-16">
             <div className="relative flex items-center justify-center py-6">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-pink-500 animate-pulse flex items-center justify-center shadow-2xl">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-pink-500 siri-orb flex items-center justify-center shadow-2xl">
                 <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center text-indigo-600 font-bold text-sm">
                   AI
                 </div>
@@ -465,7 +533,7 @@ export default function InterviewPrepPage() {
         )}
 
         {interviewResult && (
-          <div className="max-w-3xl mx-auto bg-white rounded-3xl p-8 sm:p-10 shadow-2xl border border-slate-100 space-y-8">
+          <div className="max-w-3xl mx-auto bg-white/95 backdrop-blur-sm rounded-3xl p-8 sm:p-10 shadow-2xl border border-slate-100 space-y-8">
             <div className="flex items-center justify-between border-b border-slate-100 pb-6">
               <div>
                 <h2 className="text-2xl font-extrabold text-slate-900">Mock Interview Evaluation Report</h2>
