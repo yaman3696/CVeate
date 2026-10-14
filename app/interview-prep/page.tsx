@@ -32,6 +32,7 @@ export default function InterviewPrepPage() {
   const [isRecording, setIsRecording] = useState(false)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
+  const recognitionRef = useRef<any>(null)
 
   const [evaluating, setEvaluating] = useState(false)
   const [interviewResult, setInterviewResult] = useState<any>(null)
@@ -111,15 +112,44 @@ export default function InterviewPrepPage() {
 
   const startRecording = async () => {
     audioChunksRef.current = []
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition()
+      recognition.continuous = true
+      recognition.interimResults = true
+      recognition.lang = 'en-US'
+
+      recognition.onresult = (event: any) => {
+        let interimTranscript = ''
+        let finalTranscript = ''
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript
+          } else {
+            interimTranscript += event.results[i][0].transcript
+          }
+        }
+
+        if (finalTranscript || interimTranscript) {
+          setCurrentAnswer(prev => {
+            const base = prev.replace(/[Voice Answer Recorded]/g, '').trim()
+            return (base ? base + ' ' : '') + (finalTranscript || interimTranscript)
+          })
+        }
+      }
+
+      recognition.start()
+      recognitionRef.current = recognition
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       const mediaRecorder = new MediaRecorder(stream)
       mediaRecorderRef.current = mediaRecorder
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) audioChunksRef.current.push(event.data)
-      }
-      mediaRecorder.onstop = () => {
-        setCurrentAnswer(prev => prev + (prev ? ' ' : '') + '[Voice Answer Recorded]')
       }
       mediaRecorder.start()
       setIsRecording(true)
@@ -129,6 +159,11 @@ export default function InterviewPrepPage() {
   }
 
   const stopRecording = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop()
+      recognitionRef.current = null
+    }
+
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop()
       mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop())
@@ -145,7 +180,7 @@ export default function InterviewPrepPage() {
     }
   }, [currentIndex, questions])
 
-  // Canvas Network Background Animation Effect (Matching Pricing Page)
+  // Robust Canvas Network Background Animation Effect
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -157,8 +192,8 @@ export default function InterviewPrepPage() {
 
     const initCanvas = () => {
       if (!running || !canvas) return
-      const width = window.innerWidth || 1920
-      const height = window.innerHeight || 1080
+      const width = window.innerWidth
+      const height = window.innerHeight
       const dpr = window.devicePixelRatio || 1
 
       canvas.width = width * dpr
@@ -167,12 +202,12 @@ export default function InterviewPrepPage() {
       canvas.style.height = `${height}px`
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
 
-      const particles = Array.from({ length: 45 }, () => ({
+      const particles = Array.from({ length: 50 }, () => ({
         x: Math.random() * width,
         y: Math.random() * height,
-        vx: (Math.random() - 0.5) * 0.7,
-        vy: (Math.random() - 0.5) * 0.7,
-        radius: Math.random() * 1.5 + 1,
+        vx: (Math.random() - 0.5) * 0.8,
+        vy: (Math.random() - 0.5) * 0.8,
+        radius: Math.random() * 1.8 + 1,
       }))
 
       const animate = () => {
@@ -184,8 +219,8 @@ export default function InterviewPrepPage() {
             const dx = particles[i].x - particles[j].x
             const dy = particles[i].y - particles[j].y
             const dist = Math.sqrt(dx * dx + dy * dy)
-            if (dist < 110) {
-              ctx.strokeStyle = `rgba(99, 102, 241, ${0.18 * (1 - dist / 110)})`
+            if (dist < 120) {
+              ctx.strokeStyle = `rgba(99, 102, 241, ${0.2 * (1 - dist / 120)})`
               ctx.lineWidth = 1
               ctx.beginPath()
               ctx.moveTo(particles[i].x, particles[i].y)
@@ -201,7 +236,7 @@ export default function InterviewPrepPage() {
           if (p.x < 0 || p.x > width) p.vx *= -1
           if (p.y < 0 || p.y > height) p.vy *= -1
 
-          ctx.fillStyle = 'rgba(99, 102, 241, 0.4)'
+          ctx.fillStyle = 'rgba(99, 102, 241, 0.5)'
           ctx.beginPath()
           ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2)
           ctx.fill()
@@ -213,18 +248,18 @@ export default function InterviewPrepPage() {
       animate()
     }
 
-    const timer = setTimeout(initCanvas, 50)
+    initCanvas()
     const handleResize = () => { initCanvas() }
     window.addEventListener('resize', handleResize)
 
     return () => {
       running = false
-      clearTimeout(timer)
       cancelAnimationFrame(animationFrameId)
       window.removeEventListener('resize', handleResize)
     }
   }, [])
 
+  // Stay on current page session listener without unwanted redirects
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession()
@@ -246,14 +281,45 @@ export default function InterviewPrepPage() {
       }
       setAuthLoading(false)
     }
+
     checkUser()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session) {
+        setUser(session.user)
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+
+        if (profileData) {
+          setProfile(profileData)
+          if (profileData.role === 'admin' || profileData.role === '`admin`') {
+            setIsAdmin(true)
+          }
+        }
+      } else {
+        setUser(null)
+        setProfile(null)
+        setIsAdmin(false)
+      }
+      setAuthLoading(false)
+    })
+
+    return () => {
+      subscription.unsubscribe()
+    }
   }, [])
 
   const handleCategorySelect = (categoryName: string) => {
     if (!user) {
       const globalAuthBtn = document.querySelector('nav button') as HTMLButtonElement
-      if (globalAuthBtn) globalAuthBtn.click()
-      else router.push('/ats-checker')
+      if (globalAuthBtn) {
+        globalAuthBtn.click()
+      } else {
+        alert('Please sign in using the top navigation bar to start mock interviews.')
+      }
       return
     }
 
@@ -380,8 +446,8 @@ export default function InterviewPrepPage() {
   if (authLoading) return <div className="min-h-screen flex items-center justify-center text-slate-600">Verifying session...</div>
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 relative overflow-hidden flex flex-col">
-      <canvas ref={canvasRef} className="fixed inset-0 w-full h-full pointer-events-none z-0 opacity-70" />
+    <div className="min-h-screen bg-transparent text-slate-900 relative overflow-hidden flex flex-col">
+      <canvas ref={canvasRef} className="fixed inset-0 w-full h-full pointer-events-none z-0" />
 
       <style jsx>{`
         @keyframes siriPulse {
@@ -464,7 +530,7 @@ export default function InterviewPrepPage() {
               <div className="flex items-center justify-center gap-2">
                 <span className={`h-2.5 w-2.5 rounded-full ${isSpeaking ? 'bg-indigo-400 animate-ping' : (isRecording ? 'bg-red-500 animate-pulse' : 'bg-slate-500')}`}></span>
                 <span className="text-xs font-bold uppercase tracking-widest text-slate-300">
-                  {isSpeaking ? 'CVeat AI Speaking...' : (isRecording ? 'Listening to Your Answer...' : 'Ready / Paused')}
+                  {isSpeaking ? 'CVeat AI Speaking...' : (isRecording ? 'Listening & Transcribing Live...' : 'Ready / Paused')}
                 </span>
               </div>
               <div className="h-16 flex items-center justify-center">
@@ -483,7 +549,7 @@ export default function InterviewPrepPage() {
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">Your Answer</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">Your Answer (Live Transcribed)</label>
                 {!isRecording ? (
                   <button
                     type="button"
@@ -491,7 +557,7 @@ export default function InterviewPrepPage() {
                     className="inline-flex items-center gap-1.5 rounded-lg bg-red-50 border border-red-200 px-3 py-1 text-xs font-bold text-red-600 hover:bg-red-100 transition-all cursor-pointer"
                   >
                     <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse"></span>
-                    Record Voice Answer
+                    Start Live Speech-to-Text
                   </button>
                 ) : (
                   <button
@@ -507,7 +573,7 @@ export default function InterviewPrepPage() {
                 rows={5}
                 value={currentAnswer}
                 onChange={(e) => setCurrentAnswer(e.target.value)}
-                placeholder="Type your response or speak into your microphone..."
+                placeholder="Speak into your microphone or type your response here..."
                 className="w-full rounded-2xl border border-slate-200 p-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-slate-900 resize-none"
               />
             </div>
