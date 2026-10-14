@@ -113,35 +113,40 @@ export default function InterviewPrepPage() {
   const startRecording = async () => {
     audioChunksRef.current = []
 
+    // Live speech-to-text recognition
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     if (SpeechRecognition) {
-      const recognition = new SpeechRecognition()
-      recognition.continuous = true
-      recognition.interimResults = true
-      recognition.lang = 'en-US'
+      try {
+        const recognition = new SpeechRecognition()
+        recognition.continuous = true
+        recognition.interimResults = true
+        recognition.lang = 'en-US'
 
-      recognition.onresult = (event: any) => {
-        let interimTranscript = ''
-        let finalTranscript = ''
+        recognition.onresult = (event: any) => {
+          let interimTranscript = ''
+          let finalTranscript = ''
 
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript
-          } else {
-            interimTranscript += event.results[i][0].transcript
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+              finalTranscript += event.results[i][0].transcript
+            } else {
+              interimTranscript += event.results[i][0].transcript
+            }
+          }
+
+          if (finalTranscript || interimTranscript) {
+            setCurrentAnswer(prev => {
+              const base = prev.replace(/[Voice Answer Recorded]/g, '').trim()
+              return (base ? base + ' ' : '') + (finalTranscript || interimTranscript)
+            })
           }
         }
 
-        if (finalTranscript || interimTranscript) {
-          setCurrentAnswer(prev => {
-            const base = prev.replace(/[Voice Answer Recorded]/g, '').trim()
-            return (base ? base + ' ' : '') + (finalTranscript || interimTranscript)
-          })
-        }
+        recognition.start()
+        recognitionRef.current = recognition
+      } catch (err) {
+        console.log('Speech recognition start error:', err)
       }
-
-      recognition.start()
-      recognitionRef.current = recognition
     }
 
     try {
@@ -160,7 +165,9 @@ export default function InterviewPrepPage() {
 
   const stopRecording = () => {
     if (recognitionRef.current) {
-      recognitionRef.current.stop()
+      try {
+        recognitionRef.current.stop()
+      } catch (e) {}
       recognitionRef.current = null
     }
 
@@ -180,7 +187,7 @@ export default function InterviewPrepPage() {
     }
   }, [currentIndex, questions])
 
-  // Robust Canvas Network Background Animation Effect
+  // Canvas Network Background Animation Effect
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -202,7 +209,7 @@ export default function InterviewPrepPage() {
       canvas.style.height = `${height}px`
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
 
-      const particles = Array.from({ length: 50 }, () => ({
+      const particles = Array.from({ length: 55 }, () => ({
         x: Math.random() * width,
         y: Math.random() * height,
         vx: (Math.random() - 0.5) * 0.8,
@@ -219,8 +226,8 @@ export default function InterviewPrepPage() {
             const dx = particles[i].x - particles[j].x
             const dy = particles[i].y - particles[j].y
             const dist = Math.sqrt(dx * dx + dy * dy)
-            if (dist < 120) {
-              ctx.strokeStyle = `rgba(99, 102, 241, ${0.2 * (1 - dist / 120)})`
+            if (dist < 130) {
+              ctx.strokeStyle = `rgba(99, 102, 241, ${0.25 * (1 - dist / 130)})`
               ctx.lineWidth = 1
               ctx.beginPath()
               ctx.moveTo(particles[i].x, particles[i].y)
@@ -236,7 +243,7 @@ export default function InterviewPrepPage() {
           if (p.x < 0 || p.x > width) p.vx *= -1
           if (p.y < 0 || p.y > height) p.vy *= -1
 
-          ctx.fillStyle = 'rgba(99, 102, 241, 0.5)'
+          ctx.fillStyle = 'rgba(99, 102, 241, 0.6)'
           ctx.beginPath()
           ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2)
           ctx.fill()
@@ -259,7 +266,6 @@ export default function InterviewPrepPage() {
     }
   }, [])
 
-  // Stay on current page session listener without unwanted redirects
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession()
@@ -281,7 +287,6 @@ export default function InterviewPrepPage() {
       }
       setAuthLoading(false)
     }
-
     checkUser()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
@@ -460,6 +465,24 @@ export default function InterviewPrepPage() {
 
       <div className="flex-grow z-10 max-w-6xl mx-auto px-6 py-16 w-full">
 
+        {/* TOP BACK BUTTON FOR ACTIVE INTERVIEW OR RESULTS */}
+        {(questions.length > 0 || interviewResult) && !generating && !evaluating && (
+          <div className="mb-6">
+            <button
+              onClick={() => {
+                if (isRecording) stopRecording()
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel()
+                setQuestions([])
+                setInterviewResult(null)
+                setSelectedCategory('')
+              }}
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white/90 backdrop-blur-sm px-4 py-2 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-all cursor-pointer"
+            >
+              ← Back to Categories
+            </button>
+          </div>
+        )}
+
         {!generating && questions.length === 0 && !interviewResult && (
           <div className="space-y-16">
             <div className="text-center space-y-4 max-w-3xl mx-auto">
@@ -483,7 +506,7 @@ export default function InterviewPrepPage() {
                   <button
                     key={cat.tag}
                     onClick={() => handleCategorySelect(cat.name)}
-                    className="group rounded-2xl border border-slate-200 bg-white/90 backdrop-blur-sm p-6 shadow-sm hover:border-indigo-600 hover:shadow-md transition-all text-left flex items-center gap-4 cursor-pointer"
+                    className="group rounded-2xl border border-slate-200 bg-white/90 backdrop-blur-md p-6 shadow-sm hover:border-indigo-600 hover:shadow-md transition-all text-left flex items-center gap-4 cursor-pointer"
                   >
                     <span className="p-3 rounded-xl border border-slate-100 bg-slate-50 group-hover:scale-105 transition-transform">
                       {cat.icon}
@@ -501,24 +524,27 @@ export default function InterviewPrepPage() {
           </div>
         )}
 
+        {/* GENERATING OVERLAY MODAL */}
         {generating && (
-          <div className="bg-white/90 backdrop-blur-xl border border-slate-200 rounded-3xl p-12 text-center shadow-2xl space-y-8 max-w-xl mx-auto my-16">
-            <div className="relative flex items-center justify-center py-6">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-pink-500 siri-orb flex items-center justify-center shadow-2xl">
-                <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center text-indigo-600 font-bold text-sm">
-                  AI
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
+            <div className="bg-white/95 backdrop-blur-xl border border-slate-200 rounded-3xl p-12 text-center shadow-2xl space-y-8 max-w-xl w-full mx-auto">
+              <div className="relative flex items-center justify-center py-6">
+                <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-pink-500 siri-orb flex items-center justify-center shadow-2xl">
+                  <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center text-indigo-600 font-bold text-sm">
+                    AI
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="space-y-2">
-              <h2 className="text-xl font-bold text-slate-900">CVeat AI is generating your interview questions...</h2>
-              <p className="text-xs text-slate-500">Tailoring technical and behavioral questions to your experience level.</p>
+              <div className="space-y-2">
+                <h2 className="text-xl font-bold text-slate-900">CVeat AI is generating your interview questions...</h2>
+                <p className="text-xs text-slate-500">Tailoring technical and behavioral questions to your experience level.</p>
+              </div>
             </div>
           </div>
         )}
 
         {!generating && questions.length > 0 && !interviewResult && (
-          <div className="max-w-3xl mx-auto bg-white/95 backdrop-blur-sm rounded-3xl p-8 sm:p-10 shadow-2xl border border-slate-100 space-y-6">
+          <div className="max-w-3xl mx-auto bg-white/95 backdrop-blur-md rounded-3xl p-8 sm:p-10 shadow-2xl border border-slate-100 space-y-6">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-3 py-1 rounded-md">
                 Question {currentIndex + 1} of {questions.length} ({selectedCategory})
@@ -595,24 +621,27 @@ export default function InterviewPrepPage() {
           </div>
         )}
 
+        {/* EVALUATING OVERLAY MODAL */}
         {evaluating && (
-          <div className="bg-white/90 backdrop-blur-xl border border-slate-200 rounded-3xl p-12 text-center shadow-2xl space-y-8 max-w-xl mx-auto my-16">
-            <div className="relative flex items-center justify-center py-6">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-pink-500 siri-orb flex items-center justify-center shadow-2xl">
-                <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center text-indigo-600 font-bold text-sm">
-                  AI
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
+            <div className="bg-white/95 backdrop-blur-xl border border-slate-200 rounded-3xl p-12 text-center shadow-2xl space-y-8 max-w-xl w-full mx-auto">
+              <div className="relative flex items-center justify-center py-6">
+                <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-pink-500 siri-orb flex items-center justify-center shadow-2xl">
+                  <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center text-indigo-600 font-bold text-sm">
+                    AI
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="space-y-2">
-              <h2 className="text-xl font-bold text-slate-900">CVeat AI is evaluating your responses...</h2>
-              <p className="text-xs text-slate-500">Scoring communication, technical accuracy, and structural impact.</p>
+              <div className="space-y-2">
+                <h2 className="text-xl font-bold text-slate-900">CVeat AI is evaluating your responses...</h2>
+                <p className="text-xs text-slate-500">Scoring communication, technical accuracy, and structural impact.</p>
+              </div>
             </div>
           </div>
         )}
 
         {interviewResult && (
-          <div className="max-w-3xl mx-auto bg-white/95 backdrop-blur-sm rounded-3xl p-8 sm:p-10 shadow-2xl border border-slate-100 space-y-8">
+          <div className="max-w-3xl mx-auto bg-white/95 backdrop-blur-md rounded-3xl p-8 sm:p-10 shadow-2xl border border-slate-100 space-y-8">
             <div className="flex items-center justify-between border-b border-slate-100 pb-6">
               <div>
                 <h2 className="text-2xl font-extrabold text-slate-900">Mock Interview Evaluation Report</h2>
