@@ -4,8 +4,8 @@ import { createClient } from '@supabase/supabase-js'
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
 
-async function evaluateWithFallback(prompt: string, retries = 3, delay = 2000): Promise<string> {
-  const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash']
+async function evaluateWithFallback(prompt: string, retries = 3, delay = 1500): Promise<string> {
+  const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-1.5-pro']
   
   for (const model of modelsToTry) {
     try {
@@ -16,7 +16,7 @@ async function evaluateWithFallback(prompt: string, retries = 3, delay = 2000): 
       const text = response.text || (response as any).candidates?.[0]?.content?.parts?.[0]?.text
       if (text) return text
     } catch (error: any) {
-      console.warn(`Model ${model} failed...`, error?.message)
+      console.warn(`Model ${model} busy/unavailable, trying next...`)
     }
   }
 

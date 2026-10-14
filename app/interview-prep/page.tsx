@@ -145,7 +145,7 @@ export default function InterviewPrepPage() {
     }
   }, [currentIndex, questions])
 
-  // Canvas Network Background Animation Effect
+  // Canvas Network Background Animation Effect (Matching Pricing Page)
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -231,7 +231,6 @@ export default function InterviewPrepPage() {
       if (session) {
         setUser(session.user)
 
-        // Securely fetch profile and role from Supabase database
         const { data: profileData } = await supabase
           .from('profiles')
           .select('*')
@@ -240,7 +239,7 @@ export default function InterviewPrepPage() {
 
         if (profileData) {
           setProfile(profileData)
-          if (profileData.role === 'admin') {
+          if (profileData.role === 'admin' || profileData.role === '`admin`') {
             setIsAdmin(true)
           }
         }
@@ -258,8 +257,10 @@ export default function InterviewPrepPage() {
       return
     }
 
+    const isOwnerOrAdmin = user?.email === 'yaman.kashyap@gmail.com' || profile?.role === 'admin' || profile?.role === '`admin`'
     const hasPaidPass = profile?.plan_name === 'Daily Pass' || profile?.plan_name === 'Monthly'
-    if (!isAdmin && !hasPaidPass) {
+
+    if (!isOwnerOrAdmin && !hasPaidPass) {
       setIsPricingModalOpen(true)
       return
     }
@@ -276,9 +277,15 @@ export default function InterviewPrepPage() {
     setGenerating(true)
 
     try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+
       const res = await fetch('/api/generate-interview', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({
           category: selectedCategory,
           seniority: seniorityLevel,
@@ -320,9 +327,15 @@ export default function InterviewPrepPage() {
   const evaluateInterviewTranscript = async (finalAnswers: string[]) => {
     setEvaluating(true)
     try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+
       const res = await fetch('/api/evaluate-interview', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({
           category: selectedCategory,
           seniority: seniorityLevel,
@@ -367,7 +380,7 @@ export default function InterviewPrepPage() {
   if (authLoading) return <div className="min-h-screen flex items-center justify-center text-slate-600">Verifying session...</div>
 
   return (
-    <div className="min-h-screen bg-transparent text-slate-900 relative overflow-hidden flex flex-col">
+    <div className="min-h-screen bg-slate-50 text-slate-900 relative overflow-hidden flex flex-col">
       <canvas ref={canvasRef} className="fixed inset-0 w-full h-full pointer-events-none z-0 opacity-70" />
 
       <style jsx>{`
