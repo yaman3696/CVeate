@@ -98,7 +98,7 @@ export default function InterviewPrepPage() {
 
   const seniorityOptions = ['Internship', 'Junior', 'Intermediate', 'Senior', 'Team Lead', 'Manager', 'HOD']
 
-  // Exact Dotted Network Particle Animation Effect from Pricing Page[cite: 15]
+  // Exact Dotted Network Particle Animation Effect from Pricing Page[cite: 14]
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -364,7 +364,7 @@ export default function InterviewPrepPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 py-16 px-6 text-slate-900 flex flex-col justify-center relative overflow-hidden">
-      {/* Dotted Network Canvas Background from Pricing Page[cite: 15] */}
+      {/* Dotted Network Canvas Background matching Pricing page[cite: 14] */}
       <canvas
         ref={canvasRef}
         className="absolute inset-0 pointer-events-none h-full w-full opacity-60 z-0"
