@@ -14,18 +14,6 @@ export default function InterviewPrepPage() {
   const [profile, setProfile] = useState<any>(null)
   const [isAdmin, setIsAdmin] = useState(false)
 
-  // Auth Modal State
-  const [isAuthOpen, setIsAuthOpen] = useState(false)
-  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signup')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [fullName, setFullName] = useState('')
-  const [contactNumber, setContactNumber] = useState('')
-  const [agreeTerms, setAgreeTerms] = useState(false)
-  const [errorMessage, setErrorMessage] = useState('')
-  const [successMessage, setSuccessMessage] = useState('')
-  const [loading, setLoading] = useState(false)
-
   // Pricing Modal for Freemium Users
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false)
 
@@ -52,7 +40,7 @@ export default function InterviewPrepPage() {
       name: 'Coding & Software Development', 
       tag: 'coding', 
       icon: (
-        <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <svg className="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
         </svg>
       ) 
@@ -61,7 +49,7 @@ export default function InterviewPrepPage() {
       name: 'UI/UX & Visual Designing', 
       tag: 'designing', 
       icon: (
-        <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <svg className="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
         </svg>
       ) 
@@ -70,7 +58,7 @@ export default function InterviewPrepPage() {
       name: 'Finance & Banking', 
       tag: 'finance', 
       icon: (
-        <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <svg className="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       ) 
@@ -79,7 +67,7 @@ export default function InterviewPrepPage() {
       name: 'Product Management', 
       tag: 'product', 
       icon: (
-        <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <svg className="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
         </svg>
       ) 
@@ -88,7 +76,7 @@ export default function InterviewPrepPage() {
       name: 'Digital Marketing & Growth', 
       tag: 'marketing', 
       icon: (
-        <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <svg className="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
         </svg>
       ) 
@@ -97,7 +85,7 @@ export default function InterviewPrepPage() {
       name: 'Data Science & AI', 
       tag: 'datascience', 
       icon: (
-        <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <svg className="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
         </svg>
       ) 
@@ -219,8 +207,13 @@ export default function InterviewPrepPage() {
 
   const handleCategorySelect = (categoryName: string) => {
     if (!user) {
-      setAuthMode('signin')
-      setIsAuthOpen(true)
+      // If user is guest, trigger global sign in or redirect preserving callback
+      const globalAuthBtn = document.querySelector('nav button') as HTMLButtonElement
+      if (globalAuthBtn) {
+        globalAuthBtn.click()
+      } else {
+        router.push('/ats-checker')
+      }
       return
     }
 
@@ -232,38 +225,6 @@ export default function InterviewPrepPage() {
 
     setSelectedCategory(categoryName)
     setIsWizardOpen(true)
-  }
-
-  const handleEmailAuth = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setErrorMessage('')
-    setSuccessMessage('')
-
-    try {
-      if (authMode === 'signup') {
-        if (!agreeTerms) throw new Error('You must agree to the terms and conditions.')
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { data: { full_name: fullName, contact_number: contactNumber } }
-        })
-        if (error) throw error
-        setSuccessMessage('Account created successfully! Please sign in.')
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password })
-        if (error) throw error
-        setSuccessMessage('Signed in successfully!')
-        setTimeout(() => {
-          setIsAuthOpen(false)
-          window.location.reload()
-        }, 800)
-      }
-    } catch (err: any) {
-      setErrorMessage(err.message || 'Authentication failed.')
-    } finally {
-      setLoading(false)
-    }
   }
 
   const handleStartInterviewQuestions = async (e: React.FormEvent) => {
@@ -404,7 +365,7 @@ export default function InterviewPrepPage() {
                     onClick={() => handleCategorySelect(cat.name)}
                     className="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:border-indigo-600 hover:shadow-md transition-all text-left flex items-center gap-4 cursor-pointer"
                   >
-                    <span className="p-3 rounded-xl bg-indigo-50 group-hover:scale-110 transition-transform">
+                    <span className="p-3 rounded-xl border border-slate-100 bg-slate-50 group-hover:scale-105 transition-transform">
                       {cat.icon}
                     </span>
                     <div>
@@ -600,50 +561,6 @@ export default function InterviewPrepPage() {
                   Generate 5 Interview Questions
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Global Auth Modal */}
-      {isAuthOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
-          <div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl border border-slate-100 relative text-slate-900">
-            <button onClick={() => setIsAuthOpen(false)} className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 font-bold cursor-pointer">X</button>
-            <h3 className="text-2xl font-extrabold text-slate-900 mb-2">{authMode === 'signin' ? 'Sign In' : 'Create Account'}</h3>
-            {errorMessage && <div className="mb-4 rounded-xl bg-red-50 p-3 text-xs text-red-600 font-semibold">{errorMessage}</div>}
-            {successMessage && <div className="mb-4 rounded-xl bg-green-50 p-3 text-xs text-green-600 font-semibold">{successMessage}</div>}
-
-            <form onSubmit={handleEmailAuth} className="space-y-3 text-xs">
-              {authMode === 'signup' && (
-                <>
-                  <div>
-                    <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Full Name</label>
-                    <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required className="w-full rounded-xl border border-slate-200 px-4 py-2 text-sm outline-none text-slate-900" />
-                  </div>
-                  <div>
-                    <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Contact Number</label>
-                    <input type="tel" maxLength={10} value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} required className="w-full rounded-xl border border-slate-200 px-4 py-2 text-sm outline-none text-slate-900" />
-                  </div>
-                </>
-              )}
-              <div>
-                <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Email</label>
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full rounded-xl border border-slate-200 px-4 py-2 text-sm outline-none text-slate-900" />
-              </div>
-              <div>
-                <label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Password</label>
-                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full rounded-xl border border-slate-200 px-4 py-2 text-sm outline-none text-slate-900" />
-              </div>
-              {authMode === 'signup' && (
-                <div className="flex items-center gap-2">
-                  <input type="checkbox" id="terms" checked={agreeTerms} onChange={(e) => setAgreeTerms(e.target.checked)} required />
-                  <label htmlFor="terms" className="text-[11px] text-slate-600">I agree to Terms & Conditions.</label>
-                </div>
-              )}
-              <button type="submit" disabled={loading} className="w-full rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white shadow-md hover:bg-indigo-500 cursor-pointer">
-                {loading ? 'Processing...' : (authMode === 'signin' ? 'Sign In' : 'Sign Up')}
-              </button>
             </form>
           </div>
         </div>
