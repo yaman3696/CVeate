@@ -850,9 +850,9 @@ export default function LandingPage() {
               <li><Link href="/" className="hover:text-white transition-colors">Home</Link></li>
               <li><a href="#about" className="hover:text-white transition-colors">About Us</a></li>
               <li><Link href="/blog" className="hover:text-white transition-colors">Blog</Link></li>
+              <li><Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
               <li><Link href="/ats-checker" className="hover:text-white transition-colors">ATS Checker</Link></li>
               <li><Link href="/interview-prep" className="hover:text-white transition-colors">Interview-Prep</Link></li>
-              <li><Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
             </ul>
           </div>
           <div className="space-y-3">

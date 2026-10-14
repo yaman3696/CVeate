@@ -325,6 +325,7 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
               <Link href="/blog" className="hover:text-white transition-colors">Blog</Link>
               <Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link>
               <Link href="/ats-checker" className="hover:text-white transition-colors">ATS Checker</Link>
+              <Link href="/interview-prep" className="hover:text-white transition-colors">Interview Prep</Link>
             </div>
 
             <div className="flex items-center gap-3">

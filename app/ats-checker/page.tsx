@@ -465,7 +465,7 @@ export default function AtsCheckerPage() {
             <Link href="/blog" className="hover:text-indigo-600 transition-colors">Blog</Link>
             <Link href="/pricing" className="hover:text-indigo-600 transition-colors">Pricing</Link>
             <Link href="/ats-checker" className="text-indigo-600 font-bold transition-colors">ATS Checker</Link>
-            <Link href="/interview-prep" className="text-indigo-600 font-bold transition-colors">Interview-Prep</Link>
+            <Link href="/interview-prep" className="hover:text-indigo-600 transition-colors">Interview-Prep</Link>
           </div>
 
           <div className="flex items-center gap-3">
@@ -530,7 +530,7 @@ export default function AtsCheckerPage() {
               <Link href="/blog" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-indigo-600 transition-colors py-1.5">Blog</Link>
               <Link href="/pricing" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-indigo-600 transition-colors py-1.5">Pricing</Link>
               <Link href="/ats-checker" onClick={() => setIsMobileMenuOpen(false)} className="text-indigo-600 py-1.5">ATS Checker</Link>
-              <Link href="/interview-prep" onClick={() => setIsMobileMenuOpen(false)} className="text-indigo-600 py-1.5">Interview-Prep</Link>
+              <Link href="/interview-prep" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-indigo-600 transition-colors py-1.5">Interview-Prep</Link>
             </div>
           </div>
         )}
