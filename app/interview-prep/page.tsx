@@ -48,12 +48,60 @@ export default function InterviewPrepPage() {
   const [savedSuccess, setSavedSuccess] = useState(false)
 
   const professionCategories = [
-    { name: 'Coding & Software Development', tag: 'coding', icon: '💻' },
-    { name: 'UI/UX & Visual Designing', tag: 'designing', icon: '🎨' },
-    { name: 'Finance & Banking', tag: 'finance', icon: '📈' },
-    { name: 'Product Management', tag: 'product', icon: '🚀' },
-    { name: 'Digital Marketing & Growth', tag: 'marketing', icon: '📣' },
-    { name: 'Data Science & AI', tag: 'datascience', icon: '📊' }
+    { 
+      name: 'Coding & Software Development', 
+      tag: 'coding', 
+      icon: (
+        <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+        </svg>
+      ) 
+    },
+    { 
+      name: 'UI/UX & Visual Designing', 
+      tag: 'designing', 
+      icon: (
+        <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+        </svg>
+      ) 
+    },
+    { 
+      name: 'Finance & Banking', 
+      tag: 'finance', 
+      icon: (
+        <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ) 
+    },
+    { 
+      name: 'Product Management', 
+      tag: 'product', 
+      icon: (
+        <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      ) 
+    },
+    { 
+      name: 'Digital Marketing & Growth', 
+      tag: 'marketing', 
+      icon: (
+        <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+        </svg>
+      ) 
+    },
+    { 
+      name: 'Data Science & AI', 
+      tag: 'datascience', 
+      icon: (
+        <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+      ) 
+    }
   ]
 
   const seniorityOptions = ['Internship', 'Junior', 'Intermediate', 'Senior', 'Team Lead', 'Manager', 'HOD']
@@ -176,7 +224,6 @@ export default function InterviewPrepPage() {
       return
     }
 
-    // Check pass or admin privilege
     const hasPaidPass = profile?.plan_name === 'Daily Pass' || profile?.plan_name === 'Monthly'
     if (!isAdmin && !hasPaidPass) {
       setIsPricingModalOpen(true)
@@ -219,7 +266,6 @@ export default function InterviewPrepPage() {
     }
   }
 
-  // Generate 5 Questions via Gemini API backend
   const handleStartInterviewQuestions = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!experienceYears) {
@@ -265,7 +311,6 @@ export default function InterviewPrepPage() {
       setCurrentIndex(prev => prev + 1)
       setCurrentAnswer(updatedAnswers[currentIndex + 1] === '[Skipped]' ? '' : updatedAnswers[currentIndex + 1])
     } else {
-      // Finished all 5 questions -> Submit transcript to Gemini for feedback
       evaluateInterviewTranscript(updatedAnswers)
     }
   }
@@ -331,44 +376,11 @@ export default function InterviewPrepPage() {
     <div className="min-h-screen bg-white text-slate-900 relative overflow-hidden flex flex-col">
       <canvas ref={canvasRef} className="fixed inset-0 w-full h-full pointer-events-none z-0 opacity-60" />
 
-      {/* Unified Global Navbar */}
-      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md shadow-sm text-slate-900 border-b border-slate-100">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <Link href="/" className="text-2xl font-black tracking-tight text-indigo-600">
-            CVeat
-          </Link>
-          
-          <div className="hidden md:flex items-center gap-6 ml-auto mr-6 text-sm font-medium text-slate-600">
-            <Link href="/" className="hover:text-indigo-600 transition-colors">Home</Link>
-            <Link href="/blog" className="hover:text-indigo-600 transition-colors">Blog</Link>
-            <Link href="/pricing" className="hover:text-indigo-600 transition-colors">Pricing</Link>
-            <Link href="/interview-prep" className="text-indigo-600 font-bold transition-colors">Interview Prep</Link>
-            <Link href="/ats-checker" className="hover:text-indigo-600 transition-colors">ATS Checker</Link>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {user ? (
-              <span className="text-xs font-bold bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-full border border-indigo-100">
-                {profile?.plan_name || 'Freemium'} {isAdmin ? '(Admin)' : ''}
-              </span>
-            ) : (
-              <button
-                onClick={() => { setAuthMode('signin'); setIsAuthOpen(true); }}
-                className="rounded-xl bg-indigo-600 px-5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500 transition-all cursor-pointer"
-              >
-                Sign In
-              </button>
-            )}
-          </div>
-        </div>
-      </nav>
-
       {/* Main Content Area */}
       <div className="flex-grow z-10 max-w-6xl mx-auto px-6 py-16 w-full">
 
         {!generating && !questions.length && !interviewResult && (
           <div className="space-y-16">
-            {/* Hero Section */}
             <div className="text-center space-y-4 max-w-3xl mx-auto">
               <span className="inline-block rounded-full bg-indigo-50 px-4 py-1 text-xs font-bold uppercase tracking-wider text-indigo-600 border border-indigo-100">
                 AI Career Companion
@@ -381,7 +393,6 @@ export default function InterviewPrepPage() {
               </p>
             </div>
 
-            {/* Profession Category Tags Grid */}
             <div className="space-y-6">
               <h3 className="text-center text-xs font-bold uppercase tracking-wider text-slate-400">
                 Select a Profession Category to Begin
@@ -393,7 +404,7 @@ export default function InterviewPrepPage() {
                     onClick={() => handleCategorySelect(cat.name)}
                     className="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:border-indigo-600 hover:shadow-md transition-all text-left flex items-center gap-4 cursor-pointer"
                   >
-                    <span className="text-3xl p-3 rounded-xl bg-indigo-50 group-hover:scale-110 transition-transform">
+                    <span className="p-3 rounded-xl bg-indigo-50 group-hover:scale-110 transition-transform">
                       {cat.icon}
                     </span>
                     <div>
@@ -409,7 +420,6 @@ export default function InterviewPrepPage() {
           </div>
         )}
 
-        {/* Generating Loader */}
         {generating && (
           <div className="text-center py-24 space-y-6">
             <div className="w-16 h-16 rounded-full bg-indigo-600 text-white flex items-center justify-center mx-auto text-xl font-bold animate-spin">
@@ -420,7 +430,6 @@ export default function InterviewPrepPage() {
           </div>
         )}
 
-        {/* 5-Question Interview Flow */}
         {!generating && questions.length > 0 && !interviewResult && (
           <div className="max-w-3xl mx-auto bg-white rounded-3xl p-8 sm:p-10 shadow-2xl border border-slate-100 space-y-6">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
@@ -464,7 +473,6 @@ export default function InterviewPrepPage() {
           </div>
         )}
 
-        {/* Evaluating Loader */}
         {evaluating && (
           <div className="text-center py-24 space-y-6">
             <div className="w-16 h-16 rounded-full bg-indigo-600 text-white flex items-center justify-center mx-auto text-xl font-bold animate-pulse">
@@ -475,7 +483,6 @@ export default function InterviewPrepPage() {
           </div>
         )}
 
-        {/* Interview Feedback & Rating Result Page */}
         {interviewResult && (
           <div className="max-w-3xl mx-auto bg-white rounded-3xl p-8 sm:p-10 shadow-2xl border border-slate-100 space-y-8">
             <div className="flex items-center justify-between border-b border-slate-100 pb-6">
