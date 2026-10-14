@@ -98,7 +98,7 @@ export default function InterviewPrepPage() {
 
   const seniorityOptions = ['Internship', 'Junior', 'Intermediate', 'Senior', 'Team Lead', 'Manager', 'HOD']
 
-  // Exact Dotted Network Particle Animation Effect from Pricing Page[cite: 14]
+  // Dotted Network Particle Animation Effect with initial sizing fallback
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -106,15 +106,21 @@ export default function InterviewPrepPage() {
     if (!ctx) return
 
     let animationFrameId: number
-    let width = (canvas.width = canvas.offsetWidth)
-    let height = (canvas.height = canvas.offsetHeight)
 
-    const handleResize = () => {
+    const updateSize = () => {
       if (!canvas) return
-      width = canvas.width = canvas.offsetWidth
-      height = canvas.height = canvas.offsetHeight
+      const width = canvas.offsetWidth || window.innerWidth
+      const height = canvas.offsetHeight || window.innerHeight
+      canvas.width = width
+      canvas.height = height
     }
+
+    updateSize()
+    const handleResize = () => { updateSize() }
     window.addEventListener('resize', handleResize)
+
+    let width = canvas.width
+    let height = canvas.height
 
     const particles = Array.from({ length: 25 }, () => ({
       x: Math.random() * width,
@@ -125,6 +131,8 @@ export default function InterviewPrepPage() {
     }))
 
     const render = () => {
+      width = canvas.width
+      height = canvas.height
       ctx.clearRect(0, 0, width, height)
 
       for (let i = 0; i < particles.length; i++) {
@@ -158,9 +166,14 @@ export default function InterviewPrepPage() {
       animationFrameId = requestAnimationFrame(render)
     }
 
-    render()
+    // Small timeout to ensure the DOM layout box is painted on initial mount
+    const timer = setTimeout(() => {
+      updateSize()
+      render()
+    }, 50)
 
     return () => {
+      clearTimeout(timer)
       window.removeEventListener('resize', handleResize)
       cancelAnimationFrame(animationFrameId)
     }

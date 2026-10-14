@@ -62,7 +62,7 @@ export async function POST(req: Request) {
       try {
         attempts++;
         response = await ai.models.generateContent({
-          model: 'gemini-3.8-flash',
+          model: 'models/gemini-3.8-flash',
           contents: [
             {
               text: prompt,
