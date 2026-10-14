@@ -743,10 +743,12 @@ export default function LandingPage() {
 
       {/* SEO Optimized FAQ Section */}
       <section className="mx-auto max-w-4xl px-6 py-20 border-t border-slate-100">
-        <div className="text-center space-y-3 mb-12">
-          <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
-            Got Questions
-          </span>
+      <div className="text-center space-y-4 mb-12">
+          <div className="mb-4 inline-block">
+            <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
+              Got Questions
+            </span>
+          </div>
           <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
             Frequently Asked Questions
           </h2>
