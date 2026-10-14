@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase'
 export default function InterviewPrepPage() {
   const router = useRouter()
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const waveformCanvasRef = useRef<HTMLCanvasElement | null>(null)
 
   const [user, setUser] = useState<any>(null)
   const [authLoading, setAuthLoading] = useState(true)
@@ -30,6 +31,12 @@ export default function InterviewPrepPage() {
   const [userAnswers, setUserAnswers] = useState<string[]>([])
   const [currentAnswer, setCurrentAnswer] = useState('')
   
+  // Audio Speech & Waveform States
+  const [isSpeaking, setIsSpeaking] = useState(false)
+  const [isRecording, setIsRecording] = useState(false)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const audioChunksRef = useRef<Blob[]>([])
+
   const [evaluating, setEvaluating] = useState(false)
   const [interviewResult, setInterviewResult] = useState<any>(null)
   const [saving, setSaving] = useState(false)
@@ -94,7 +101,105 @@ export default function InterviewPrepPage() {
 
   const seniorityOptions = ['Internship', 'Junior', 'Intermediate', 'Senior', 'Team Lead', 'Manager', 'HOD']
 
-  // Canvas Network Animation Effect
+  const speakQuestion = (text: string) => {
+    if (!('speechSynthesis' in window)) return
+
+    window.speechSynthesis.cancel()
+    const utterance = new SpeechSynthesisUtterance(text)
+    utterance.rate = 1.0
+    utterance.pitch = 1.0
+
+    utterance.onstart = () => setIsSpeaking(true)
+    utterance.onend = () => {
+      setIsSpeaking(false)
+      startRecording()
+    }
+
+    window.speechSynthesis.speak(utterance)
+  }
+
+  const startRecording = async () => {
+    audioChunksRef.current = []
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const mediaRecorder = new MediaRecorder(stream)
+      mediaRecorderRef.current = mediaRecorder
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) audioChunksRef.current.push(event.data)
+      }
+
+      mediaRecorder.onstop = () => {
+        setCurrentAnswer(prev => prev + (prev ? ' ' : '') + '[Voice Answer Recorded]')
+      }
+
+      mediaRecorder.start()
+      setIsRecording(true)
+    } catch (err) {
+      console.log('Microphone access note: ', err)
+    }
+  }
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop()
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop())
+      setIsRecording(false)
+    }
+  }
+
+  useEffect(() => {
+    if (questions.length > 0 && currentIndex < questions.length) {
+      speakQuestion(questions[currentIndex])
+    }
+    return () => {
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel()
+    }
+  }, [currentIndex, questions])
+
+  useEffect(() => {
+    const canvas = waveformCanvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    let animId: number
+    let phase = 0
+
+    const renderWaveform = () => {
+      animId = requestAnimationFrame(renderWaveform)
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+      if (!isSpeaking && !isRecording) {
+        ctx.strokeStyle = '#cbd5e1'
+        ctx.lineWidth = 2
+        ctx.beginPath()
+        ctx.moveTo(0, canvas.height / 2)
+        ctx.lineTo(canvas.width, canvas.height / 2)
+        ctx.stroke()
+        return
+      }
+
+      ctx.lineWidth = 2.5
+      ctx.strokeStyle = isSpeaking ? '#6366f1' : '#ef4444'
+      ctx.beginPath()
+
+      const frequency = isSpeaking ? 0.04 : 0.08
+      const amplitude = isSpeaking ? 16 : 24
+
+      for (let x = 0; x < canvas.width; x++) {
+        const y = canvas.height / 2 + Math.sin(x * frequency + phase) * amplitude * Math.sin(x / (canvas.width / Math.PI))
+        if (x === 0) ctx.moveTo(x, y)
+        else ctx.lineTo(x, y)
+      }
+      ctx.stroke()
+      phase += 0.15
+    }
+
+    renderWaveform()
+    return () => cancelAnimationFrame(animId)
+  }, [isSpeaking, isRecording])
+
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -128,22 +233,6 @@ export default function InterviewPrepPage() {
         if (!running) return
         ctx.clearRect(0, 0, width, height)
 
-        for (let i = 0; i < particles.length; i++) {
-          for (let j = i + 1; j < particles.length; j++) {
-            const dx = particles[i].x - particles[j].x
-            const dy = particles[i].y - particles[j].y
-            const dist = Math.sqrt(dx * dx + dy * dy)
-            if (dist < 110) {
-              ctx.strokeStyle = `rgba(99, 102, 241, ${0.15 * (1 - dist / 110)})`
-              ctx.lineWidth = 1
-              ctx.beginPath()
-              ctx.moveTo(particles[i].x, particles[i].y)
-              ctx.lineTo(particles[j].x, particles[j].y)
-              ctx.stroke()
-            }
-          }
-        }
-
         particles.forEach((p) => {
           p.x += p.vx
           p.y += p.vy
@@ -174,16 +263,13 @@ export default function InterviewPrepPage() {
     }
   }, [])
 
-  // Check Session & Admin Privilege
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (session) {
         setUser(session.user)
         const OWNER_EMAIL = 'yaman.kashyap@gmail.com'
-        if (session.user.email === OWNER_EMAIL) {
-          setIsAdmin(true)
-        }
+        if (session.user.email === OWNER_EMAIL) setIsAdmin(true)
 
         const { data: profileData } = await supabase
           .from('profiles')
@@ -207,13 +293,9 @@ export default function InterviewPrepPage() {
 
   const handleCategorySelect = (categoryName: string) => {
     if (!user) {
-      // If user is guest, trigger global sign in or redirect preserving callback
       const globalAuthBtn = document.querySelector('nav button') as HTMLButtonElement
-      if (globalAuthBtn) {
-        globalAuthBtn.click()
-      } else {
-        router.push('/ats-checker')
-      }
+      if (globalAuthBtn) globalAuthBtn.click()
+      else router.push('/ats-checker')
       return
     }
 
@@ -264,6 +346,9 @@ export default function InterviewPrepPage() {
   }
 
   const handleNextOrSkipQuestion = (isSkipped = false) => {
+    if (isRecording) stopRecording()
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel()
+
     const updatedAnswers = [...userAnswers]
     updatedAnswers[currentIndex] = isSkipped ? '[Skipped]' : currentAnswer
     setUserAnswers(updatedAnswers)
@@ -337,10 +422,9 @@ export default function InterviewPrepPage() {
     <div className="min-h-screen bg-white text-slate-900 relative overflow-hidden flex flex-col">
       <canvas ref={canvasRef} className="fixed inset-0 w-full h-full pointer-events-none z-0 opacity-60" />
 
-      {/* Main Content Area */}
       <div className="flex-grow z-10 max-w-6xl mx-auto px-6 py-16 w-full">
 
-        {!generating && !questions.length && !interviewResult && (
+        {!generating && questions.length === 0 && !interviewResult && (
           <div className="space-y-16">
             <div className="text-center space-y-4 max-w-3xl mx-auto">
               <span className="inline-block rounded-full bg-indigo-50 px-4 py-1 text-xs font-bold uppercase tracking-wider text-indigo-600 border border-indigo-100">
@@ -350,7 +434,7 @@ export default function InterviewPrepPage() {
                 Master Your Next Interview with <span className="text-indigo-600">AI Mock Training</span>
               </h1>
               <p className="text-base text-slate-600 leading-relaxed max-w-2xl mx-auto">
-                Select your profession category below to start a tailored 5-question interview session complete with instant AI scoring and recruiter feedback.
+                Select your profession category below to start a tailored 5-question voice interview session complete with live AI speech, dynamic waveforms, and instant recruiter feedback.
               </p>
             </div>
 
@@ -400,19 +484,65 @@ export default function InterviewPrepPage() {
               <span className="text-xs font-semibold text-slate-400">Seniority: {seniorityLevel}</span>
             </div>
 
+            <div className="rounded-2xl bg-slate-900 p-6 text-center text-white space-y-3 relative overflow-hidden shadow-inner">
+              <div className="flex items-center justify-center gap-2">
+                <span className={`h-2.5 w-2.5 rounded-full ${isSpeaking ? 'bg-indigo-400 animate-ping' : (isRecording ? 'bg-red-500 animate-pulse' : 'bg-slate-500')}`}></span>
+                <span className="text-xs font-bold uppercase tracking-widest text-slate-300">
+                  {isSpeaking ? 'AI Interviewer Speaking...' : (isRecording ? 'Listening to Your Answer...' : 'Ready / Paused')}
+                </span>
+              </div>
+              
+              <div className="h-16 flex items-center justify-center">
+                <canvas ref={waveformCanvasRef} width={500} height={60} className="w-full max-w-md h-12" />
+              </div>
+
+              <div className="flex items-center justify-center gap-4 pt-1">
+                <button
+                  type="button"
+                  onClick={() => speakQuestion(questions[currentIndex])}
+                  className="text-xs font-semibold text-indigo-300 hover:text-white transition-colors cursor-pointer"
+                >
+                  [ Replay Question Audio ]
+                </button>
+              </div>
+            </div>
+
             <div className="space-y-3">
               <h2 className="text-lg font-bold text-slate-900 leading-snug">
                 {questions[currentIndex]}
               </h2>
             </div>
 
-            <div className="space-y-2">
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">Your Answer</label>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">Your Answer</label>
+                <div className="flex items-center gap-2">
+                  {!isRecording ? (
+                    <button
+                      type="button"
+                      onClick={startRecording}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-red-50 border border-red-200 px-3 py-1 text-xs font-bold text-red-600 hover:bg-red-100 transition-all cursor-pointer"
+                    >
+                      <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse"></span>
+                      Record Voice Answer
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={stopRecording}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-1 text-xs font-bold text-white hover:bg-slate-800 transition-all cursor-pointer"
+                    >
+                      Stop Recording
+                    </button>
+                  )}
+                </div>
+              </div>
+
               <textarea
-                rows={6}
+                rows={5}
                 value={currentAnswer}
                 onChange={(e) => setCurrentAnswer(e.target.value)}
-                placeholder="Type your detailed interview answer here..."
+                placeholder="Type your response or speak into your microphone..."
                 className="w-full rounded-2xl border border-slate-200 p-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-slate-900 resize-none"
               />
             </div>
@@ -500,7 +630,6 @@ export default function InterviewPrepPage() {
 
       </div>
 
-      {/* Configuration Wizard Modal */}
       {isWizardOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
           <div className="w-full max-w-lg rounded-3xl bg-white p-8 shadow-2xl border border-slate-100 relative text-slate-900 space-y-6">
@@ -566,7 +695,6 @@ export default function InterviewPrepPage() {
         </div>
       )}
 
-      {/* Pricing Modal for Freemium Users */}
       {isPricingModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
           <div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl border border-slate-100 text-center space-y-4 text-slate-900">
