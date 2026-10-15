@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, notFound } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 
@@ -44,18 +44,9 @@ export default function ArticlePage() {
     return <div className="min-h-screen flex items-center justify-center text-slate-500">Loading article...</div>
   }
 
+  // Trigger Next.js 404 handling if the article does not exist in Supabase
   if (!blog) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center text-center px-6">
-        <h1 className="text-3xl font-extrabold text-slate-900 mb-2">404 - Article Not Found</h1>
-        <p className="text-sm text-slate-500 mb-6">The blog post you are looking for doesn't exist or has been removed.</p>
-        <Link href="/blog">
-          <button className="rounded-xl bg-indigo-600 px-6 py-3 text-xs font-semibold text-white shadow-md hover:bg-indigo-500 transition-all cursor-pointer">
-            ← Back to All Blogs
-          </button>
-        </Link>
-      </div>
-    )
+    notFound()
   }
 
   return (
@@ -65,7 +56,7 @@ export default function ArticlePage() {
         {/* Navigation & Minimalist Edit Icon Button */}
         <div className="flex items-center justify-between">
           <Link href="/blog" className="text-xs font-bold text-indigo-600 hover:underline inline-block">
-            ← Back to Career Insights
+             Back to Career Insights
           </Link>
           {isAdmin && (
             <Link href={`/admin/blog/edit/${blog.id}`} title="Edit Article">
@@ -96,9 +87,9 @@ export default function ArticlePage() {
 
         {/* Main Content Area */}
         <div 
-  className="max-w-none text-slate-700 leading-relaxed space-y-4 [&_a]:text-indigo-600 [&_a]:font-bold [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-indigo-800"
-  dangerouslySetInnerHTML={{ __html: blog.content }}
-/>
+          className="max-w-none text-slate-700 leading-relaxed space-y-4 [&_a]:text-indigo-600 [&_a]:font-bold [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-indigo-800"
+          dangerouslySetInnerHTML={{ __html: blog.content }}
+        />
 
         {/* Footer Backlink Callout */}
         <div className="mt-16 p-8 rounded-3xl bg-indigo-50/70 border border-indigo-100 text-center space-y-4">

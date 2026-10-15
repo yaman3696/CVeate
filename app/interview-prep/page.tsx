@@ -98,7 +98,7 @@ export default function InterviewPrepPage() {
 
   const seniorityOptions = ['Internship', 'Junior', 'Intermediate', 'Senior', 'Team Lead', 'Manager', 'HOD']
 
-  // Dotted Network Particle Animation Effect with initial sizing fallback
+  // Robust Dotted Network Particle Animation with ResizeObserver for immediate first-load paint
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -107,32 +107,30 @@ export default function InterviewPrepPage() {
 
     let animationFrameId: number
 
-    const updateSize = () => {
+    const updateCanvasSize = () => {
       if (!canvas) return
-      const width = canvas.offsetWidth || window.innerWidth
-      const height = canvas.offsetHeight || window.innerHeight
-      canvas.width = width
-      canvas.height = height
+      canvas.width = canvas.offsetWidth || window.innerWidth
+      canvas.height = canvas.offsetHeight || window.innerHeight
     }
 
-    updateSize()
-    const handleResize = () => { updateSize() }
-    window.addEventListener('resize', handleResize)
+    updateCanvasSize()
 
-    let width = canvas.width
-    let height = canvas.height
+    const observer = new ResizeObserver(() => {
+      updateCanvasSize()
+    })
+    observer.observe(canvas)
 
     const particles = Array.from({ length: 25 }, () => ({
-      x: Math.random() * width,
-      y: Math.random() * height,
+      x: Math.random() * (canvas.width || window.innerWidth),
+      y: Math.random() * (canvas.height || window.innerHeight),
       vx: (Math.random() - 0.5) * 0.5,
       vy: (Math.random() - 0.5) * 0.5,
       radius: Math.random() * 2 + 1.5,
     }))
 
     const render = () => {
-      width = canvas.width
-      height = canvas.height
+      const width = canvas.width
+      const height = canvas.height
       ctx.clearRect(0, 0, width, height)
 
       for (let i = 0; i < particles.length; i++) {
@@ -166,15 +164,10 @@ export default function InterviewPrepPage() {
       animationFrameId = requestAnimationFrame(render)
     }
 
-    // Small timeout to ensure the DOM layout box is painted on initial mount
-    const timer = setTimeout(() => {
-      updateSize()
-      render()
-    }, 50)
+    render()
 
     return () => {
-      clearTimeout(timer)
-      window.removeEventListener('resize', handleResize)
+      observer.disconnect()
       cancelAnimationFrame(animationFrameId)
     }
   }, [])
@@ -245,8 +238,11 @@ export default function InterviewPrepPage() {
   const handleCategorySelect = (categoryName: string) => {
     if (!user) {
       const globalAuthBtn = document.querySelector('nav button') as HTMLButtonElement
-      if (globalAuthBtn) globalAuthBtn.click()
-      else router.push('/ats-checker')
+      if (globalAuthBtn) {
+        globalAuthBtn.click()
+      } else {
+        window.dispatchEvent(new CustomEvent('open-auth-modal', { detail: 'signin' }))
+      }
       return
     }
 
@@ -377,7 +373,7 @@ export default function InterviewPrepPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 py-16 px-6 text-slate-900 flex flex-col justify-center relative overflow-hidden">
-      {/* Dotted Network Canvas Background matching Pricing page[cite: 14] */}
+      {/* Dotted Network Canvas Background */}
       <canvas
         ref={canvasRef}
         className="absolute inset-0 pointer-events-none h-full w-full opacity-60 z-0"
