@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react'
 
-// Text-to-Speech Hook
 export function useSpeechSynthesis() {
   const [speaking, setSpeaking] = useState(false)
 
@@ -32,8 +31,7 @@ export function useSpeechSynthesis() {
   return { speaking, speak, cancel }
 }
 
-// Cross-Browser Audio Recorder Hook (Temporary in-memory blob recording)
-export function useAudioRecorder() {
+export function useLiveAudioRecorder() {
   const [recording, setRecording] = useState(false)
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
@@ -61,8 +59,8 @@ export function useAudioRecorder() {
       mediaRecorder.start()
       setRecording(true)
     } catch (err) {
-      console.error('Microphone access error:', err)
-      alert('Microphone permission is required for voice recording. Please check your browser settings.')
+      console.error('Microphone permission error:', err)
+      alert('Microphone access is required for live voice answers. Please check your browser settings.')
     }
   }
 

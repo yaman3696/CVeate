@@ -4,11 +4,12 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { useSpeechSynthesis, useAudioRecorder } from '@/hooks/useSpeech'
+import { useSpeechSynthesis, useLiveAudioRecorder } from '@/hooks/useSpeech'
 
 export default function InterviewPrepPage() {
   const router = useRouter()
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const videoRef = useRef<HTMLVideoElement | null>(null)
 
   const [user, setUser] = useState<any>(null)
   const [authLoading, setAuthLoading] = useState(true)
@@ -25,6 +26,7 @@ export default function InterviewPrepPage() {
   const [generating, setGenerating] = useState(false)
   const [questions, setQuestions] = useState<any[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [audioBlobs, setAudioBlobs] = useState<Blob[]>([])
   const [userAnswers, setUserAnswers] = useState<string[]>([])
   const [currentAnswer, setCurrentAnswer] = useState('')
 
@@ -33,70 +35,32 @@ export default function InterviewPrepPage() {
   const [saving, setSaving] = useState(false)
   const [savedSuccess, setSavedSuccess] = useState(false)
 
-  // Speech and Audio Recording hooks
   const { speaking, speak, cancel: cancelSpeech } = useSpeechSynthesis()
-  const { recording, audioBlob, startRecording, stopRecording } = useAudioRecorder()
+  const { recording, audioBlob, startRecording, stopRecording } = useLiveAudioRecorder()
 
   const professionCategories = [
-    { 
-      name: 'Coding & Software Development', 
-      tag: 'coding', 
-      icon: (
-        <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-        </svg>
-      ) 
-    },
-    { 
-      name: 'UI/UX & Visual Designing', 
-      tag: 'designing', 
-      icon: (
-        <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-        </svg>
-      ) 
-    },
-    { 
-      name: 'Finance & Banking', 
-      tag: 'finance', 
-      icon: (
-        <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ) 
-    },
-    { 
-      name: 'Product Management', 
-      tag: 'product', 
-      icon: (
-        <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-        </svg>
-      ) 
-    },
-    { 
-      name: 'Digital Marketing & Growth', 
-      tag: 'marketing', 
-      icon: (
-        <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
-        </svg>
-      ) 
-    },
-    { 
-      name: 'Data Science & AI', 
-      tag: 'datascience', 
-      icon: (
-        <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-        </svg>
-      ) 
-    }
+    { name: 'Coding & Software Development', tag: 'coding', icon: <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg> },
+    { name: 'UI/UX & Visual Designing', tag: 'designing', icon: <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg> },
+    { name: 'Finance & Banking', tag: 'finance', icon: <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
+    { name: 'Product Management', tag: 'product', icon: <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg> },
+    { name: 'Digital Marketing & Growth', tag: 'marketing', icon: <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" /></svg> },
+    { name: 'Data Science & AI', tag: 'datascience', icon: <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg> }
   ]
 
   const seniorityOptions = ['Internship', 'Junior', 'Intermediate', 'Senior', 'Team Lead', 'Manager', 'HOD']
 
-  // Dotted Network Particle Animation Effect with ResizeObserver for instant first-load paint
+  // Enable Webcam Stream for Live Room Experience
+  useEffect(() => {
+    if (questions.length > 0 && !interviewResult) {
+      navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+        .then((stream) => {
+          if (videoRef.current) videoRef.current.srcObject = stream
+        })
+        .catch((err) => console.log('Webcam not available:', err))
+    }
+  }, [questions.length, interviewResult])
+
+  // Dotted Network Particle Animation
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -104,7 +68,6 @@ export default function InterviewPrepPage() {
     if (!ctx) return
 
     let animationFrameId: number
-
     const updateCanvasSize = () => {
       if (!canvas) return
       canvas.width = canvas.offsetWidth || window.innerWidth
@@ -160,21 +123,20 @@ export default function InterviewPrepPage() {
     }
 
     render()
-
     return () => {
       observer.disconnect()
       cancelAnimationFrame(animationFrameId)
     }
   }, [])
 
-  // Speak question when active
+  // Speak question aloud automatically
   useEffect(() => {
     if (questions.length > 0 && currentIndex < questions.length) {
-      speak(questions[currentIndex])
+      speak(questions[currentIndex], () => {
+        startRecording() // Automatically start recording user's voice after AI finishes asking
+      })
     }
-    return () => {
-      cancelSpeech()
-    }
+    return () => { cancelSpeech() }
   }, [currentIndex, questions])
 
   useEffect(() => {
@@ -182,17 +144,10 @@ export default function InterviewPrepPage() {
       const { data: { session } } = await supabase.auth.getSession()
       if (session) {
         setUser(session.user)
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
-
+        const { data: profileData } = await supabase.from('profiles').select('*').eq('id', session.user.id).single()
         if (profileData) {
           setProfile(profileData)
-          if (profileData.role === 'admin' || profileData.role === '`admin`') {
-            setIsAdmin(true)
-          }
+          if (profileData.role === 'admin' || profileData.role === '`admin`') setIsAdmin(true)
         }
       }
       setAuthLoading(false)
@@ -202,17 +157,10 @@ export default function InterviewPrepPage() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session) {
         setUser(session.user)
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
-
+        const { data: profileData } = await supabase.from('profiles').select('*').eq('id', session.user.id).single()
         if (profileData) {
           setProfile(profileData)
-          if (profileData.role === 'admin' || profileData.role === '`admin`') {
-            setIsAdmin(true)
-          }
+          if (profileData.role === 'admin' || profileData.role === '`admin`') setIsAdmin(true)
         }
       } else {
         setUser(null)
@@ -222,19 +170,14 @@ export default function InterviewPrepPage() {
       setAuthLoading(false)
     })
 
-    return () => {
-      subscription.unsubscribe()
-    }
+    return () => subscription.unsubscribe()
   }, [])
 
   const handleCategorySelect = (categoryName: string) => {
     if (!user) {
       const globalAuthBtn = document.querySelector('nav button') as HTMLButtonElement
-      if (globalAuthBtn) {
-        globalAuthBtn.click()
-      } else {
-        window.dispatchEvent(new CustomEvent('open-auth-modal', { detail: 'signin' }))
-      }
+      if (globalAuthBtn) globalAuthBtn.click()
+      else window.dispatchEvent(new CustomEvent('open-auth-modal', { detail: 'signin' }))
       return
     }
 
@@ -280,6 +223,7 @@ export default function InterviewPrepPage() {
 
       setQuestions(data.questions || [])
       setCurrentIndex(0)
+      setAudioBlobs([])
       setUserAnswers(new Array(data.questions.length).fill(''))
       setCurrentAnswer('')
     } catch (err: any) {
@@ -291,52 +235,62 @@ export default function InterviewPrepPage() {
 
   const handleNextOrSkipQuestion = async (isSkipped = false) => {
     cancelSpeech()
-    stopRecording()
+    if (recording) stopRecording()
 
-    let answerText = isSkipped ? '[Skipped]' : currentAnswer
+    const updatedBlobs = [...audioBlobs]
+    if (!isSkipped && audioBlob) {
+      updatedBlobs[currentIndex] = audioBlob
+    } else {
+      updatedBlobs[currentIndex] = new Blob([], { type: 'audio/webm' })
+    }
+    setAudioBlobs(updatedBlobs)
 
-    // If audio blob was recorded temporarily in memory, you can append/send it or keep text fallback
     const updatedAnswers = [...userAnswers]
-    updatedAnswers[currentIndex] = answerText
+    updatedAnswers[currentIndex] = isSkipped ? '[Skipped]' : (currentAnswer.trim() || '[Spoken Audio Response]')
     setUserAnswers(updatedAnswers)
 
     if (currentIndex < questions.length - 1) {
       setCurrentIndex(prev => prev + 1)
-      setCurrentAnswer(updatedAnswers[currentIndex + 1] === '[Skipped]' ? '' : updatedAnswers[currentIndex + 1])
+      setCurrentAnswer('')
     } else {
-      evaluateInterviewTranscript(updatedAnswers)
+      await evaluateLiveInterview(questions, updatedBlobs, updatedAnswers)
     }
   }
 
-  const evaluateInterviewTranscript = async (finalAnswers: string[]) => {
+  const evaluateLiveInterview = async (ques: string[], blobs: Blob[], fallbackAnswers: string[]) => {
     cancelSpeech()
-    stopRecording()
+    if (recording) stopRecording()
     setEvaluating(true)
 
     try {
       const { data: { session } } = await supabase.auth.getSession()
       const token = session?.access_token
 
+      const formData = new FormData()
+      formData.append('category', selectedCategory)
+      formData.append('seniority', seniorityLevel)
+      formData.append('experience', experienceYears)
+      formData.append('questions', JSON.stringify(ques))
+
+      blobs.forEach((blob, idx) => {
+        if (blob && blob.size > 0) {
+          formData.append(`audio_${idx}`, blob, `answer_${idx}.webm`)
+        } else {
+          formData.append(`answer_${idx}`, fallbackAnswers[idx])
+        }
+      })
+
       const res = await fetch('/api/evaluate-interview', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({
-          category: selectedCategory,
-          seniority: seniorityLevel,
-          experience: experienceYears,
-          questions,
-          answers: finalAnswers
-        })
+        headers: { ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+        body: formData
       })
 
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Evaluation failed.')
       setInterviewResult(data)
     } catch (err: any) {
-      alert(err.message || 'Failed to evaluate.')
+      alert(err.message || 'Failed to evaluate interview.')
     } finally {
       setEvaluating(false)
     }
@@ -368,11 +322,7 @@ export default function InterviewPrepPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 py-16 px-6 text-slate-900 flex flex-col justify-center relative overflow-hidden">
-      {/* Dotted Network Canvas Background */}
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 pointer-events-none h-full w-full opacity-60 z-0"
-      />
+      <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none h-full w-full opacity-60 z-0" />
 
       <style jsx>{`
         @keyframes siriPulse {
@@ -393,21 +343,13 @@ export default function InterviewPrepPage() {
       `}</style>
 
       <div className="mx-auto max-w-6xl w-full space-y-12 relative z-10">
-
-        {/* TOP BACK NAVIGATION BUTTON */}
         {(questions.length > 0 || interviewResult) && !generating && !evaluating && (
           <div className="mb-6">
             <button
-              onClick={() => {
-                cancelSpeech()
-                stopRecording()
-                setQuestions([])
-                setInterviewResult(null)
-                setSelectedCategory('')
-              }}
+              onClick={() => { cancelSpeech(); stopRecording(); setQuestions([]); setInterviewResult(null); setSelectedCategory(''); }}
               className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white/95 backdrop-blur-md px-4 py-2 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-all cursor-pointer"
             >
-               Back to Categories
+              ← Back to Categories
             </button>
           </div>
         )}
@@ -419,10 +361,10 @@ export default function InterviewPrepPage() {
                 AI Career Companion
               </span>
               <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-6xl sm:leading-tight">
-                Master Your Next Interview with <span className="text-indigo-600">AI Mock Training</span>
+                Master Your Next Interview with <span className="text-indigo-600">Live Voice Room</span>
               </h1>
               <p className="text-base text-slate-600 leading-relaxed max-w-2xl mx-auto">
-                Select your profession category below to start a tailored 5-question voice interview session complete with live AI speech and recruiter feedback.
+                Step into a live interview room complete with video preview, AI voice questioning, and intelligent spoken evaluation.
               </p>
             </div>
 
@@ -476,76 +418,89 @@ export default function InterviewPrepPage() {
         )}
 
         {!generating && questions.length > 0 && !interviewResult && (
-          <div className="max-w-3xl mx-auto bg-white/95 backdrop-blur-sm rounded-3xl p-8 sm:p-10 shadow-2xl border border-slate-100 space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-              <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-3 py-1 rounded-md">
-                Question {currentIndex + 1} of {questions.length} ({selectedCategory})
-              </span>
-              <span className="text-xs font-semibold text-slate-400">Seniority: {seniorityLevel}</span>
+          <div className="max-w-4xl mx-auto space-y-6">
+            {/* Live Video & AI Orb Room Header */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="md:col-span-1 rounded-3xl bg-slate-900 p-4 shadow-2xl relative overflow-hidden flex flex-col items-center justify-center min-h-[200px]">
+                <video ref={videoRef} autoPlay playsInline muted className="absolute inset-h inset-0 w-full h-full object-cover opacity-80 mirror" />
+                <span className="absolute bottom-3 left-3 bg-black/60 text-white text-[10px] px-2.5 py-1 rounded-md backdrop-blur-md">Live Candidate View</span>
+              </div>
+              <div className="md:col-span-2 rounded-3xl bg-slate-900 p-6 text-white flex flex-col items-center justify-center space-y-4 shadow-2xl relative overflow-hidden">
+                <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-pink-500 siri-orb flex items-center justify-center shadow-lg">
+                  <div className="w-12 h-12 rounded-full bg-slate-900 flex items-center justify-center text-xs font-bold text-indigo-400">AI</div>
+                </div>
+                <div className="text-center space-y-1">
+                  <span className={`h-2.5 w-2.5 inline-block rounded-full mr-2 ${speaking ? 'bg-indigo-400 animate-ping' : (recording ? 'bg-red-500 animate-pulse' : 'bg-emerald-400')}`}></span>
+                  <span className="text-xs font-bold uppercase tracking-widest text-slate-300">
+                    {speaking ? 'AI Interviewer Speaking...' : (recording ? 'Listening to Your Answer...' : 'Ready')}
+                  </span>
+                </div>
+              </div>
             </div>
 
-            <div className="rounded-2xl bg-slate-900 p-6 text-center text-white space-y-3 relative overflow-hidden shadow-inner">
-              <div className="flex items-center justify-center gap-2">
-                <span className={`h-2.5 w-2.5 rounded-full ${speaking ? 'bg-indigo-400 animate-ping' : (recording ? 'bg-red-500 animate-pulse' : 'bg-slate-500')}`}></span>
-                <span className="text-xs font-bold uppercase tracking-widest text-slate-300">
-                  {speaking ? 'CVeat AI Speaking...' : (recording ? 'Recording Voice Answer...' : 'Ready / Paused')}
+            {/* Question Card */}
+            <div className="bg-white/95 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-slate-100 space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-3 py-1 rounded-md">
+                  Question {currentIndex + 1} of {questions.length} ({selectedCategory})
                 </span>
+                <button
+                  type="button"
+                  onClick={() => speak(questions[currentIndex])}
+                  className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer"
+                >
+                  [ Replay Question Audio ]
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => speak(questions[currentIndex])}
-                className="text-xs font-semibold text-indigo-300 hover:text-white transition-colors cursor-pointer"
-              >
-                [ Replay Question Audio ]
-              </button>
-            </div>
 
-            <h2 className="text-lg font-bold text-slate-900 leading-snug">{questions[currentIndex]}</h2>
+              <h2 className="text-xl font-extrabold text-slate-900 leading-snug">{questions[currentIndex]}</h2>
 
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">Your Answer (Voice or Text)</label>
-                {!recording ? (
-                  <button
-                    type="button"
-                    onClick={() => startRecording()}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-red-50 border border-red-200 px-3 py-1 text-xs font-bold text-red-600 hover:bg-red-100 transition-all cursor-pointer"
-                  >
-                    <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse"></span>
-                    Start Recording Answer
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => stopRecording()}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-1 text-xs font-bold text-white hover:bg-slate-800 transition-all cursor-pointer"
-                  >
-                    Stop Recording
-                  </button>
-                )}
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">Your Spoken Answer (Voice Recorded in Memory)</label>
+                  {!recording ? (
+                    <button
+                      type="button"
+                      onClick={startRecording}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-red-50 border border-red-200 px-3 py-1 text-xs font-bold text-red-600 hover:bg-red-100 transition-all cursor-pointer"
+                    >
+                      <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse"></span>
+                      Start Speaking / Recording
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={stopRecording}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-bold text-emerald-600 hover:bg-emerald-100 transition-all cursor-pointer"
+                    >
+                      <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                      Stop Recording (Ready)
+                    </button>
+                  )}
+                </div>
+                <textarea
+                  rows={4}
+                  value={currentAnswer}
+                  onChange={(e) => setCurrentAnswer(e.target.value)}
+                  placeholder="Speak into your microphone or type notes here..."
+                  className="w-full rounded-2xl border border-slate-200 p-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-slate-900 resize-none"
+                />
               </div>
-              <textarea
-                rows={5}
-                value={currentAnswer}
-                onChange={(e) => setCurrentAnswer(e.target.value)}
-                placeholder="Speak into your microphone or type your response here..."
-                className="w-full rounded-2xl border border-slate-200 p-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-slate-900 resize-none"
-              />
-            </div>
 
-            <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-              <button
-                onClick={() => handleNextOrSkipQuestion(true)}
-                className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-all cursor-pointer"
-              >
-                Skip Question
-              </button>
-              <button
-                onClick={() => handleNextOrSkipQuestion(false)}
-                className="rounded-xl bg-indigo-600 px-6 py-3 text-xs font-semibold text-white shadow-md hover:bg-indigo-500 transition-all cursor-pointer"
-              >
-                {currentIndex < questions.length - 1 ? 'Next Question ->' : 'Finish & Get AI Feedback'}
-              </button>
+              <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                <button
+                  onClick={() => handleNextOrSkipQuestion(true)}
+                  className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-all cursor-pointer"
+                >
+                  Skip Question
+                </button>
+                <button
+                  onClick={() => handleNextOrSkipQuestion(false)}
+                  className="rounded-xl bg-indigo-600 px-6 py-3 text-xs font-semibold text-white shadow-md hover:bg-indigo-500 transition-all cursor-pointer"
+                >
+                  {currentIndex < questions.length - 1 ? 'Next Question ->' : 'Finish & Get AI Evaluation'}
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -561,8 +516,8 @@ export default function InterviewPrepPage() {
               </div>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <h2 className="text-xl font-bold text-slate-900">CVeat AI is evaluating your responses...</h2>
-                  <p className="text-xs text-slate-500">Scoring communication, technical accuracy, and structural impact.</p>
+                  <h2 className="text-xl font-bold text-slate-900">CVeat AI is transcribing and evaluating your voice responses...</h2>
+                  <p className="text-xs text-slate-500">Analyzing speech clarity, technical accuracy, and structural impact.</p>
                 </div>
                 <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
                   <div className="loading-bar h-2.5 rounded-full w-full"></div>
@@ -576,7 +531,7 @@ export default function InterviewPrepPage() {
           <div className="max-w-3xl mx-auto bg-white/95 backdrop-blur-sm rounded-3xl p-8 sm:p-10 shadow-2xl border border-slate-100 space-y-8">
             <div className="flex items-center justify-between border-b border-slate-100 pb-6">
               <div>
-                <h2 className="text-2xl font-extrabold text-slate-900">Mock Interview Evaluation Report</h2>
+                <h2 className="text-2xl font-extrabold text-slate-900">Live Voice Interview Evaluation Report</h2>
                 <p className="text-xs text-slate-500 mt-0.5">Role: {selectedCategory} ({seniorityLevel})</p>
               </div>
               <div className="text-right">
@@ -596,7 +551,7 @@ export default function InterviewPrepPage() {
                 {interviewResult.breakdown?.map((item: any, i: number) => (
                   <div key={i} className="rounded-2xl border border-slate-200 p-5 space-y-2 bg-slate-50">
                     <p className="text-xs font-bold text-slate-900">Q{i + 1}: {questions[i]}</p>
-                    <p className="text-xs text-slate-600"><strong>Your Answer:</strong> {userAnswers[i]}</p>
+                    <p className="text-xs text-slate-600"><strong>Transcribed Answer:</strong> {userAnswers[i]}</p>
                     <p className="text-xs text-indigo-600"><strong>Feedback:</strong> {item.feedback}</p>
                   </div>
                 ))}
@@ -685,7 +640,7 @@ export default function InterviewPrepPage() {
                   type="submit"
                   className="rounded-xl bg-indigo-600 px-6 py-3 text-xs font-semibold text-white shadow-md hover:bg-indigo-500 transition-all cursor-pointer"
                 >
-                  Generate 5 Interview Questions
+                  Start Live Voice Room
                 </button>
               </div>
             </form>

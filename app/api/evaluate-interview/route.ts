@@ -28,13 +28,49 @@ export async function POST(req: Request) {
       }
     }
 
-    const { category, seniority, experience, questions, answers } = await req.json();
+    const contentType = req.headers.get('content-type') || '';
+    let category, seniority, experience, questions, answers;
+
+    // Check if request is multipart/form-data (Audio Blob submission)
+    if (contentType.includes('multipart/form-data')) {
+      const formData = await req.formData();
+      category = formData.get('category');
+      seniority = formData.get('seniority');
+      experience = formData.get('experience');
+      questions = JSON.parse(formData.get('questions') as string || '[]');
+      
+      // Collect recorded audio blobs if sent per question
+      answers = [];
+      for (let i = 0; i < questions.length; i++) {
+        const audioFile = formData.get(`audio_${i}`) as File;
+        if (audioFile) {
+          const buffer = Buffer.from(await audioFile.arrayBuffer());
+          const base64Audio = buffer.toString('base64');
+          
+          // Transcribe audio inline via Gemini-3.8-flash
+          const sttRes = await ai.models.generateContent({
+            model: 'models/gemini-3.8-flash',
+            contents: [
+              { inlineData: { mimeType: audioFile.type || 'audio/webm', data: base64Audio } },
+              { text: `Transcribe this candidate's spoken interview answer word for word into text. Return ONLY the transcribed text without conversational filler.` }
+            ]
+          });
+          answers.push(sttRes.text?.trim() || '[Spoken Answer Received]');
+        } else {
+          answers.push(formData.get(`answer_${i}`) || '[No Answer Provided]');
+        }
+      }
+    } else {
+      const body = await req.json();
+      category = body.category;
+      seniority = body.seniority;
+      experience = body.experience;
+      questions = body.questions;
+      answers = body.answers;
+    }
 
     if (!questions || !answers || questions.length === 0) {
-      return NextResponse.json(
-        { error: 'Missing interview transcript questions or answers.' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing interview transcript questions or answers.' }, { status: 400 });
     }
 
     const prompt = `
@@ -63,17 +99,12 @@ export async function POST(req: Request) {
         attempts++;
         response = await ai.models.generateContent({
           model: 'models/gemini-3.8-flash',
-          contents: [
-            {
-              text: prompt,
-            },
-          ],
+          contents: [{ text: prompt }],
         });
         break;
       } catch (err: any) {
-        // If 503 or overload occurs on final attempt, throw error to catch block
         if (attempts >= maxAttempts) throw err;
-        await new Promise((resolve) => setTimeout(resolve, 3000 * attempts));
+        await new Promise((resolve) => setTimeout(resolve, 2500 * attempts));
       }
     }
 
