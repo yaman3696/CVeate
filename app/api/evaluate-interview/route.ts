@@ -28,64 +28,28 @@ export async function POST(req: Request) {
       }
     }
 
-    const contentType = req.headers.get('content-type') || '';
-    let category, seniority, experience, questions, answers;
-
-    // Check if request is multipart/form-data (Audio Blob submission)
-    if (contentType.includes('multipart/form-data')) {
-      const formData = await req.formData();
-      category = formData.get('category');
-      seniority = formData.get('seniority');
-      experience = formData.get('experience');
-      questions = JSON.parse(formData.get('questions') as string || '[]');
-      
-      // Collect recorded audio blobs if sent per question
-      answers = [];
-      for (let i = 0; i < questions.length; i++) {
-        const audioFile = formData.get(`audio_${i}`) as File;
-        if (audioFile) {
-          const buffer = Buffer.from(await audioFile.arrayBuffer());
-          const base64Audio = buffer.toString('base64');
-          
-          // Transcribe audio inline via Gemini-3.8-flash
-          const sttRes = await ai.models.generateContent({
-            model: 'models/gemini-3.8-flash',
-            contents: [
-              { inlineData: { mimeType: audioFile.type || 'audio/webm', data: base64Audio } },
-              { text: `Transcribe this candidate's spoken interview answer word for word into text. Return ONLY the transcribed text without conversational filler.` }
-            ]
-          });
-          answers.push(sttRes.text?.trim() || '[Spoken Answer Received]');
-        } else {
-          answers.push(formData.get(`answer_${i}`) || '[No Answer Provided]');
-        }
-      }
-    } else {
-      const body = await req.json();
-      category = body.category;
-      seniority = body.seniority;
-      experience = body.experience;
-      questions = body.questions;
-      answers = body.answers;
-    }
+    const { category, seniority, questions, answers } = await req.json();
 
     if (!questions || !answers || questions.length === 0) {
-      return NextResponse.json({ error: 'Missing interview transcript questions or answers.' }, { status: 400 });
+      return NextResponse.json({ error: 'Missing assessment questions or answers.' }, { status: 400 });
     }
 
     const prompt = `
-      You are an expert recruiter and principal hiring manager. Evaluate the mock interview transcript for a ${seniority} ${category} candidate with ${experience} years of experience.
+      You are an expert technical recruiter, hiring manager, and principal interviewer. 
+      Evaluate the timed assessment responses for a candidate applying for a **${seniority}** position in **${category}**.
 
-      Questions and Candidate Answers:
+      Assessment Questions and Candidate Answers:
       ${questions.map((q: string, i: number) => `Q${i+1}:${q}\nAnswer${i+1}:${answers[i] || '[No Answer Provided]'}`).join('\n\n')}
 
-      Task:
-      Evaluate the candidate's communication clarity, technical depth, problem-solving approach, and suitability for the role.
+      Evaluation Guidelines:
+      1. Assess technical accuracy, problem-solving depth, structural clarity, and relevance to the ${seniority} level expectations.
+      2. If an answer is marked as '[Skipped]' or '[No Answer Provided]', score it accordingly and provide constructive advice on what should have been covered.
+      3. Be rigorous yet constructive.
 
-      Provide your evaluation in strict JSON format with the following keys:
-      - "overallScore": number (overall score out of 10)
-      - "summary": string (comprehensive performance summary and recruiter feedback)
-      - "breakdown": array of objects for each question, each having a "feedback" string explaining the evaluation of that specific answer.
+      Provide your evaluation in strict JSON format with the following exact keys:
+      - "overallScore": number (overall score out of 10, rounded to one decimal place)
+      - "summary": string (comprehensive performance summary, highlighting core strengths and areas for improvement)
+      - "breakdown": array of objects for each question index, each having a "feedback" string explaining the evaluation, critique, and ideal approach for that specific question.
 
       Return ONLY valid JSON without markdown formatting backticks.
     `;
@@ -115,7 +79,7 @@ export async function POST(req: Request) {
     return NextResponse.json(evaluationData);
 
   } catch (error: any) {
-    console.error('Gemini Interview Evaluation Error:', error);
+    console.error('Gemini Assessment Evaluation Error:', error);
     return NextResponse.json(
       { error: error.message || 'AI servers are experiencing high traffic. Please try again in a few moments.' },
       { status: 500 }
