@@ -71,8 +71,9 @@ export async function POST(req: Request) {
         });
         break;
       } catch (err: any) {
+        // If 503 or overload occurs on final attempt, throw error to catch block
         if (attempts >= maxAttempts) throw err;
-        await new Promise((resolve) => setTimeout(resolve, 2500 * attempts));
+        await new Promise((resolve) => setTimeout(resolve, 3000 * attempts));
       }
     }
 

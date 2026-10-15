@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { useSpeechRecognition, useSpeechSynthesis } from '@/hooks/useSpeech'
+import { useSpeechSynthesis, useAudioRecorder } from '@/hooks/useSpeech'
 
 export default function InterviewPrepPage() {
   const router = useRouter()
@@ -33,11 +33,9 @@ export default function InterviewPrepPage() {
   const [saving, setSaving] = useState(false)
   const [savedSuccess, setSavedSuccess] = useState(false)
 
-  // Speech hooks for TTS and live STT
+  // Speech and Audio Recording hooks
   const { speaking, speak, cancel: cancelSpeech } = useSpeechSynthesis()
-  const { listening, error: speechError, start: startSpeech, stop: stopSpeech, abort: abortSpeech } = useSpeechRecognition((text) => {
-    setCurrentAnswer(text)
-  })
+  const { recording, audioBlob, startRecording, stopRecording } = useAudioRecorder()
 
   const professionCategories = [
     { 
@@ -169,16 +167,13 @@ export default function InterviewPrepPage() {
     }
   }, [])
 
-  // Speak question and automatically initiate listening when active
+  // Speak question when active
   useEffect(() => {
     if (questions.length > 0 && currentIndex < questions.length) {
-      speak(questions[currentIndex], () => {
-        startSpeech(currentAnswer)
-      })
+      speak(questions[currentIndex])
     }
     return () => {
       cancelSpeech()
-      abortSpeech()
     }
   }, [currentIndex, questions])
 
@@ -296,10 +291,13 @@ export default function InterviewPrepPage() {
 
   const handleNextOrSkipQuestion = async (isSkipped = false) => {
     cancelSpeech()
-    const finalTxt = await stopSpeech()
+    stopRecording()
 
+    let answerText = isSkipped ? '[Skipped]' : currentAnswer
+
+    // If audio blob was recorded temporarily in memory, you can append/send it or keep text fallback
     const updatedAnswers = [...userAnswers]
-    updatedAnswers[currentIndex] = isSkipped ? '[Skipped]' : (finalTxt ?? currentAnswer)
+    updatedAnswers[currentIndex] = answerText
     setUserAnswers(updatedAnswers)
 
     if (currentIndex < questions.length - 1) {
@@ -312,7 +310,7 @@ export default function InterviewPrepPage() {
 
   const evaluateInterviewTranscript = async (finalAnswers: string[]) => {
     cancelSpeech()
-    await stopSpeech()
+    stopRecording()
     setEvaluating(true)
 
     try {
@@ -402,14 +400,14 @@ export default function InterviewPrepPage() {
             <button
               onClick={() => {
                 cancelSpeech()
-                abortSpeech()
+                stopRecording()
                 setQuestions([])
                 setInterviewResult(null)
                 setSelectedCategory('')
               }}
               className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white/95 backdrop-blur-md px-4 py-2 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-all cursor-pointer"
             >
-              ← Back to Categories
+               Back to Categories
             </button>
           </div>
         )}
@@ -488,9 +486,9 @@ export default function InterviewPrepPage() {
 
             <div className="rounded-2xl bg-slate-900 p-6 text-center text-white space-y-3 relative overflow-hidden shadow-inner">
               <div className="flex items-center justify-center gap-2">
-                <span className={`h-2.5 w-2.5 rounded-full ${speaking ? 'bg-indigo-400 animate-ping' : (listening ? 'bg-red-500 animate-pulse' : 'bg-slate-500')}`}></span>
+                <span className={`h-2.5 w-2.5 rounded-full ${speaking ? 'bg-indigo-400 animate-ping' : (recording ? 'bg-red-500 animate-pulse' : 'bg-slate-500')}`}></span>
                 <span className="text-xs font-bold uppercase tracking-widest text-slate-300">
-                  {speaking ? 'CVeat AI Speaking...' : (listening ? 'Listening Live...' : 'Ready / Paused')}
+                  {speaking ? 'CVeat AI Speaking...' : (recording ? 'Recording Voice Answer...' : 'Ready / Paused')}
                 </span>
               </div>
               <button
@@ -504,29 +502,25 @@ export default function InterviewPrepPage() {
 
             <h2 className="text-lg font-bold text-slate-900 leading-snug">{questions[currentIndex]}</h2>
 
-            {speechError && (
-              <p className="text-xs text-red-500 bg-red-50 p-3 rounded-xl border border-red-200">{speechError}</p>
-            )}
-
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">Your Answer (Live Transcribed)</label>
-                {!listening ? (
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">Your Answer (Voice or Text)</label>
+                {!recording ? (
                   <button
                     type="button"
-                    onClick={() => startSpeech(currentAnswer)}
+                    onClick={() => startRecording()}
                     className="inline-flex items-center gap-1.5 rounded-lg bg-red-50 border border-red-200 px-3 py-1 text-xs font-bold text-red-600 hover:bg-red-100 transition-all cursor-pointer"
                   >
                     <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse"></span>
-                    Resume Listening
+                    Start Recording Answer
                   </button>
                 ) : (
                   <button
                     type="button"
-                    onClick={async () => { await stopSpeech() }}
+                    onClick={() => stopRecording()}
                     className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-1 text-xs font-bold text-white hover:bg-slate-800 transition-all cursor-pointer"
                   >
-                    Pause Listening
+                    Stop Recording
                   </button>
                 )}
               </div>
