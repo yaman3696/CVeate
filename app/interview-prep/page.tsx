@@ -40,7 +40,7 @@ export default function InterviewPrepPage() {
 
   const positionOptions = ['Internship', 'Junior', 'Intermediate', 'Senior', 'Team Lead', 'Manager', 'HOD']
 
-  // Dotted Network Canvas Animation
+  // Dotted Network Particle Animation Effect
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -48,6 +48,7 @@ export default function InterviewPrepPage() {
     if (!ctx) return
 
     let animationFrameId: number
+
     const updateCanvasSize = () => {
       if (!canvas) return
       canvas.width = canvas.offsetWidth || window.innerWidth
@@ -58,11 +59,11 @@ export default function InterviewPrepPage() {
     const observer = new ResizeObserver(() => updateCanvasSize())
     observer.observe(canvas)
 
-    const particles = Array.from({ length: 25 }, () => ({
+    const particles = Array.from({ length: 30 }, () => ({
       x: Math.random() * (canvas.width || window.innerWidth),
       y: Math.random() * (canvas.height || window.innerHeight),
-      vx: (Math.random() - 0.5) * 0.5,
-      vy: (Math.random() - 0.5) * 0.5,
+      vx: (Math.random() - 0.5) * 0.6,
+      vy: (Math.random() - 0.5) * 0.6,
       radius: Math.random() * 2 + 1.5,
     }))
 
@@ -76,8 +77,8 @@ export default function InterviewPrepPage() {
           const dx = particles[i].x - particles[j].x
           const dy = particles[i].y - particles[j].y
           const dist = Math.sqrt(dx * dx + dy * dy)
-          if (dist < 120) {
-            ctx.strokeStyle = `rgba(99, 102, 241, ${0.15 * (1 - dist / 120)})`
+          if (dist < 130) {
+            ctx.strokeStyle = `rgba(99, 102, 241, ${0.2 * (1 - dist / 130)})`
             ctx.lineWidth = 1
             ctx.beginPath()
             ctx.moveTo(particles[i].x, particles[i].y)
@@ -93,7 +94,7 @@ export default function InterviewPrepPage() {
         if (p.x < 0 || p.x > width) p.vx *= -1
         if (p.y < 0 || p.y > height) p.vy *= -1
 
-        ctx.fillStyle = 'rgba(99, 102, 241, 0.3)'
+        ctx.fillStyle = 'rgba(99, 102, 241, 0.4)'
         ctx.beginPath()
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2)
         ctx.fill()
@@ -103,6 +104,7 @@ export default function InterviewPrepPage() {
     }
 
     render()
+
     return () => {
       observer.disconnect()
       cancelAnimationFrame(animationFrameId)
@@ -251,8 +253,8 @@ export default function InterviewPrepPage() {
   if (authLoading) return <div className="min-h-screen flex items-center justify-center text-slate-600">Verifying session...</div>
 
   return (
-    <div className="min-h-screen bg-slate-50 py-16 px-6 text-slate-900 flex flex-col justify-center relative overflow-hidden">
-      <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none h-full w-full opacity-60 z-0" />
+    <div className="h-screen w-screen bg-slate-50 px-6 overflow-hidden flex flex-col justify-center items-center relative">
+      <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none w-full h-full opacity-60 z-0" />
 
       <style jsx>{`
         @keyframes shimmerBar {
@@ -351,12 +353,20 @@ export default function InterviewPrepPage() {
           </div>
         )}
 
+        {/* EVALUATING OVERLAY MODAL */}
         {evaluating && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm px-4">
             <div className="bg-white border border-slate-100 rounded-3xl p-12 text-center shadow-2xl space-y-8 max-w-xl w-full mx-auto">
+              <div className="relative flex items-center justify-center py-4">
+                <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-pink-500 siri-orb flex items-center justify-center shadow-2xl">
+                  <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center"></div>
+                </div>
+              </div>
               <div className="space-y-4">
-                <h2 className="text-xl font-bold text-slate-900">Evaluating your assessment responses...</h2>
-                <p className="text-xs text-slate-500">Scoring technical depth, communication, and overall suitability.</p>
+                <div className="space-y-2">
+                  <h2 className="text-xl font-bold text-slate-900">Evaluating your assessment responses...</h2>
+                  <p className="text-xs text-slate-500">Scoring technical depth, communication, and overall suitability.</p>
+                </div>
                 <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
                   <div className="loading-bar h-2.5 rounded-full w-full"></div>
                 </div>
