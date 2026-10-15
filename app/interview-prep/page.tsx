@@ -25,7 +25,6 @@ export default function InterviewPrepPage() {
   const [userAnswers, setUserAnswers] = useState<string[]>([])
   const [currentAnswer, setCurrentAnswer] = useState('')
 
-  // 3-minute timer per question
   const [timeLeft, setTimeLeft] = useState(180)
   const [evaluating, setEvaluating] = useState(false)
   const [interviewResult, setInterviewResult] = useState<any>(null)
@@ -40,7 +39,7 @@ export default function InterviewPrepPage() {
 
   const positionOptions = ['Internship', 'Junior', 'Intermediate', 'Senior', 'Team Lead', 'Manager', 'HOD']
 
-  // Dotted Network Particle Animation Effect
+  // Dotted Network Canvas Animation
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -48,7 +47,6 @@ export default function InterviewPrepPage() {
     if (!ctx) return
 
     let animationFrameId: number
-
     const updateCanvasSize = () => {
       if (!canvas) return
       canvas.width = canvas.offsetWidth || window.innerWidth
@@ -59,11 +57,11 @@ export default function InterviewPrepPage() {
     const observer = new ResizeObserver(() => updateCanvasSize())
     observer.observe(canvas)
 
-    const particles = Array.from({ length: 30 }, () => ({
+    const particles = Array.from({ length: 25 }, () => ({
       x: Math.random() * (canvas.width || window.innerWidth),
       y: Math.random() * (canvas.height || window.innerHeight),
-      vx: (Math.random() - 0.5) * 0.6,
-      vy: (Math.random() - 0.5) * 0.6,
+      vx: (Math.random() - 0.5) * 0.5,
+      vy: (Math.random() - 0.5) * 0.5,
       radius: Math.random() * 2 + 1.5,
     }))
 
@@ -77,8 +75,8 @@ export default function InterviewPrepPage() {
           const dx = particles[i].x - particles[j].x
           const dy = particles[i].y - particles[j].y
           const dist = Math.sqrt(dx * dx + dy * dy)
-          if (dist < 130) {
-            ctx.strokeStyle = `rgba(99, 102, 241, ${0.2 * (1 - dist / 130)})`
+          if (dist < 120) {
+            ctx.strokeStyle = `rgba(99, 102, 241, ${0.15 * (1 - dist / 120)})`
             ctx.lineWidth = 1
             ctx.beginPath()
             ctx.moveTo(particles[i].x, particles[i].y)
@@ -94,7 +92,7 @@ export default function InterviewPrepPage() {
         if (p.x < 0 || p.x > width) p.vx *= -1
         if (p.y < 0 || p.y > height) p.vy *= -1
 
-        ctx.fillStyle = 'rgba(99, 102, 241, 0.4)'
+        ctx.fillStyle = 'rgba(99, 102, 241, 0.3)'
         ctx.beginPath()
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2)
         ctx.fill()
@@ -104,7 +102,6 @@ export default function InterviewPrepPage() {
     }
 
     render()
-
     return () => {
       observer.disconnect()
       cancelAnimationFrame(animationFrameId)
@@ -168,11 +165,9 @@ export default function InterviewPrepPage() {
     e.preventDefault()
     setIsWizardOpen(false)
 
-    // Pull pool from static questions and shuffle freshly every time
     const categoryPool = questionBank[selectedCategory] || questionBank['Coding & Software Development']
     const positionPool = categoryPool[selectedPosition] || categoryPool['Junior'] || ['Tell me about your background.']
     
-    // Shuffle pool and take 5 unique questions
     const shuffled = [...positionPool].sort(() => 0.5 - Math.random())
     const selected5 = shuffled.slice(0, 5)
 
@@ -212,7 +207,6 @@ export default function InterviewPrepPage() {
         body: JSON.stringify({
           category: selectedCategory,
           seniority: selectedPosition,
-          experience: `${selectedPosition} Level`,
           questions,
           answers: finalAnswers
         })
@@ -250,13 +244,19 @@ export default function InterviewPrepPage() {
     }
   }
 
-  if (authLoading) return <div className="min-h-screen flex items-center justify-center text-slate-600">Verifying session...</div>
+  if (authLoading) return <div className="h-screen flex items-center justify-center text-slate-600">Verifying session...</div>
 
   return (
     <div className="h-screen w-screen bg-slate-50 px-6 overflow-hidden flex flex-col justify-center items-center relative">
-      <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none w-full h-full opacity-60 z-0" />
+      <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none h-full w-full opacity-60 z-0" />
 
       <style jsx>{`
+        @keyframes siriPulse {
+          0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+          70% { transform: scale(1.05); box-shadow: 0 0 0 30px rgba(99, 102, 241, 0); }
+          100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+        }
+        .siri-orb { animation: siriPulse 2.8s infinite cubic-bezier(0.4, 0, 0.6, 1); }
         @keyframes shimmerBar {
           0% { background-position: -200% 0; }
           100% { background-position: 200% 0; }
@@ -268,9 +268,9 @@ export default function InterviewPrepPage() {
         }
       `}</style>
 
-      <div className="mx-auto max-w-6xl w-full space-y-12 relative z-10">
+      <div className="mx-auto max-w-4xl w-full space-y-6 relative z-10 flex flex-col justify-center my-auto">
         {(questions.length > 0 || interviewResult) && !evaluating && (
-          <div className="mb-6">
+          <div>
             <button
               onClick={() => { setQuestions([]); setInterviewResult(null); setSelectedCategory(''); }}
               className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white/95 px-4 py-2 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 cursor-pointer"
@@ -281,28 +281,28 @@ export default function InterviewPrepPage() {
         )}
 
         {questions.length === 0 && !interviewResult && (
-          <div className="space-y-16">
-            <div className="text-center space-y-4 max-w-3xl mx-auto">
+          <div className="space-y-8 text-center">
+            <div className="space-y-3 max-w-2xl mx-auto">
               <span className="inline-block rounded-full bg-indigo-50 px-4 py-1 text-xs font-bold uppercase tracking-wider text-indigo-600 border border-indigo-100">
                 Structured Assessment
               </span>
-              <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-6xl sm:leading-tight">
+              <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900 leading-tight">
                 Master Your Interview with <span className="text-indigo-600">Timed Assessments</span>
               </h1>
-              <p className="text-base text-slate-600 leading-relaxed max-w-2xl mx-auto">
+              <p className="text-sm text-slate-600 leading-relaxed max-w-xl mx-auto">
                 Select your target profession category to begin a timed, position-specific mock interview assessment.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
               {professionCategories.map((cat) => (
                 <button
                   key={cat.tag}
                   onClick={() => handleCategorySelect(cat.name)}
-                  className="rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-sm hover:border-indigo-600 hover:shadow-md transition-all text-left space-y-2 cursor-pointer"
+                  className="rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-sm hover:border-indigo-600 hover:shadow-md transition-all text-left space-y-1.5 cursor-pointer"
                 >
-                  <h4 className="text-base font-bold text-slate-900">{cat.name}</h4>
-                  <p className="text-xs text-slate-500">Click to configure position & start</p>
+                  <h4 className="text-sm font-bold text-slate-900">{cat.name}</h4>
+                  <p className="text-[11px] text-slate-500">Click to configure position & start</p>
                 </button>
               ))}
             </div>
@@ -310,8 +310,8 @@ export default function InterviewPrepPage() {
         )}
 
         {questions.length > 0 && !interviewResult && !evaluating && (
-          <div className="max-w-3xl mx-auto bg-white rounded-3xl p-8 sm:p-10 shadow-2xl border border-slate-100 space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-100 space-y-4 max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-3 py-1 rounded-md">
                 Question {currentIndex + 1} of {questions.length} ({selectedCategory})
               </span>
@@ -323,29 +323,29 @@ export default function InterviewPrepPage() {
               </div>
             </div>
 
-            <h2 className="text-lg font-bold text-slate-900 leading-snug">{questions[currentIndex]}</h2>
+            <h2 className="text-base sm:text-lg font-bold text-slate-900 leading-snug">{questions[currentIndex]}</h2>
 
-            <div className="space-y-3">
+            <div className="space-y-2">
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">Your Answer</label>
               <textarea
-                rows={6}
+                rows={4}
                 value={currentAnswer}
                 onChange={(e) => setCurrentAnswer(e.target.value)}
                 placeholder="Type your detailed answer here..."
-                className="w-full rounded-2xl border border-slate-200 p-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-slate-900 resize-none"
+                className="w-full rounded-2xl border border-slate-200 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-slate-900 resize-none"
               />
             </div>
 
-            <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+            <div className="flex items-center justify-between pt-3 border-t border-slate-100">
               <button
                 onClick={() => handleNextOrSkipQuestion(true)}
-                className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer"
+                className="rounded-xl border border-slate-200 bg-white px-5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer"
               >
                 Skip Question
               </button>
               <button
                 onClick={() => handleNextOrSkipQuestion(false)}
-                className="rounded-xl bg-indigo-600 px-6 py-3 text-xs font-semibold text-white shadow-md hover:bg-indigo-500 cursor-pointer"
+                className="rounded-xl bg-indigo-600 px-6 py-2.5 text-xs font-semibold text-white shadow-md hover:bg-indigo-500 cursor-pointer"
               >
                 {currentIndex < questions.length - 1 ? 'Next Question ->' : 'Submit & Get Evaluation'}
               </button>
@@ -353,7 +353,6 @@ export default function InterviewPrepPage() {
           </div>
         )}
 
-        {/* EVALUATING OVERLAY MODAL */}
         {evaluating && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm px-4">
             <div className="bg-white border border-slate-100 rounded-3xl p-12 text-center shadow-2xl space-y-8 max-w-xl w-full mx-auto">
@@ -376,28 +375,28 @@ export default function InterviewPrepPage() {
         )}
 
         {interviewResult && (
-          <div className="max-w-3xl mx-auto bg-white rounded-3xl p-8 sm:p-10 shadow-2xl border border-slate-100 space-y-8">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-6">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-100 space-y-6 max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div>
-                <h2 className="text-2xl font-extrabold text-slate-900">Assessment Evaluation Report</h2>
+                <h2 className="text-xl font-extrabold text-slate-900">Assessment Evaluation Report</h2>
                 <p className="text-xs text-slate-500 mt-0.5">Role: {selectedCategory} ({selectedPosition})</p>
               </div>
               <div className="text-right">
-                <span className="text-3xl font-black text-indigo-600">{interviewResult.overallScore}/10</span>
+                <span className="text-2xl sm:text-3xl font-black text-indigo-600">{interviewResult.overallScore}/10</span>
                 <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Overall Score</span>
               </div>
             </div>
 
-            <div className="rounded-2xl bg-indigo-50 border border-indigo-100 p-6 space-y-2">
+            <div className="rounded-2xl bg-indigo-50 border border-indigo-100 p-4 space-y-1.5">
               <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-900">Performance Summary</h4>
               <p className="text-xs text-slate-700 leading-relaxed">{interviewResult.summary}</p>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Question Breakdown</h3>
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {interviewResult.breakdown?.map((item: any, i: number) => (
-                  <div key={i} className="rounded-2xl border border-slate-200 p-5 space-y-2 bg-slate-50">
+                  <div key={i} className="rounded-2xl border border-slate-200 p-4 space-y-1.5 bg-slate-50">
                     <p className="text-xs font-bold text-slate-900">Q{i + 1}: {questions[i]}</p>
                     <p className="text-xs text-slate-600"><strong>Your Answer:</strong> {userAnswers[i]}</p>
                     <p className="text-xs text-indigo-600"><strong>Feedback:</strong> {item.feedback}</p>
@@ -406,10 +405,10 @@ export default function InterviewPrepPage() {
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center justify-between pt-4 border-t border-slate-100 gap-3">
+            <div className="flex flex-col sm:flex-row items-center justify-between pt-3 border-t border-slate-100 gap-3">
               <button
                 onClick={() => { setInterviewResult(null); setQuestions([]); setSelectedCategory(''); }}
-                className="w-full sm:w-auto rounded-xl border border-slate-200 bg-white px-6 py-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
+                className="w-full sm:w-auto rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
               >
                 Start New Assessment
               </button>
@@ -417,7 +416,7 @@ export default function InterviewPrepPage() {
               <button
                 onClick={handleSaveInterview}
                 disabled={saving || savedSuccess}
-                className="w-full sm:w-auto rounded-xl bg-indigo-600 px-8 py-3 text-xs font-semibold text-white shadow-md hover:bg-indigo-500 cursor-pointer disabled:opacity-50"
+                className="w-full sm:w-auto rounded-xl bg-indigo-600 px-6 py-2.5 text-xs font-semibold text-white shadow-md hover:bg-indigo-500 cursor-pointer disabled:opacity-50"
               >
                 {savedSuccess ? 'Saved to History!' : (saving ? 'Saving...' : 'Save Report to History')}
               </button>
@@ -429,10 +428,10 @@ export default function InterviewPrepPage() {
 
       {isWizardOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
-          <div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl border border-slate-100 relative text-slate-900 space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-              <h3 className="text-xl font-extrabold text-slate-900">Configure: {selectedCategory}</h3>
-              <button onClick={() => setIsWizardOpen(false)} className="text-slate-400 hover:text-slate-600 font-bold cursor-pointer">X</button>
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 sm:p-8 shadow-2xl border border-slate-100 relative text-slate-900 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="text-lg font-extrabold text-slate-900">Configure: {selectedCategory}</h3>
+              <button onClick={() => setIsWizardOpen(false)} className="text-slate-400 hover:text-slate-600 font-bold cursor-pointer">✕</button>
             </div>
 
             <form onSubmit={handleStartInterview} className="space-y-4">
@@ -449,17 +448,17 @@ export default function InterviewPrepPage() {
                 </select>
               </div>
 
-              <div className="flex items-center justify-between pt-4">
+              <div className="flex items-center justify-between pt-3">
                 <button
                   type="button"
                   onClick={() => setIsWizardOpen(false)}
-                  className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer"
+                  className="rounded-xl border border-slate-200 bg-white px-5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-indigo-600 px-6 py-3 text-xs font-semibold text-white shadow-md hover:bg-indigo-500 cursor-pointer"
+                  className="rounded-xl bg-indigo-600 px-6 py-2.5 text-xs font-semibold text-white shadow-md hover:bg-indigo-500 cursor-pointer"
                 >
                   Start Timed Assessment
                 </button>
@@ -471,8 +470,8 @@ export default function InterviewPrepPage() {
 
       {isPricingModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
-          <div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl border border-slate-100 text-center space-y-4 text-slate-900">
-            <h3 className="text-xl font-extrabold text-slate-900">Pass Required for Assessments</h3>
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 sm:p-8 shadow-2xl border border-slate-100 text-center space-y-4 text-slate-900">
+            <h3 className="text-lg font-extrabold text-slate-900">Pass Required for Assessments</h3>
             <p className="text-xs text-slate-500">Assessments are included with our Daily and Monthly Passes. Upgrade your plan to unlock full access.</p>
             <div className="pt-2 flex flex-col gap-2">
               <Link href="/pricing">
