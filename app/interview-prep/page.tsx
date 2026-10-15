@@ -98,7 +98,7 @@ export default function InterviewPrepPage() {
 
   const seniorityOptions = ['Internship', 'Junior', 'Intermediate', 'Senior', 'Team Lead', 'Manager', 'HOD']
 
-  // Robust Dotted Network Particle Animation with ResizeObserver for immediate first-load paint
+  // Dotted Network Particle Animation Effect with ResizeObserver for instant first-load paint
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -114,10 +114,7 @@ export default function InterviewPrepPage() {
     }
 
     updateCanvasSize()
-
-    const observer = new ResizeObserver(() => {
-      updateCanvasSize()
-    })
+    const observer = new ResizeObserver(() => updateCanvasSize())
     observer.observe(canvas)
 
     const particles = Array.from({ length: 25 }, () => ({
@@ -386,6 +383,15 @@ export default function InterviewPrepPage() {
           100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
         }
         .siri-orb { animation: siriPulse 2.8s infinite cubic-bezier(0.4, 0, 0.6, 1); }
+        @keyframes shimmerBar {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        .loading-bar {
+          background: linear-gradient(90deg, #e0e7ff 0%, #6366f1 50%, #e0e7ff 100%);
+          background-size: 200% 100%;
+          animation: shimmerBar 1.8s infinite linear;
+        }
       `}</style>
 
       <div className="mx-auto max-w-6xl w-full space-y-12 relative z-10">
@@ -451,18 +457,21 @@ export default function InterviewPrepPage() {
 
         {/* GENERATING OVERLAY MODAL */}
         {generating && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
-            <div className="bg-white/95 backdrop-blur-xl border border-slate-200 rounded-3xl p-12 text-center shadow-2xl space-y-8 max-w-xl w-full mx-auto">
-              <div className="relative flex items-center justify-center py-6">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm px-4">
+            <div className="bg-white border border-slate-100 rounded-3xl p-12 text-center shadow-2xl space-y-8 max-w-xl w-full mx-auto">
+              <div className="relative flex items-center justify-center py-4">
                 <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-pink-500 siri-orb flex items-center justify-center shadow-2xl">
-                  <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center text-indigo-600 font-bold text-sm">
-                    AI
-                  </div>
+                  <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center"></div>
                 </div>
               </div>
-              <div className="space-y-2">
-                <h2 className="text-xl font-bold text-slate-900">CVeat AI is generating your interview questions...</h2>
-                <p className="text-xs text-slate-500">Tailoring questions to your seniority and experience.</p>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <h2 className="text-xl font-bold text-slate-900">CVeat AI is generating your interview questions...</h2>
+                  <p className="text-xs text-slate-500">Tailoring questions to your seniority and experience.</p>
+                </div>
+                <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                  <div className="loading-bar h-2.5 rounded-full w-full"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -549,18 +558,21 @@ export default function InterviewPrepPage() {
 
         {/* EVALUATING OVERLAY MODAL */}
         {evaluating && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
-            <div className="bg-white/95 backdrop-blur-xl border border-slate-200 rounded-3xl p-12 text-center shadow-2xl space-y-8 max-w-xl w-full mx-auto">
-              <div className="relative flex items-center justify-center py-6">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm px-4">
+            <div className="bg-white border border-slate-100 rounded-3xl p-12 text-center shadow-2xl space-y-8 max-w-xl w-full mx-auto">
+              <div className="relative flex items-center justify-center py-4">
                 <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-pink-500 siri-orb flex items-center justify-center shadow-2xl">
-                  <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center text-indigo-600 font-bold text-sm">
-                    AI
-                  </div>
+                  <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center"></div>
                 </div>
               </div>
-              <div className="space-y-2">
-                <h2 className="text-xl font-bold text-slate-900">CVeat AI is evaluating your responses...</h2>
-                <p className="text-xs text-slate-500">Scoring communication, technical accuracy, and structural impact.</p>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <h2 className="text-xl font-bold text-slate-900">CVeat AI is evaluating your responses...</h2>
+                  <p className="text-xs text-slate-500">Scoring communication, technical accuracy, and structural impact.</p>
+                </div>
+                <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                  <div className="loading-bar h-2.5 rounded-full w-full"></div>
+                </div>
               </div>
             </div>
           </div>
