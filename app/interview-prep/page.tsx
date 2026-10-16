@@ -40,7 +40,7 @@ export default function InterviewPrepPage() {
 
   const positionOptions = ['Internship', 'Junior', 'Intermediate', 'Senior', 'Team Lead', 'Manager', 'HOD']
 
-  // Dotted Network Canvas Animation Effect
+  // Dotted Network Canvas Animation Effect (Fixed first-load sizing)
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -51,22 +51,26 @@ export default function InterviewPrepPage() {
 
     const updateCanvasSize = () => {
       if (!canvas) return
-      canvas.width = window.innerWidth
-      canvas.height = window.innerHeight
+      // Use clientWidth/clientHeight for immediate accurate box sizing
+      canvas.width = canvas.parentElement?.clientWidth || window.innerWidth
+      canvas.height = canvas.parentElement?.clientHeight || window.innerHeight
     }
 
+    // Run immediately and on a short timeout to catch layout paint
     updateCanvasSize()
+    const timer = setTimeout(updateCanvasSize, 50)
     window.addEventListener('resize', updateCanvasSize)
 
     const particles = Array.from({ length: 35 }, () => ({
-      x: Math.random() * window.innerWidth,
-      y: Math.random() * window.innerHeight,
+      x: Math.random() * (canvas.width || window.innerWidth),
+      y: Math.random() * (canvas.height || window.innerHeight),
       vx: (Math.random() - 0.5) * 0.5,
       vy: (Math.random() - 0.5) * 0.5,
       radius: Math.random() * 2 + 1.5,
     }))
 
     const render = () => {
+      if (!canvas.width || !canvas.height) updateCanvasSize()
       ctx.clearRect(0, 0, canvas.width, canvas.height)
 
       for (let i = 0; i < particles.length; i++) {
@@ -103,6 +107,7 @@ export default function InterviewPrepPage() {
     render()
 
     return () => {
+      clearTimeout(timer)
       window.removeEventListener('resize', updateCanvasSize)
       cancelAnimationFrame(animationFrameId)
     }
@@ -247,7 +252,7 @@ export default function InterviewPrepPage() {
   if (authLoading) return <div className="h-screen w-screen flex items-center justify-center text-slate-600 bg-slate-50">Verifying session...</div>
 
   return (
-    <div className="fixed inset-0 w-screen h-screen bg-slate-50 overflow-hidden flex flex-col justify-center items-center pt-20 px-6">
+    <div className="relative min-h-screen w-full bg-slate-50 flex flex-col justify-center items-center py-24 px-6 overflow-x-hidden">
       <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none w-full h-full opacity-60 z-0" />
 
       <style jsx>{`
@@ -486,7 +491,7 @@ export default function InterviewPrepPage() {
               </Link>
               <button onClick={() => setIsPricingModalOpen(false)} className="w-full rounded-xl border border-slate-200 bg-white py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer">Close</button>
             </div>
-          </div>
+          </div> 
         </div>
       )}
 
