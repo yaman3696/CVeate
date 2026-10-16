@@ -78,17 +78,15 @@ export default function ProfilePage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('No active user found.')
 
-      const { error } = await supabase
+        const { data: updatedProfile, error } = await supabase
         .from('profiles')
-        .upsert({
-          id: user.id,
-          email: user.email,
+        .update({
           full_name: formData.fullName,
           contact_number: formData.contactNumber,
           phone: formData.contactNumber,
           address_line_1: formData.address,
           gender: formData.gender,
-          birthdate: formData.birthdate,
+          birthdate: formData.birthdate || null,
           profession: formData.profession,
           current_job_title: formData.currentPosition,
           career_status: formData.careerStatus,
@@ -96,11 +94,22 @@ export default function ProfilePage() {
           total_experience_months: parseInt(formData.totalExperienceMonths) || 0,
           notice_period: formData.noticePeriod,
           pan_number: formData.panNumber || null,
-          current_ctc: formData.currentCtc ? parseFloat(formData.currentCtc) : null,
-          expected_ctc: formData.expectedCtc ? parseFloat(formData.expectedCtc) : null,
+          current_ctc: formData.currentCtc
+            ? parseFloat(formData.currentCtc)
+            : null,
+          expected_ctc: formData.expectedCtc
+            ? parseFloat(formData.expectedCtc)
+            : null,
         })
-
+        .eq('id', user.id)
+        .select('id')
+        .single()
+      
       if (error) throw error
+      
+      if (!updatedProfile) {
+        throw new Error('Profile not found. Please sign in again.')
+      }
 
       setMessage({ text: 'Profile settings updated and saved successfully!', type: 'success' })
       setIsEditing(false)

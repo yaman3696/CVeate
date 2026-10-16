@@ -45,35 +45,45 @@ export default function AtsCheckerPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   // Sync Google Profile with name preservation logic
-  const syncGoogleProfile = async (sessionUser: any) => {
-    if (!sessionUser) return
+  
+const syncGoogleProfile = async (sessionUser: any) => {
+  if (!sessionUser) return
 
-    const { data: existingProfile } = await supabase
+  const { data: existingProfile, error } = await supabase
+    .from('profiles')
+    .select('id, full_name')
+    .eq('id', sessionUser.id)
+    .maybeSingle()
+
+  if (error) {
+    console.error('Unable to fetch user profile:', error)
+    return
+  }
+
+  const googleName =
+    sessionUser.user_metadata?.full_name ||
+    sessionUser.user_metadata?.name ||
+    ''
+
+  // New profiles are created by the Supabase signup trigger.
+  // The browser must never assign plans or Career Credits.
+  if (!existingProfile) {
+    console.warn('User profile not available yet.')
+    return
+  }
+
+  if (!existingProfile.full_name && googleName) {
+    const { error: updateError } = await supabase
       .from('profiles')
-      .select('id, full_name, plan_name, ats_chances_remaining')
+      .update({ full_name: googleName })
       .eq('id', sessionUser.id)
-      .maybeSingle()
 
-    const googleName = sessionUser.user_metadata?.full_name || sessionUser.user_metadata?.name || ''
-    const contactNo = sessionUser.user_metadata?.contact_number || sessionUser.user_metadata?.phone || ''
-
-    if (!existingProfile) {
-      await supabase.from('profiles').upsert({
-        id: sessionUser.id,
-        email: sessionUser.email,
-        full_name: googleName,
-        phone: contactNo,
-        contact_number: contactNo,
-        plan_name: 'Freemium',
-        ats_chances_remaining: 2,
-        ats_last_reset: new Date().toISOString()
-      })
-    } else if (!existingProfile.full_name && googleName) {
-      await supabase.from('profiles')
-        .update({ full_name: googleName })
-        .eq('id', sessionUser.id)
+    if (updateError) {
+      console.error('Unable to update profile name:', updateError)
     }
   }
+}
+
 
   // Reliable Canvas Network Animation Effect
   useEffect(() => {
@@ -262,18 +272,15 @@ export default function AtsCheckerPage() {
           throw error
         }
   
-        if (data?.user) {
-          await supabase.from('profiles').upsert({
-            id: data.user.id,
-            email: email,
-            full_name: fullName,
-            contact_number: contactNumber,
-            phone: contactNumber,
-            plan_name: 'Freemium',
-            ats_chances_remaining: 2,
-            ats_last_reset: new Date().toISOString()
-          })
-        }
+        
+if (data?.user) {
+  // The Supabase database trigger creates the profile
+  // with the default plan and Career Credits.
+  // Do not assign subscription details from the browser.
+
+  console.log('Account created. Profile managed by Supabase.')
+}
+
         setSuccessMessage('Account created successfully! Please check your email for verification.')
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
@@ -348,85 +355,175 @@ export default function AtsCheckerPage() {
 
   const [loadingProgress, setLoadingProgress] = useState(0)
 
-  const handleAnalyze = async (e: React.FormEvent) => {
-    e.preventDefault()
+ 
+const handleAnalyze = async (e: React.FormEvent) => {
+  e.preventDefault()
 
-    if (!user) {
-      setIsLoginPromptOpen(true)
+  if (isAnalyzing) return
+
+  if (!user) {
+    setIsLoginPromptOpen(true)
+    return
+  }
+
+  if (!selectedFile) {
+    alert('Please upload a CV file first.')
+    return
+  }
+
+  if (!jobDescription.trim()) {
+    alert('Please paste a target job description.')
+    return
+  }
+
+  setIsAnalyzing(true)
+  setLoadingStep(1)
+  setLoadingProgress(15)
+
+  const progressInterval = setInterval(() => {
+    setLoadingProgress((prev) => {
+      if (prev < 40) {
+        setLoadingStep(1)
+        return prev + 10
+      } else if (prev < 75) {
+        setLoadingStep(2)
+        return prev + 8
+      } else if (prev < 90) {
+        setLoadingStep(3)
+        return prev + 3
+      }
+      return prev
+    })
+  }, 600)
+
+  try {
+    const { data: sessionData, error: sessionError } =
+      await supabase.auth.getSession()
+
+    if (sessionError || !sessionData.session) {
+      throw new Error('Please sign in again.')
+    }
+
+    // Create a unique identity for the resume and job description.
+const fileBytes = await selectedFile.arrayBuffer()
+const jobBytes = new TextEncoder().encode(jobDescription)
+
+const combinedBytes = new Uint8Array(
+  fileBytes.byteLength + jobBytes.byteLength
+)
+
+combinedBytes.set(new Uint8Array(fileBytes), 0)
+combinedBytes.set(jobBytes, fileBytes.byteLength)
+
+const hashBuffer = await crypto.subtle.digest(
+  'SHA-256',
+  combinedBytes
+)
+
+const scanFingerprint = Array.from(new Uint8Array(hashBuffer))
+  .map(byte => byte.toString(16).padStart(2, '0'))
+  .join('')
+
+// Keep the request ID only when retrying identical inputs.
+const requestKey = `cveate_ats_pending_${user.id}`
+const fingerprintKey = `cveate_ats_fingerprint_${user.id}`
+
+let requestId = sessionStorage.getItem(requestKey)
+const previousFingerprint = sessionStorage.getItem(fingerprintKey)
+
+if (!requestId || previousFingerprint !== scanFingerprint) {
+  requestId = crypto.randomUUID()
+
+  sessionStorage.setItem(requestKey, requestId)
+  sessionStorage.setItem(fingerprintKey, scanFingerprint)
+}
+
+    const formData = new FormData()
+    formData.append('jobDescription', jobDescription)
+    formData.append('cvFile', selectedFile)
+
+    const res = await fetch('/api/analyze-cv', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${sessionData.session.access_token}`,
+        'x-ats-request-id': requestId,
+      },
+      body: formData,
+    })
+
+    const data = await res.json()
+
+    if (res.status === 202) {
+      alert(
+        'Your scan is already processing. Please retry shortly. No additional credit will be deducted.'
+      )
       return
     }
 
-    if (!selectedFile) {
-      alert('Please upload a CV file first.')
-      return
-    }
-    if (!jobDescription.trim()) {
-      alert('Please paste a target job description.')
-      return
-    }
-
-    if (!profile || profile.ats_chances_remaining <= 0) {
+    if (res.status === 402 || data.insufficientCredits) {
+      sessionStorage.removeItem(requestKey)
+sessionStorage.removeItem(fingerprintKey)
       setIsLimitModalOpen(true)
       return
     }
 
-    setIsAnalyzing(true)
-    setLoadingStep(1)
-    setLoadingProgress(15)
-
-    const progressInterval = setInterval(() => {
-      setLoadingProgress((prev) => {
-        if (prev < 40) {
-          setLoadingStep(1)
-          return prev + 10
-        } else if (prev < 75) {
-          setLoadingStep(2)
-          return prev + 8
-        } else if (prev < 90) {
-          setLoadingStep(3)
-          return prev + 3
-        }
-        return prev
-      })
-    }, 600)
-
-    try {
-      const newChances = profile.ats_chances_remaining - 1
-      await supabase
-        .from('profiles')
-        .update({ ats_chances_remaining: newChances })
-        .eq('id', user.id)
-
-      setProfile((prev: any) => ({ ...prev, ats_chances_remaining: newChances }))
-
-      const formData = new FormData()
-      formData.append('jobDescription', jobDescription)
-      formData.append('cvFile', selectedFile)
-
-      const res = await fetch('/api/analyze-cv', {
-        method: 'POST',
-        body: formData,
-      })
-
-      const data = await res.json()
-
-      clearInterval(progressInterval)
-      setLoadingProgress(100)
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Something went wrong during analysis.')
-      }
-
-      setAnalysisResult(data)
-    } catch (err: any) {
-      clearInterval(progressInterval)
-      alert(err.message || 'Failed to connect to CVeat AI backend.')
-    } finally {
-      setIsAnalyzing(false)
-      setLoadingStep(0)
-      setLoadingProgress(0)
+    if (res.status === 409) {
+      sessionStorage.removeItem(requestKey)
+sessionStorage.removeItem(fingerprintKey)
+      throw new Error(
+        'This scan was refunded. Please click Analyze again to start a new scan.'
+      )
     }
+
+    if (!res.ok) {
+      throw new Error(
+        data.error || 'Something went wrong during analysis.'
+      )
+    }
+
+    sessionStorage.removeItem(requestKey)
+sessionStorage.removeItem(fingerprintKey)
+
+    setLoadingProgress(100)
+    setAnalysisResult(data)
+
+    // Refresh the displayed balance from the database.
+    const { data: refreshedProfile, error: profileError } =
+      await supabase.rpc('get_or_refresh_user_profile', {
+        user_id: user.id,
+      })
+
+    if (
+      !profileError &&
+      Array.isArray(refreshedProfile) &&
+      refreshedProfile.length > 0
+    ) {
+      setProfile(refreshedProfile[0])
+    }
+  } catch (err: any) {
+    alert(err.message || 'Failed to connect to CVeate AI backend.')
+  } finally {
+    // Refresh the displayed Career Credits after every attempt.
+    if (user) {
+      const { data: refreshedProfile, error: profileError } =
+        await supabase.rpc('get_or_refresh_user_profile', {
+          user_id: user.id,
+        })
+  
+      if (
+        !profileError &&
+        Array.isArray(refreshedProfile) &&
+        refreshedProfile.length > 0
+      ) {
+        setProfile(refreshedProfile[0])
+      }
+    }
+    clearInterval(progressInterval)
+    setIsAnalyzing(false)
+    setLoadingStep(0)
+    setLoadingProgress(0)
   }
+}
 
   const handleAutoFillAndBuild = () => {
     sessionStorage.setItem('cveate_ats_data', JSON.stringify(analysisResult))
@@ -481,7 +578,7 @@ export default function AtsCheckerPage() {
                   <div className="h-6 w-6 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-[10px]">
                     {user.user_metadata?.full_name ? user.user_metadata.full_name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}
                   </div>
-                  <span>{profile?.plan_name ? profile.plan_name.toUpperCase() : 'FREEMIUM'} ({profile?.ats_chances_remaining ?? 0} Left)</span>
+                  <span>{profile?.plan_name ? profile.plan_name.toUpperCase() : 'FREEMIUM'} ({profile?.career_credits ?? 0} Left)</span>
                 </button>
 
                 {isProfileOpen && (
@@ -578,7 +675,7 @@ export default function AtsCheckerPage() {
                 </p>
                 {user && (
                   <div className="inline-block bg-white/25 backdrop-blur-sm px-4 py-1.5 rounded-full text-xs font-bold">
-                    Remaining Checks: {profile?.ats_chances_remaining ?? 0}
+                    Remaining Checks: {profile?.career_credits ?? 0}
                   </div>
                 )}
               </div>
