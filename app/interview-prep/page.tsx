@@ -45,7 +45,7 @@ export default function InterviewPrepPage() {
 
   const positionOptions = ['Internship', 'Junior', 'Intermediate', 'Senior', 'Team Lead', 'Manager', 'HOD']
 
-  // Dotted Network Canvas Animation (Guaranteed immediate mount rendering)
+  // Dotted Network Canvas Animation (Forced active render loop)
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -53,28 +53,24 @@ export default function InterviewPrepPage() {
     if (!ctx) return
 
     let animationFrameId: number
-    let timeoutId: NodeJS.Timeout
 
     const updateSize = () => {
-      if (!canvas) return
       canvas.width = window.innerWidth
       canvas.height = window.innerHeight
     }
 
     updateSize()
-    timeoutId = setTimeout(updateSize, 50)
     window.addEventListener('resize', updateSize)
 
-    const particles = Array.from({ length: 45 }, () => ({
+    const particles = Array.from({ length: 50 }, () => ({
       x: Math.random() * window.innerWidth,
       y: Math.random() * window.innerHeight,
-      vx: (Math.random() - 0.5) * 0.4,
-      vy: (Math.random() - 0.5) * 0.4,
+      vx: (Math.random() - 0.5) * 0.5,
+      vy: (Math.random() - 0.5) * 0.5,
       radius: Math.random() * 2 + 1.5,
     }))
 
     const render = () => {
-      if (!canvas.width || !canvas.height) updateSize()
       ctx.clearRect(0, 0, canvas.width, canvas.height)
 
       for (let i = 0; i < particles.length; i++) {
@@ -83,7 +79,7 @@ export default function InterviewPrepPage() {
           const dy = particles[i].y - particles[j].y
           const dist = Math.sqrt(dx * dx + dy * dy)
           if (dist < 150) {
-            ctx.strokeStyle = `rgba(99, 102, 241, ${0.35 * (1 - dist / 150)})`
+            ctx.strokeStyle = `rgba(99, 102, 241, ${0.3 * (1 - dist / 150)})`
             ctx.lineWidth = 1
             ctx.beginPath()
             ctx.moveTo(particles[i].x, particles[i].y)
@@ -99,7 +95,7 @@ export default function InterviewPrepPage() {
         if (p.x < 0 || p.x > canvas.width) p.vx *= -1
         if (p.y < 0 || p.y > canvas.height) p.vy *= -1
 
-        ctx.fillStyle = 'rgba(79, 70, 229, 0.6)'
+        ctx.fillStyle = 'rgba(79, 70, 229, 0.55)'
         ctx.beginPath()
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2)
         ctx.fill()
@@ -111,7 +107,6 @@ export default function InterviewPrepPage() {
     render()
 
     return () => {
-      clearTimeout(timeoutId)
       window.removeEventListener('resize', updateSize)
       cancelAnimationFrame(animationFrameId)
     }
@@ -256,8 +251,8 @@ export default function InterviewPrepPage() {
   if (authLoading) return <div className="h-screen w-screen flex items-center justify-center text-slate-600 bg-slate-50">Verifying session...</div>
 
   return (
-    <div className="relative min-h-screen w-full bg-slate-50 flex flex-col justify-center items-center py-20 px-6 overflow-x-hidden">
-      {/* Canvas background layer */}
+    <div className="relative min-h-screen w-full bg-slate-50 flex flex-col justify-start items-center pt-8 pb-12 px-6 overflow-x-hidden">
+      {/* Canvas background layer with clear z-index */}
       <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none w-full h-full opacity-70 z-0" />
 
       <style jsx>{`
@@ -278,7 +273,7 @@ export default function InterviewPrepPage() {
         }
       `}</style>
 
-      <div className="max-w-6xl w-full space-y-8 relative z-10 my-auto">
+      <div className="max-w-6xl w-full space-y-6 relative z-10 mt-4">
         {(questions.length > 0 || interviewResult) && !evaluating && (
           <div>
             <button
@@ -291,12 +286,13 @@ export default function InterviewPrepPage() {
         )}
 
         {questions.length === 0 && !interviewResult && (
-          <div className="space-y-10 text-center">
-            <div className="space-y-4 max-w-4xl mx-auto">
+          <div className="space-y-8 text-center">
+            <div className="space-y-3 max-w-4xl mx-auto">
               <span className="inline-block rounded-full bg-indigo-50 px-4 py-1 text-xs font-bold uppercase tracking-wider text-indigo-600 border border-indigo-100">
                 Structured Assessment
               </span>
-              <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900 leading-tight w-full">
+              {/* Heading font size matched to main website style (text-4xl sm:text-6xl) */}
+              <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-slate-900 leading-tight w-full">
                 Master Your Interview with <span className="text-indigo-600 whitespace-nowrap">Timed Assessments</span>
               </h1>
               <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-xl mx-auto">
@@ -304,7 +300,7 @@ export default function InterviewPrepPage() {
               </p>
             </div>
 
-            {/* Grid layout accommodating all categories */}
+            {/* Grid layout for all categories */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-5xl mx-auto">
               {professionCategories.map((cat) => (
                 <button
