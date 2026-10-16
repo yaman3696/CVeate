@@ -180,7 +180,7 @@ export default function InterviewPrepPage() {
     checkUser()
   }, [])
 
-  const handleCategorySelect = (categoryName: string) => {
+  const handleCategorySelect = async (categoryName: string) => {
     if (!user) {
       window.dispatchEvent(new CustomEvent('open-auth-modal', { detail: 'signin' }))
       return
@@ -188,10 +188,31 @@ export default function InterviewPrepPage() {
 
     const isOwnerOrAdmin = user?.email === process.env.NEXT_PUBLIC_OWNER_EMAIL || profile?.role === 'admin' || profile?.role === '`admin`'
     const hasPaidPass = profile?.plan_name === 'Daily Pass' || profile?.plan_name === 'Monthly'
+    const hasCredits = (profile?.credits || profile?.ats_checks_left || 0) > 0
 
-    if (!isOwnerOrAdmin && !hasPaidPass) {
+    // If they don't have a paid pass or available credits, prompt pricing modal
+    if (!isOwnerOrAdmin && !hasPaidPass && !hasCredits) {
       setIsPricingModalOpen(true)
       return
+    }
+
+    // If they are using a credit (not owner/admin and no active unlimited pass), deduct 1 credit immediately
+    if (!isOwnerOrAdmin && !hasPaidPass && hasCredits) {
+      const creditField = profile?.credits !== undefined ? 'credits' : 'ats_checks_left'
+      const currentCredits = profile[creditField] || 0
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ [creditField]: currentCredits - 1 })
+        .eq('id', user.id)
+
+      if (error) {
+        alert('Failed to deduct assessment credit. Please try again.')
+        return
+      }
+
+      // Update local profile state
+      setProfile({ ...profile, [creditField]: currentCredits - 1 })
     }
 
     setSelectedCategory(categoryName)

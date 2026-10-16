@@ -226,10 +226,9 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
         }
         setSuccessMessage('Signed in successfully!')
         
-        const currentPath = window.location.pathname
         setTimeout(() => {
           setIsAuthOpen(false)
-          window.location.href = currentPath
+          window.location.reload()
         }, 800)
       }
     } catch (err: any) {
@@ -264,12 +263,20 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
 
   const handleGoogleAuth = async () => {
     try {
+      setErrorMessage('')
+  
+      const redirectUrl =
+        window.location.origin +
+        window.location.pathname +
+        window.location.search
+  
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}`
+          redirectTo: redirectUrl
         }
       })
+  
       if (error) throw error
     } catch (err: any) {
       setErrorMessage(err.message || 'Google login failed.')

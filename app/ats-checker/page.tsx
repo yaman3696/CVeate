@@ -326,7 +326,10 @@ export default function AtsCheckerPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.href}`
+          redirectTo:
+  window.location.origin +
+  window.location.pathname +
+  window.location.search
         }
       })
       if (error) throw error
