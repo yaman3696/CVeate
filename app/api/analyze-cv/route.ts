@@ -2,10 +2,9 @@ import { GoogleGenAI } from '@google/genai'
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
-export const runtime = 'nodejs'
-
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
-const json = (body: unknown, status = 200) => NextResponse.json(body, { status })
+const json = (body: unknown, status = 200) =>
+  NextResponse.json(body, { status })
 
 function validReport(v: any): boolean {
   return v && typeof v === 'object' && !Array.isArray(v)
