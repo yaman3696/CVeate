@@ -45,42 +45,61 @@ export default function InterviewPrepPage() {
 
   const positionOptions = ['Internship', 'Junior', 'Intermediate', 'Senior', 'Team Lead', 'Manager', 'HOD']
 
-  // Dotted Network Canvas Animation (Guaranteed immediate mount rendering)
+  
+  // Dotted Network Canvas Animation
   useEffect(() => {
+    // Wait until authentication finishes and the canvas is mounted
+    if (authLoading) return
+
     const canvas = canvasRef.current
     if (!canvas) return
+
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
     let animationFrameId: number
+    let isActive = true
 
     const updateSize = () => {
-      if (!canvas) return
-      canvas.width = window.innerWidth
-      canvas.height = window.innerHeight
+      const rect = canvas.getBoundingClientRect()
+      const dpr = window.devicePixelRatio || 1
+
+      // Match the canvas drawing dimensions to its actual size
+      canvas.width = Math.round(rect.width * dpr)
+      canvas.height = Math.round(rect.height * dpr)
+
+      // Keep drawing coordinates in CSS pixels
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     }
 
     updateSize()
-    window.addEventListener('resize', updateSize)
 
     const particles = Array.from({ length: 35 }, () => ({
-      x: Math.random() * window.innerWidth,
-      y: Math.random() * window.innerHeight,
+      x: Math.random() * canvas.clientWidth,
+      y: Math.random() * canvas.clientHeight,
       vx: (Math.random() - 0.5) * 0.5,
       vy: (Math.random() - 0.5) * 0.5,
       radius: Math.random() * 2 + 1.5,
     }))
 
     const render = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      if (!isActive) return
 
+      const width = canvas.clientWidth
+      const height = canvas.clientHeight
+
+      ctx.clearRect(0, 0, width, height)
+
+      // Draw connecting lines
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
           const dx = particles[i].x - particles[j].x
           const dy = particles[i].y - particles[j].y
           const dist = Math.sqrt(dx * dx + dy * dy)
+
           if (dist < 120) {
-            ctx.strokeStyle = `rgba(99, 102, 241, ${0.15 * (1 - dist / 120)})`
+            ctx.strokeStyle =
+              `rgba(99, 102, 241, ${0.15 * (1 - dist / 120)})`
             ctx.lineWidth = 1
             ctx.beginPath()
             ctx.moveTo(particles[i].x, particles[i].y)
@@ -90,11 +109,13 @@ export default function InterviewPrepPage() {
         }
       }
 
+      // Move and draw particles
       particles.forEach((p) => {
         p.x += p.vx
         p.y += p.vy
-        if (p.x < 0 || p.x > canvas.width) p.vx *= -1
-        if (p.y < 0 || p.y > canvas.height) p.vy *= -1
+
+        if (p.x < 0 || p.x > width) p.vx *= -1
+        if (p.y < 0 || p.y > height) p.vy *= -1
 
         ctx.fillStyle = 'rgba(99, 102, 241, 0.3)'
         ctx.beginPath()
@@ -107,11 +128,23 @@ export default function InterviewPrepPage() {
 
     render()
 
+    // Keep canvas dimensions synchronized with the container
+    const resizeObserver = new ResizeObserver(() => {
+      updateSize()
+    })
+
+    resizeObserver.observe(canvas)
+
+    window.addEventListener('resize', updateSize)
+
     return () => {
-      window.removeEventListener('resize', updateSize)
+      isActive = false
       cancelAnimationFrame(animationFrameId)
+      resizeObserver.disconnect()
+      window.removeEventListener('resize', updateSize)
     }
-  }, [])
+  }, [authLoading])
+
 
   // 30-Minute Overall Assessment Timer & Auto-Submit
   useEffect(() => {
