@@ -40,7 +40,7 @@ export default function InterviewPrepPage() {
 
   const positionOptions = ['Internship', 'Junior', 'Intermediate', 'Senior', 'Team Lead', 'Manager', 'HOD']
 
-  // Dotted Network Canvas Animation Effect (Fixed first-load sizing)
+  // Dotted Network Canvas Animation Effect (Guaranteed viewport sizing)
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -50,27 +50,22 @@ export default function InterviewPrepPage() {
     let animationFrameId: number
 
     const updateCanvasSize = () => {
-      if (!canvas) return
-      // Use clientWidth/clientHeight for immediate accurate box sizing
-      canvas.width = canvas.parentElement?.clientWidth || window.innerWidth
-      canvas.height = canvas.parentElement?.clientHeight || window.innerHeight
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
     }
 
-    // Run immediately and on a short timeout to catch layout paint
     updateCanvasSize()
-    const timer = setTimeout(updateCanvasSize, 50)
     window.addEventListener('resize', updateCanvasSize)
 
-    const particles = Array.from({ length: 35 }, () => ({
-      x: Math.random() * (canvas.width || window.innerWidth),
-      y: Math.random() * (canvas.height || window.innerHeight),
+    const particles = Array.from({ length: 40 }, () => ({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
       vx: (Math.random() - 0.5) * 0.5,
       vy: (Math.random() - 0.5) * 0.5,
       radius: Math.random() * 2 + 1.5,
     }))
 
     const render = () => {
-      if (!canvas.width || !canvas.height) updateCanvasSize()
       ctx.clearRect(0, 0, canvas.width, canvas.height)
 
       for (let i = 0; i < particles.length; i++) {
@@ -107,7 +102,6 @@ export default function InterviewPrepPage() {
     render()
 
     return () => {
-      clearTimeout(timer)
       window.removeEventListener('resize', updateCanvasSize)
       cancelAnimationFrame(animationFrameId)
     }
@@ -252,8 +246,9 @@ export default function InterviewPrepPage() {
   if (authLoading) return <div className="h-screen w-screen flex items-center justify-center text-slate-600 bg-slate-50">Verifying session...</div>
 
   return (
-    <div className="relative min-h-screen w-full bg-slate-50 flex flex-col justify-center items-center py-24 px-6 overflow-x-hidden">
-      <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none w-full h-full opacity-60 z-0" />
+    <div className="relative min-h-screen w-full bg-slate-50 flex flex-col justify-center items-center py-20 px-6 overflow-x-hidden">
+      {/* Canvas positioned explicitly behind contents with high z-index stacking */}
+      <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none w-full h-full opacity-70 z-0" />
 
       <style jsx>{`
         @keyframes siriPulse {
@@ -287,14 +282,16 @@ export default function InterviewPrepPage() {
 
         {questions.length === 0 && !interviewResult && (
           <div className="space-y-10 text-center">
-            <div className="space-y-4 max-w-2xl mx-auto">
+            <div className="space-y-4 max-w-3xl mx-auto">
               <span className="inline-block rounded-full bg-indigo-50 px-4 py-1 text-xs font-bold uppercase tracking-wider text-indigo-600 border border-indigo-100">
                 Structured Assessment
               </span>
-              <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-slate-900 leading-tight">
-                Master Your Interview with <span className="text-indigo-600">Timed Assessments</span>
+              {/* Heading expanded to max-w-4xl so "Timed Assessments" fits on one line */}
+              <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-slate-900 leading-tight max-w-4xl mx-auto">
+                Master Your Interview with <span className="text-indigo-600 whitespace-nowrap">Timed Assessments</span>
               </h1>
-              <p className="text-base text-slate-600 leading-relaxed max-w-xl mx-auto">
+              {/* Subtitle merged into a clean single line */}
+              <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-xl mx-auto">
                 Select your target profession category to begin a 30-minute position-specific assessment.
               </p>
             </div>
@@ -491,7 +488,7 @@ export default function InterviewPrepPage() {
               </Link>
               <button onClick={() => setIsPricingModalOpen(false)} className="w-full rounded-xl border border-slate-200 bg-white py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer">Close</button>
             </div>
-          </div> 
+          </div>
         </div>
       )}
 
