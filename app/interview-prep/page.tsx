@@ -35,7 +35,12 @@ export default function InterviewPrepPage() {
   const professionCategories = [
     { name: 'Coding & Software Development', tag: 'coding', icon: <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg> },
     { name: 'UI/UX & Visual Designing', tag: 'designing', icon: <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg> },
-    { name: 'Product Management', tag: 'product', icon: <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg> }
+    { name: 'Product Management', tag: 'product', icon: <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg> },
+    { name: 'Finance', tag: 'finance', icon: <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
+    { name: 'Graphic Designing', tag: 'graphicdesigning', icon: <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg> },
+    { name: 'Video Editing', tag: 'videoediting', icon: <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg> },
+    { name: 'HR (Human Resources)', tag: 'hr', icon: <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg> },
+    { name: 'Data Analytics', tag: 'dataanalytics', icon: <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg> }
   ]
 
   const positionOptions = ['Internship', 'Junior', 'Intermediate', 'Senior', 'Team Lead', 'Manager', 'HOD']
@@ -48,13 +53,16 @@ export default function InterviewPrepPage() {
     if (!ctx) return
 
     let animationFrameId: number
+    let timeoutId: NodeJS.Timeout
 
     const updateSize = () => {
+      if (!canvas) return
       canvas.width = window.innerWidth
       canvas.height = window.innerHeight
     }
 
     updateSize()
+    timeoutId = setTimeout(updateSize, 50)
     window.addEventListener('resize', updateSize)
 
     const particles = Array.from({ length: 45 }, () => ({
@@ -66,6 +74,7 @@ export default function InterviewPrepPage() {
     }))
 
     const render = () => {
+      if (!canvas.width || !canvas.height) updateSize()
       ctx.clearRect(0, 0, canvas.width, canvas.height)
 
       for (let i = 0; i < particles.length; i++) {
@@ -74,7 +83,7 @@ export default function InterviewPrepPage() {
           const dy = particles[i].y - particles[j].y
           const dist = Math.sqrt(dx * dx + dy * dy)
           if (dist < 150) {
-            ctx.strokeStyle = `rgba(99, 102, 241, ${0.25 * (1 - dist / 150)})`
+            ctx.strokeStyle = `rgba(99, 102, 241, ${0.35 * (1 - dist / 150)})`
             ctx.lineWidth = 1
             ctx.beginPath()
             ctx.moveTo(particles[i].x, particles[i].y)
@@ -90,7 +99,7 @@ export default function InterviewPrepPage() {
         if (p.x < 0 || p.x > canvas.width) p.vx *= -1
         if (p.y < 0 || p.y > canvas.height) p.vy *= -1
 
-        ctx.fillStyle = 'rgba(99, 102, 241, 0.45)'
+        ctx.fillStyle = 'rgba(79, 70, 229, 0.6)'
         ctx.beginPath()
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2)
         ctx.fill()
@@ -102,6 +111,7 @@ export default function InterviewPrepPage() {
     render()
 
     return () => {
+      clearTimeout(timeoutId)
       window.removeEventListener('resize', updateSize)
       cancelAnimationFrame(animationFrameId)
     }
@@ -268,7 +278,7 @@ export default function InterviewPrepPage() {
         }
       `}</style>
 
-      <div className="max-w-5xl w-full space-y-8 relative z-10 my-auto">
+      <div className="max-w-6xl w-full space-y-8 relative z-10 my-auto">
         {(questions.length > 0 || interviewResult) && !evaluating && (
           <div>
             <button
@@ -286,31 +296,30 @@ export default function InterviewPrepPage() {
               <span className="inline-block rounded-full bg-indigo-50 px-4 py-1 text-xs font-bold uppercase tracking-wider text-indigo-600 border border-indigo-100">
                 Structured Assessment
               </span>
-              {/* Scaled down heading size (text-3xl sm:text-5xl) and wrapper widened so Timed Assessments stays on one line */}
               <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900 leading-tight w-full">
                 Master Your Interview with <span className="text-indigo-600 whitespace-nowrap">Timed Assessments</span>
               </h1>
-              {/* Single clean subtitle line */}
               <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-xl mx-auto">
                 Select your target profession category to begin a 30-minute position-specific assessment.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            {/* Grid layout accommodating all categories */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-5xl mx-auto">
               {professionCategories.map((cat) => (
                 <button
                   key={cat.tag}
                   onClick={() => handleCategorySelect(cat.name)}
-                  className="group rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-sm hover:border-indigo-600 hover:shadow-md transition-all text-left flex items-center gap-4 cursor-pointer"
+                  className="group rounded-2xl border border-slate-200 bg-white/95 p-5 shadow-sm hover:border-indigo-600 hover:shadow-md transition-all text-left flex items-center gap-3.5 cursor-pointer"
                 >
-                  <span className="p-3 rounded-xl border border-slate-100 bg-slate-50 group-hover:scale-105 transition-transform">
+                  <span className="p-2.5 rounded-xl border border-slate-100 bg-slate-50 group-hover:scale-105 transition-transform shrink-0">
                     {cat.icon}
                   </span>
                   <div>
-                    <h4 className="text-base font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                    <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors leading-snug">
                       {cat.name}
                     </h4>
-                    <p className="text-xs text-slate-500 mt-0.5">Click to configure & start</p>
+                    <p className="text-[11px] text-slate-500 mt-0.5">Click to configure & start</p>
                   </div>
                 </button>
               ))}
