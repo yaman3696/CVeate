@@ -40,7 +40,7 @@ export default function InterviewPrepPage() {
 
   const positionOptions = ['Internship', 'Junior', 'Intermediate', 'Senior', 'Team Lead', 'Manager', 'HOD']
 
-  // Dotted Network Canvas Animation Effect (Guaranteed viewport sizing)
+  // Dotted Network Canvas Animation (Guaranteed immediate mount rendering)
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -49,19 +49,19 @@ export default function InterviewPrepPage() {
 
     let animationFrameId: number
 
-    const updateCanvasSize = () => {
+    const updateSize = () => {
       canvas.width = window.innerWidth
       canvas.height = window.innerHeight
     }
 
-    updateCanvasSize()
-    window.addEventListener('resize', updateCanvasSize)
+    updateSize()
+    window.addEventListener('resize', updateSize)
 
-    const particles = Array.from({ length: 40 }, () => ({
+    const particles = Array.from({ length: 45 }, () => ({
       x: Math.random() * window.innerWidth,
       y: Math.random() * window.innerHeight,
-      vx: (Math.random() - 0.5) * 0.5,
-      vy: (Math.random() - 0.5) * 0.5,
+      vx: (Math.random() - 0.5) * 0.4,
+      vy: (Math.random() - 0.5) * 0.4,
       radius: Math.random() * 2 + 1.5,
     }))
 
@@ -73,8 +73,8 @@ export default function InterviewPrepPage() {
           const dx = particles[i].x - particles[j].x
           const dy = particles[i].y - particles[j].y
           const dist = Math.sqrt(dx * dx + dy * dy)
-          if (dist < 140) {
-            ctx.strokeStyle = `rgba(99, 102, 241, ${0.25 * (1 - dist / 140)})`
+          if (dist < 150) {
+            ctx.strokeStyle = `rgba(99, 102, 241, ${0.25 * (1 - dist / 150)})`
             ctx.lineWidth = 1
             ctx.beginPath()
             ctx.moveTo(particles[i].x, particles[i].y)
@@ -102,7 +102,7 @@ export default function InterviewPrepPage() {
     render()
 
     return () => {
-      window.removeEventListener('resize', updateCanvasSize)
+      window.removeEventListener('resize', updateSize)
       cancelAnimationFrame(animationFrameId)
     }
   }, [])
@@ -247,7 +247,7 @@ export default function InterviewPrepPage() {
 
   return (
     <div className="relative min-h-screen w-full bg-slate-50 flex flex-col justify-center items-center py-20 px-6 overflow-x-hidden">
-      {/* Canvas positioned explicitly behind contents with high z-index stacking */}
+      {/* Canvas background layer */}
       <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none w-full h-full opacity-70 z-0" />
 
       <style jsx>{`
@@ -282,15 +282,15 @@ export default function InterviewPrepPage() {
 
         {questions.length === 0 && !interviewResult && (
           <div className="space-y-10 text-center">
-            <div className="space-y-4 max-w-3xl mx-auto">
+            <div className="space-y-4 max-w-4xl mx-auto">
               <span className="inline-block rounded-full bg-indigo-50 px-4 py-1 text-xs font-bold uppercase tracking-wider text-indigo-600 border border-indigo-100">
                 Structured Assessment
               </span>
-              {/* Heading expanded to max-w-4xl so "Timed Assessments" fits on one line */}
-              <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-slate-900 leading-tight max-w-4xl mx-auto">
+              {/* Scaled down heading size (text-3xl sm:text-5xl) and wrapper widened so Timed Assessments stays on one line */}
+              <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900 leading-tight w-full">
                 Master Your Interview with <span className="text-indigo-600 whitespace-nowrap">Timed Assessments</span>
               </h1>
-              {/* Subtitle merged into a clean single line */}
+              {/* Single clean subtitle line */}
               <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-xl mx-auto">
                 Select your target profession category to begin a 30-minute position-specific assessment.
               </p>
