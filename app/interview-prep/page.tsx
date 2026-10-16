@@ -33,19 +33,19 @@ export default function InterviewPrepPage() {
   const [savedSuccess, setSavedSuccess] = useState(false)
 
   const professionCategories = [
-    { name: 'Coding & Software Development', tag: 'coding', icon: <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg> },
-    { name: 'UI/UX & Visual Designing', tag: 'designing', icon: <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg> },
-    { name: 'Product Management', tag: 'product', icon: <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg> },
-    { name: 'Finance', tag: 'finance', icon: <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
-    { name: 'Graphic Designing', tag: 'graphicdesigning', icon: <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg> },
-    { name: 'Video Editing', tag: 'videoediting', icon: <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg> },
-    { name: 'HR (Human Resources)', tag: 'hr', icon: <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg> },
-    { name: 'Data Analytics', tag: 'dataanalytics', icon: <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg> }
+    { name: 'Coding & Software Development', tag: 'coding', icon: <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg> },
+    { name: 'UI/UX & Visual Designing', tag: 'designing', icon: <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg> },
+    { name: 'Product Management', tag: 'product', icon: <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg> },
+    { name: 'Finance', tag: 'finance', icon: <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
+    { name: 'Graphic Designing', tag: 'graphicdesigning', icon: <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg> },
+    { name: 'Video Editing', tag: 'videoediting', icon: <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg> },
+    { name: 'HR (Human Resources)', tag: 'hr', icon: <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg> },
+    { name: 'Data Analytics', tag: 'dataanalytics', icon: <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg> }
   ]
 
   const positionOptions = ['Internship', 'Junior', 'Intermediate', 'Senior', 'Team Lead', 'Manager', 'HOD']
 
-  // Dotted Network Canvas Animation (Forced active render loop)
+  // Dotted Network Canvas Animation (Identical structure to Pricing page)
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -53,33 +53,34 @@ export default function InterviewPrepPage() {
     if (!ctx) return
 
     let animationFrameId: number
+    let width = (canvas.width = canvas.offsetWidth)
+    let height = (canvas.height = canvas.offsetHeight)
 
-    const updateSize = () => {
-      canvas.width = window.innerWidth
-      canvas.height = window.innerHeight
+    const handleResize = () => {
+      if (!canvas) return
+      width = canvas.width = canvas.offsetWidth
+      height = canvas.height = canvas.offsetHeight
     }
+    window.addEventListener('resize', handleResize)
 
-    updateSize()
-    window.addEventListener('resize', updateSize)
-
-    const particles = Array.from({ length: 50 }, () => ({
-      x: Math.random() * window.innerWidth,
-      y: Math.random() * window.innerHeight,
+    const particles = Array.from({ length: 30 }, () => ({
+      x: Math.random() * width,
+      y: Math.random() * height,
       vx: (Math.random() - 0.5) * 0.5,
       vy: (Math.random() - 0.5) * 0.5,
       radius: Math.random() * 2 + 1.5,
     }))
 
     const render = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      ctx.clearRect(0, 0, width, height)
 
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
           const dx = particles[i].x - particles[j].x
           const dy = particles[i].y - particles[j].y
           const dist = Math.sqrt(dx * dx + dy * dy)
-          if (dist < 150) {
-            ctx.strokeStyle = `rgba(99, 102, 241, ${0.3 * (1 - dist / 150)})`
+          if (dist < 120) {
+            ctx.strokeStyle = `rgba(99, 102, 241, ${0.15 * (1 - dist / 120)})`
             ctx.lineWidth = 1
             ctx.beginPath()
             ctx.moveTo(particles[i].x, particles[i].y)
@@ -92,10 +93,10 @@ export default function InterviewPrepPage() {
       particles.forEach((p) => {
         p.x += p.vx
         p.y += p.vy
-        if (p.x < 0 || p.x > canvas.width) p.vx *= -1
-        if (p.y < 0 || p.y > canvas.height) p.vy *= -1
+        if (p.x < 0 || p.x > width) p.vx *= -1
+        if (p.y < 0 || p.y > height) p.vy *= -1
 
-        ctx.fillStyle = 'rgba(79, 70, 229, 0.55)'
+        ctx.fillStyle = 'rgba(99, 102, 241, 0.3)'
         ctx.beginPath()
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2)
         ctx.fill()
@@ -107,7 +108,7 @@ export default function InterviewPrepPage() {
     render()
 
     return () => {
-      window.removeEventListener('resize', updateSize)
+      window.removeEventListener('resize', handleResize)
       cancelAnimationFrame(animationFrameId)
     }
   }, [])
@@ -248,12 +249,15 @@ export default function InterviewPrepPage() {
     }
   }
 
-  if (authLoading) return <div className="h-screen w-screen flex items-center justify-center text-slate-600 bg-slate-50">Verifying session...</div>
+  if (authLoading) return <div className="min-h-screen flex items-center justify-center text-slate-600 bg-slate-50">Verifying session...</div>
 
   return (
-    <div className="relative min-h-screen w-full bg-slate-50 flex flex-col justify-start items-center pt-8 pb-12 px-6 overflow-x-hidden">
-      {/* Canvas background layer with clear z-index */}
-      <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none w-full h-full opacity-70 z-0" />
+    <div className="min-h-screen bg-slate-50 py-16 px-6 text-slate-900 flex flex-col justify-center relative overflow-hidden">
+      {/* Dotted Network Canvas Background */}
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 pointer-events-none h-full w-full opacity-60 z-0"
+      />
 
       <style jsx>{`
         @keyframes siriPulse {
@@ -273,8 +277,10 @@ export default function InterviewPrepPage() {
         }
       `}</style>
 
-      <div className="max-w-6xl w-full space-y-6 relative z-10 mt-4">
-        {(questions.length > 0 || interviewResult) && !evaluating && (
+      <div className="mx-auto max-w-6xl w-full space-y-12 relative z-10">
+        
+        {/* Header (Matched to Pricing layout spacing) */}
+        {(questions.length > 0 || interviewResult) && !evaluating ? (
           <div>
             <button
               onClick={() => { setQuestions([]); setInterviewResult(null); setSelectedCategory(''); }}
@@ -283,48 +289,48 @@ export default function InterviewPrepPage() {
               ← Back to Categories
             </button>
           </div>
-        )}
-
-        {questions.length === 0 && !interviewResult && (
-          <div className="space-y-8 text-center">
-            <div className="space-y-3 max-w-4xl mx-auto">
-              <span className="inline-block rounded-full bg-indigo-50 px-4 py-1 text-xs font-bold uppercase tracking-wider text-indigo-600 border border-indigo-100">
-                Structured Assessment
-              </span>
-              {/* Heading font size matched to main website style (text-4xl sm:text-6xl) */}
-              <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-slate-900 leading-tight w-full">
-                Master Your Interview with <span className="text-indigo-600 whitespace-nowrap">Timed Assessments</span>
-              </h1>
-              <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-xl mx-auto">
-                Select your target profession category to begin a 30-minute position-specific assessment.
-              </p>
-            </div>
-
-            {/* Grid layout for all categories */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-5xl mx-auto">
-              {professionCategories.map((cat) => (
-                <button
-                  key={cat.tag}
-                  onClick={() => handleCategorySelect(cat.name)}
-                  className="group rounded-2xl border border-slate-200 bg-white/95 p-5 shadow-sm hover:border-indigo-600 hover:shadow-md transition-all text-left flex items-center gap-3.5 cursor-pointer"
-                >
-                  <span className="p-2.5 rounded-xl border border-slate-100 bg-slate-50 group-hover:scale-105 transition-transform shrink-0">
-                    {cat.icon}
-                  </span>
-                  <div>
-                    <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors leading-snug">
-                      {cat.name}
-                    </h4>
-                    <p className="text-[11px] text-slate-500 mt-0.5">Click to configure & start</p>
-                  </div>
-                </button>
-              ))}
-            </div>
+        ) : questions.length === 0 && !interviewResult && (
+          <div className="text-center space-y-4 max-w-3xl mx-auto">
+            <span className="inline-block rounded-full bg-indigo-50 px-4 py-1 text-xs font-bold uppercase tracking-wider text-indigo-600 border border-indigo-100">
+              Structured Assessment
+            </span>
+            <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl text-slate-900">
+              Master Your Interview with <span className="text-indigo-600">Timed Assessments</span>
+            </h1>
+            <p className="text-sm text-slate-600 leading-relaxed max-w-xl mx-auto">
+              Select your target profession category to begin a 30-minute position-specific assessment.
+            </p>
           </div>
         )}
 
+        {/* Categories Grid (Matching Pricing Card Grid Spacing) */}
+        {questions.length === 0 && !interviewResult && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 items-stretch pt-2">
+            {professionCategories.map((cat) => (
+              <button
+                key={cat.tag}
+                onClick={() => handleCategorySelect(cat.name)}
+                className="bg-white/90 backdrop-blur-sm rounded-3xl border border-slate-200 p-6 shadow-sm hover:border-indigo-600 hover:shadow-md transition-all text-left flex flex-col justify-between space-y-4 cursor-pointer group"
+              >
+                <div className="space-y-3">
+                  <div className="h-8 w-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+                    {cat.icon}
+                  </div>
+                  <h4 className="text-base font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                    {cat.name}
+                  </h4>
+                </div>
+                <p className="text-xs font-semibold text-indigo-600 flex items-center gap-1">
+                  Configure & Start →
+                </p>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Active Assessment Question View */}
         {questions.length > 0 && !interviewResult && !evaluating && (
-          <div className="bg-white rounded-3xl p-8 sm:p-10 shadow-2xl border border-slate-100 space-y-6 max-w-3xl mx-auto">
+          <div className="bg-white/95 backdrop-blur-sm rounded-3xl p-8 sm:p-10 shadow-xl border border-slate-200 space-y-6 max-w-3xl mx-auto">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-3 py-1 rounded-md">
                 Question {currentIndex + 1} of {questions.length} ({selectedCategory})
@@ -367,6 +373,7 @@ export default function InterviewPrepPage() {
           </div>
         )}
 
+        {/* Evaluating Modal (Matched to ATS Analyzer Style) */}
         {evaluating && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm px-4">
             <div className="bg-white border border-slate-100 rounded-3xl p-12 text-center shadow-2xl space-y-8 max-w-xl w-full mx-auto">
@@ -388,8 +395,9 @@ export default function InterviewPrepPage() {
           </div>
         )}
 
+        {/* Evaluation Report Result View */}
         {interviewResult && (
-          <div className="bg-white rounded-3xl p-8 sm:p-10 shadow-2xl border border-slate-100 space-y-6 max-w-3xl mx-auto max-h-[80vh] overflow-y-auto">
+          <div className="bg-white/95 backdrop-blur-sm rounded-3xl p-8 sm:p-10 shadow-xl border border-slate-200 space-y-6 max-w-3xl mx-auto max-h-[80vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div>
                 <h2 className="text-2xl font-extrabold text-slate-900">Assessment Evaluation Report</h2>
@@ -440,6 +448,7 @@ export default function InterviewPrepPage() {
 
       </div>
 
+      {/* Configuration Wizard Modal */}
       {isWizardOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
           <div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl border border-slate-100 relative text-slate-900 space-y-6">
@@ -482,6 +491,7 @@ export default function InterviewPrepPage() {
         </div>
       )}
 
+      {/* Pricing / Pass Modal */}
       {isPricingModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
           <div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl border border-slate-100 text-center space-y-4 text-slate-900">
