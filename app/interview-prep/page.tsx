@@ -45,7 +45,7 @@ export default function InterviewPrepPage() {
 
   const positionOptions = ['Internship', 'Junior', 'Intermediate', 'Senior', 'Team Lead', 'Manager', 'HOD']
 
-  // Dotted Network Canvas Animation (Identical structure to Pricing page)
+  // Dotted Network Canvas Animation (Guaranteed immediate mount rendering)
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -53,26 +53,26 @@ export default function InterviewPrepPage() {
     if (!ctx) return
 
     let animationFrameId: number
-    let width = (canvas.width = canvas.offsetWidth)
-    let height = (canvas.height = canvas.offsetHeight)
 
-    const handleResize = () => {
+    const updateSize = () => {
       if (!canvas) return
-      width = canvas.width = canvas.offsetWidth
-      height = canvas.height = canvas.offsetHeight
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
     }
-    window.addEventListener('resize', handleResize)
 
-    const particles = Array.from({ length: 30 }, () => ({
-      x: Math.random() * width,
-      y: Math.random() * height,
+    updateSize()
+    window.addEventListener('resize', updateSize)
+
+    const particles = Array.from({ length: 35 }, () => ({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
       vx: (Math.random() - 0.5) * 0.5,
       vy: (Math.random() - 0.5) * 0.5,
       radius: Math.random() * 2 + 1.5,
     }))
 
     const render = () => {
-      ctx.clearRect(0, 0, width, height)
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
 
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
@@ -93,8 +93,8 @@ export default function InterviewPrepPage() {
       particles.forEach((p) => {
         p.x += p.vx
         p.y += p.vy
-        if (p.x < 0 || p.x > width) p.vx *= -1
-        if (p.y < 0 || p.y > height) p.vy *= -1
+        if (p.x < 0 || p.x > canvas.width) p.vx *= -1
+        if (p.y < 0 || p.y > canvas.height) p.vy *= -1
 
         ctx.fillStyle = 'rgba(99, 102, 241, 0.3)'
         ctx.beginPath()
@@ -108,7 +108,7 @@ export default function InterviewPrepPage() {
     render()
 
     return () => {
-      window.removeEventListener('resize', handleResize)
+      window.removeEventListener('resize', updateSize)
       cancelAnimationFrame(animationFrameId)
     }
   }, [])
@@ -279,7 +279,7 @@ export default function InterviewPrepPage() {
 
       <div className="mx-auto max-w-6xl w-full space-y-12 relative z-10">
         
-        {/* Header (Matched to Pricing layout spacing) */}
+        {/* Header */}
         {(questions.length > 0 || interviewResult) && !evaluating ? (
           <div>
             <button
@@ -294,8 +294,10 @@ export default function InterviewPrepPage() {
             <span className="inline-block rounded-full bg-indigo-50 px-4 py-1 text-xs font-bold uppercase tracking-wider text-indigo-600 border border-indigo-100">
               Structured Assessment
             </span>
-            <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl text-slate-900">
-              Master Your Interview with <span className="text-indigo-600">Timed Assessments</span>
+            {/* Heading updated so "Timed Assessments" sits on two rows */}
+            <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl text-slate-900 leading-tight">
+              Master Your Interview with <br />
+              <span className="text-indigo-600">Timed Assessments</span>
             </h1>
             <p className="text-sm text-slate-600 leading-relaxed max-w-xl mx-auto">
               Select your target profession category to begin a 30-minute position-specific assessment.
@@ -303,7 +305,7 @@ export default function InterviewPrepPage() {
           </div>
         )}
 
-        {/* Categories Grid (Matching Pricing Card Grid Spacing) */}
+        {/* Categories Grid */}
         {questions.length === 0 && !interviewResult && (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 items-stretch pt-2">
             {professionCategories.map((cat) => (
@@ -373,7 +375,7 @@ export default function InterviewPrepPage() {
           </div>
         )}
 
-        {/* Evaluating Modal (Matched to ATS Analyzer Style) */}
+        {/* Evaluating Modal */}
         {evaluating && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm px-4">
             <div className="bg-white border border-slate-100 rounded-3xl p-12 text-center shadow-2xl space-y-8 max-w-xl w-full mx-auto">
