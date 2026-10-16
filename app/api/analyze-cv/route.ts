@@ -252,3 +252,92 @@ Return ONLY valid JSON without markdown formatting backticks.
     return json({ error: 'Unable to complete ATS analysis. Please retry or contact support if a credit remains reserved.' }, 500)
   }
 }
+
+
+export async function GET(req: Request) {
+  try {
+    const authorization = req.headers.get('authorization') || ''
+
+    if (!authorization.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'Please sign in again.' },
+        { status: 401 }
+      )
+    }
+
+    const { data: auth, error: authError } =
+      await supabaseAdmin.auth.getUser(authorization.slice(7))
+
+    if (authError || !auth.user) {
+      return NextResponse.json(
+        { error: 'Session expired.' },
+        { status: 401 }
+      )
+    }
+
+    const url = new URL(req.url)
+    const requestId = url.searchParams.get('requestId') || ''
+
+    const uuidPattern =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+    if (!uuidPattern.test(requestId)) {
+      return NextResponse.json(
+        { error: 'Invalid request ID.' },
+        { status: 400 }
+      )
+    }
+
+    const { data, error } = await supabaseAdmin.rpc(
+      'get_ats_credit_transaction',
+      {
+        p_user_id: auth.user.id,
+        p_request_id: requestId
+      }
+    )
+
+    if (error) throw error
+
+    const transaction = data?.[0]
+
+    if (!transaction) {
+      return NextResponse.json(
+        { error: 'Scan not found.' },
+        { status: 404 }
+      )
+    }
+
+    if (transaction.transaction_status === 'completed') {
+      if (!transaction.report_data) {
+        throw new Error('Completed scan has no saved report.')
+      }
+
+      return NextResponse.json(
+        {
+          status: 'completed',
+          report: transaction.report_data
+        },
+        { headers: { 'Cache-Control': 'no-store' } }
+      )
+    }
+
+    if (transaction.transaction_status === 'refunded') {
+      return NextResponse.json(
+        { status: 'refunded' },
+        { headers: { 'Cache-Control': 'no-store' } }
+      )
+    }
+
+    return NextResponse.json(
+      { status: 'processing' },
+      { headers: { 'Cache-Control': 'no-store' } }
+    )
+  } catch (error) {
+    console.error('ATS recovery lookup failed:', error)
+
+    return NextResponse.json(
+      { error: 'Unable to retrieve scan status.' },
+      { status: 500 }
+    )
+  }
+}
