@@ -466,6 +466,40 @@ if (data?.user) {
     e.preventDefault()
     if (isAnalyzing) return
     if (!user) { setIsLoginPromptOpen(true); return }
+    // Check the current credit balance before showing the loading screen.
+const { data: creditProfile, error: creditError } =
+await supabase.rpc('get_or_refresh_user_profile', {
+  user_id: user.id
+})
+
+if (creditError || !Array.isArray(creditProfile) || !creditProfile[0]) {
+alert('Unable to verify your Career Credits. Please try again.')
+return
+}
+
+const currentProfile = creditProfile[0]
+
+const { data: roleProfile, error: roleError } = await supabase
+  .from('profiles')
+  .select('role')
+  .eq('id', user.id)
+  .single()
+
+if (roleError || !roleProfile) {
+  alert('Unable to verify your account permissions. Please try again.')
+  return
+}
+
+currentProfile.role = roleProfile.role
+setProfile(currentProfile)
+
+if (
+  currentProfile.role !== 'admin' &&
+  currentProfile.career_credits <= 0
+) {
+  setIsLimitModalOpen(true)
+  return
+}
     if (!selectedFile) { alert('Please upload a CV file first.'); return }
     if (!jobDescription.trim()) { alert('Please paste a target job description.'); return }
 

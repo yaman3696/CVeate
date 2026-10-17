@@ -31,6 +31,56 @@ export default function InterviewPrepPage() {
   const [interviewResult, setInterviewResult] = useState<any>(null)
   const [saving, setSaving] = useState(false)
   const [savedSuccess, setSavedSuccess] = useState(false)
+  const evaluationStartedRef = useRef(false)
+const evaluationFinishedRef = useRef(false)
+
+const [activeEvaluationId, setActiveEvaluationId] =
+  useState<string | null>(null)
+
+const [evaluationStartedAt, setEvaluationStartedAt] =
+  useState<number | null>(null)
+
+const [evaluationElapsed, setEvaluationElapsed] = useState(0)
+const [evaluationNotice, setEvaluationNotice] = useState('')
+
+const formatEvaluationTime = (seconds: number) => {
+  const minutes = Math.floor(seconds / 60)
+  return `${String(minutes).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`
+}
+
+const clearPendingEvaluation = (userId: string) => {
+  sessionStorage.removeItem(`cveate_interview_pending_${userId}`)
+  sessionStorage.removeItem(`cveate_interview_started_${userId}`)
+  sessionStorage.removeItem(`cveate_interview_context_${userId}`)
+  setActiveEvaluationId(null)
+}
+
+const finishEvaluation = (
+  userId: string,
+  report?: any,
+  refunded = false
+) => {
+  if (evaluationFinishedRef.current) return
+
+  evaluationFinishedRef.current = true
+  evaluationStartedRef.current = false
+
+  if (report) setInterviewResult(report)
+
+  setEvaluating(false)
+  setEvaluationNotice('')
+
+  // Preserve the evaluation ID and context after success
+  // so the completed report can be recovered on refresh.
+  // Clear temporary data only when the evaluation was refunded.
+  if (refunded) {
+    clearPendingEvaluation(userId)
+
+    alert(
+      'The evaluation was interrupted. Its reserved Career Credit was refunded.'
+    )
+  }
+}
 
   const professionCategories = [
     { name: 'Coding & Software Development', tag: 'coding', icon: <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg> },
@@ -45,7 +95,7 @@ export default function InterviewPrepPage() {
 
   const positionOptions = ['Internship', 'Junior', 'Intermediate', 'Senior', 'Team Lead', 'Manager', 'HOD']
 
-  
+
   // Dotted Network Canvas Animation
   useEffect(() => {
     // Wait until authentication finishes and the canvas is mounted
@@ -179,40 +229,195 @@ export default function InterviewPrepPage() {
     }
     checkUser()
   }, [])
+  // Live elapsed time, including after refresh.
+useEffect(() => {
+  if (!evaluating || evaluationStartedAt === null) return
 
-  const handleCategorySelect = async (categoryName: string) => {
-    if (!user) {
-      window.dispatchEvent(new CustomEvent('open-auth-modal', { detail: 'signin' }))
-      return
+  const tick = () => {
+    setEvaluationElapsed(
+      Math.max(
+        0,
+        Math.floor((Date.now() - evaluationStartedAt) / 1000)
+      )
+    )
+  }
+
+  tick()
+
+  const timer = setInterval(tick, 1000)
+  return () => clearInterval(timer)
+}, [evaluating, evaluationStartedAt])
+
+// Restore the pending evaluation and its interview context.
+useEffect(() => {
+  if (authLoading || !user) return
+
+  const userId = user.id
+  const requestId = sessionStorage.getItem(
+    `cveate_interview_pending_${userId}`
+  )
+
+  if (!requestId) return
+
+  const contextText = sessionStorage.getItem(
+    `cveate_interview_context_${userId}`
+  )
+
+  if (contextText) {
+    try {
+      const context = JSON.parse(contextText)
+
+      if (
+        Array.isArray(context.questions) &&
+        Array.isArray(context.answers)
+      ) {
+        setSelectedCategory(context.category || '')
+        setSelectedPosition(context.seniority || 'Junior')
+        setQuestions(context.questions)
+        setUserAnswers(context.answers)
+      }
+    } catch (error) {
+      console.error('Unable to restore interview context:', error)
     }
+  }
 
-    const isOwnerOrAdmin = user?.email === process.env.NEXT_PUBLIC_OWNER_EMAIL || profile?.role === 'admin' || profile?.role === '`admin`'
-    const hasPaidPass = profile?.plan_name === 'Daily Pass' || profile?.plan_name === 'Monthly'
-    const hasCredits = (profile?.credits || profile?.ats_checks_left || 0) > 0
+  const storedStart = Number(
+    sessionStorage.getItem(
+      `cveate_interview_started_${userId}`
+    )
+  )
 
-    // If they don't have a paid pass or available credits, prompt pricing modal
-    if (!isOwnerOrAdmin && !hasPaidPass && !hasCredits) {
-      setIsPricingModalOpen(true)
-      return
-    }
+  evaluationStartedRef.current = true
+  evaluationFinishedRef.current = false
 
-    // If they are using a credit (not owner/admin and no active unlimited pass), deduct 1 credit immediately
-    if (!isOwnerOrAdmin && !hasPaidPass && hasCredits) {
-      const creditField = profile?.credits !== undefined ? 'credits' : 'ats_checks_left'
-      const currentCredits = profile[creditField] || 0
+  setEvaluationStartedAt(
+    Number.isFinite(storedStart) && storedStart > 0
+      ? storedStart
+      : Date.now()
+  )
 
-      const { error } = await supabase
-        .from('profiles')
-        .update({ [creditField]: currentCredits - 1 })
-        .eq('id', user.id)
+  setActiveEvaluationId(requestId)
+  setEvaluating(true)
+}, [authLoading, user?.id])
 
-      if (error) {
-        alert('Failed to deduct assessment credit. Please try again.')
+// Poll the same request ID; never launch Gemini again on refresh.
+useEffect(() => {
+  if (!user || !activeEvaluationId || !evaluating) return
+
+  let cancelled = false
+  let timer: ReturnType<typeof setTimeout> | undefined
+
+  const userId = user.id
+  const requestId = activeEvaluationId
+
+  const checkStatus = async () => {
+    if (cancelled || evaluationFinishedRef.current) return
+
+    try {
+      const { data: sessionData } =
+        await supabase.auth.getSession()
+
+      if (!sessionData.session || cancelled) return
+
+      const response = await fetch(
+        `/api/evaluate-interview?requestId=${encodeURIComponent(requestId)}`,
+        {
+          headers: {
+            Authorization:
+              `Bearer ${sessionData.session.access_token}`,
+          },
+          cache: 'no-store',
+        }
+      )
+
+      if (cancelled || evaluationFinishedRef.current) return
+
+      const data = await response.json()
+
+      if (data.status === 'completed' && data.report) {
+        finishEvaluation(userId, data.report)
         return
       }
 
-      // Update local profile state
-      setProfile({ ...profile, [creditField]: currentCredits - 1 })
+      if (data.status === 'refunded') {
+        finishEvaluation(userId, undefined, true)
+        return
+      }
+
+      if (response.status === 404) {
+        const started = Number(
+          sessionStorage.getItem(
+            `cveate_interview_started_${userId}`
+          )
+        ) || Date.now()
+
+        if (Date.now() - started > 30000) {
+          setEvaluationNotice(
+            'We could not locate your evaluation yet. Your request details have been preserved. Please check your connection or try refreshing the page.'
+          )
+
+          // Keep the original request ID and interview context.
+          // A temporary 404 must not erase recovery information.
+          // Continue checking instead of starting another evaluation.
+        }
+      } else if (!response.ok && response.status !== 202) {
+        setEvaluationNotice(
+          'Checking your evaluation status. Your request is saved for recovery.'
+        )
+      }
+    } catch (error) {
+      console.error('Interview recovery check failed:', error)
+
+      if (!cancelled) {
+        setEvaluationNotice(
+          'Connection interrupted. We will keep checking for your report.'
+        )
+      }
+    }
+
+    if (!cancelled && !evaluationFinishedRef.current) {
+      timer = setTimeout(checkStatus, 5000)
+    }
+  }
+
+  void checkStatus()
+
+  return () => {
+    cancelled = true
+    if (timer) clearTimeout(timer)
+  }
+}, [activeEvaluationId, evaluating, user?.id])
+
+  const handleCategorySelect = async (categoryName: string) => {
+    if (!user) {
+      window.dispatchEvent(
+        new CustomEvent('open-auth-modal', { detail: 'signin' })
+      )
+      return
+    }
+
+    const { data: currentProfile, error } = await supabase
+      .from('profiles')
+      .select('role, career_credits')
+      .eq('id', user.id)
+      .single()
+
+    if (error || !currentProfile) {
+      alert('Unable to verify your Career Credits. Please try again.')
+      return
+    }
+
+    setProfile((previous: any) => ({
+      ...previous,
+      ...currentProfile
+    }))
+
+    const isAdmin = currentProfile.role === 'admin'
+    const hasCredits = currentProfile.career_credits > 0
+
+    if (!isAdmin && !hasCredits) {
+      setIsPricingModalOpen(true)
+      return
     }
 
     setSelectedCategory(categoryName)
@@ -225,7 +430,7 @@ export default function InterviewPrepPage() {
 
     const categoryPool = questionBank[selectedCategory] || questionBank['Coding & Software Development']
     const positionPool = categoryPool[selectedPosition] || categoryPool['Junior'] || ['Tell me about your background.']
-    
+
     const shuffled = [...positionPool].sort(() => 0.5 - Math.random())
     const selected5 = shuffled.slice(0, 5)
 
@@ -250,53 +455,150 @@ export default function InterviewPrepPage() {
     }
   }
 
-  const evaluateInterviewTranscript = async (finalAnswers: string[]) => {
+  const evaluateInterviewTranscript = async (
+    finalAnswers: string[]
+  ) => {
+    if (evaluationStartedRef.current || !user) return
+
+    evaluationStartedRef.current = true
+    evaluationFinishedRef.current = false
+
+    const userId = user.id
+    const requestId = crypto.randomUUID()
+    const startedAt = Date.now()
+
+    const completedAnswers = questions.map(
+      (_, index) =>
+        finalAnswers[index] || '[No Answer Provided]'
+    )
+
+    const context = {
+      category: selectedCategory,
+      seniority: selectedPosition,
+      questions,
+      answers: completedAnswers,
+    }
+
+    sessionStorage.setItem(
+      `cveate_interview_pending_${userId}`,
+      requestId
+    )
+
+    sessionStorage.setItem(
+      `cveate_interview_started_${userId}`,
+      String(startedAt)
+    )
+
+    sessionStorage.setItem(
+      `cveate_interview_context_${userId}`,
+      JSON.stringify(context)
+    )
+
+    setUserAnswers(completedAnswers)
+    setEvaluationStartedAt(startedAt)
+    setEvaluationElapsed(0)
+    setEvaluationNotice('')
+    setActiveEvaluationId(requestId)
     setEvaluating(true)
 
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const token = session?.access_token
+      const { data: { session } } =
+        await supabase.auth.getSession()
 
-      const res = await fetch('/api/evaluate-interview', {
+      if (!session) {
+        throw new Error('Please sign in again.')
+      }
+
+      const response = await fetch('/api/evaluate-interview', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
-          category: selectedCategory,
-          seniority: selectedPosition,
-          questions,
-          answers: finalAnswers
-        })
+          requestId,
+          ...context,
+        }),
       })
 
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Evaluation failed.')
-      setInterviewResult(data)
-    } catch (err: any) {
-      alert(err.message || 'Failed to evaluate.')
-    } finally {
-      setEvaluating(false)
+      const data = await response.json()
+
+      if (evaluationFinishedRef.current) return
+
+      if (data.status === 'completed' && data.report) {
+        finishEvaluation(userId, data.report)
+        return
+      }
+
+      if (response.status === 202) {
+        return
+      }
+
+      if (response.status === 402 || data.insufficientCredits) {
+        evaluationFinishedRef.current = true
+        evaluationStartedRef.current = false
+        setEvaluating(false)
+        clearPendingEvaluation(userId)
+        setIsPricingModalOpen(true)
+        return
+      }
+
+      if (data.status === 'refunded') {
+        finishEvaluation(userId, undefined, true)
+        return
+      }
+
+      if (!response.ok) {
+        setEvaluationNotice(
+          data.error ||
+          'Checking whether your evaluation was completed or refunded.'
+        )
+      }
+    } catch (error) {
+      console.error('Interview evaluation request failed:', error)
+
+      // A network error does not prove Gemini stopped.
+      // Keep the request ID and continue checking.
+      setEvaluationNotice(
+        'Connection interrupted. Checking whether your report was saved...'
+      )
     }
   }
 
   const handleSaveInterview = async () => {
-    if (!user || !interviewResult) return
+    if (!user || !interviewResult || saving || savedSuccess) return
+
     setSaving(true)
+
     try {
-      const { error } = await supabase.from('interview_history').insert({
-        user_id: user.id,
-        profession: selectedCategory,
-        seniority: selectedPosition,
-        experience: `${selectedPosition} Level`,
-        score: interviewResult.overallScore,
-        feedback_summary: interviewResult.summary,
-        qa_transcript: questions.map((q, idx) => ({ question: q, answer: userAnswers[idx] }))
-      })
+      const { error } = await supabase
+        .from('interview_history')
+        .insert({
+          user_id: user.id,
+          profession: selectedCategory,
+          seniority: selectedPosition,
+          experience: `${selectedPosition} Level`,
+          score: interviewResult.overallScore,
+          feedback_summary: interviewResult.summary,
+          qa_transcript: questions.map((q, idx) => ({
+            question: q,
+            answer: userAnswers[idx]
+          }))
+        })
+
       if (error) throw error
+
+      // Permanent history was saved successfully.
       setSavedSuccess(true)
+
+      // Clear browser recovery information only after saving.
+      clearPendingEvaluation(user.id)
+
+      // Stop tracking the completed temporary evaluation.
+      setActiveEvaluationId(null)
+
     } catch (err: any) {
+      // Keep the report and recovery information if saving fails.
       alert(err.message || 'Failed to save.')
     } finally {
       setSaving(false)
@@ -329,10 +631,19 @@ export default function InterviewPrepPage() {
           background-size: 200% 100%;
           animation: shimmerBar 1.8s infinite linear;
         }
+          @keyframes cveateScanActivity {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(300%);
+  }
+}
       `}</style>
 
       <div className="mx-auto max-w-6xl w-full space-y-12 relative z-10">
-        
+
         {/* Header */}
         {(questions.length > 0 || interviewResult) && !evaluating ? (
           <div>
@@ -429,27 +740,136 @@ export default function InterviewPrepPage() {
           </div>
         )}
 
-        {/* Evaluating Modal */}
-        {evaluating && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm px-4">
-            <div className="bg-white border border-slate-100 rounded-3xl p-12 text-center shadow-2xl space-y-8 max-w-xl w-full mx-auto">
-              <div className="relative flex items-center justify-center py-4">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-pink-500 siri-orb flex items-center justify-center shadow-2xl">
-                  <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center"></div>
-                </div>
-              </div>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <h2 className="text-xl font-bold text-slate-900">Evaluating your assessment responses...</h2>
-                  <p className="text-xs text-slate-500">Scoring technical depth, communication, and overall suitability.</p>
-                </div>
-                <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-                  <div className="loading-bar h-2.5 rounded-full w-full"></div>
-                </div>
-              </div>
-            </div>
+        {/* Evaluating Modal - same design as ATS Checker */}
+{evaluating && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm px-4 py-6 overflow-y-auto">
+    <div className="bg-white rounded-3xl p-8 sm:p-12 text-center text-slate-900 shadow-2xl space-y-7 max-w-3xl w-full mx-auto">
+
+      <div className="flex justify-center">
+        <div className="relative flex h-24 w-24 items-center justify-center">
+          <div className="absolute inset-0 rounded-full bg-indigo-100 animate-ping opacity-30" />
+
+          <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 shadow-lg shadow-indigo-200">
+            <svg
+              className="h-10 w-10 text-white"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9 12h6m-6 4h4M7 3h7l5 5v13H7a2 2 0 01-2-2V5a2 2 0 012-2z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M14 3v5h5"
+              />
+            </svg>
           </div>
-        )}
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <h2 className="text-2xl font-extrabold text-slate-900">
+          CVeate AI is evaluating your interview
+        </h2>
+
+        <p className="text-sm text-slate-500">
+          We're reviewing your answers, technical accuracy,
+          communication, and overall performance.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="rounded-2xl bg-indigo-50 border border-indigo-100 p-4">
+          <p className="text-xs font-semibold text-indigo-500 mb-2">
+            Time Elapsed
+          </p>
+
+          <p className="text-2xl font-black text-indigo-700 tabular-nums">
+            {formatEvaluationTime(evaluationElapsed)}
+          </p>
+        </div>
+
+        <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+          <p className="text-xs font-semibold text-slate-500 mb-2">
+            Estimated Total Wait
+          </p>
+
+          <p className="text-2xl font-black text-slate-800">
+            2-3 min
+          </p>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <div className="flex justify-between text-xs font-semibold">
+          <span className="text-slate-500">
+            Evaluation in progress
+          </span>
+
+          <span className="text-indigo-600">
+            Processing...
+          </span>
+        </div>
+
+        <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-indigo-100">
+          <div
+            className="absolute inset-y-0 left-0 w-1/3 rounded-full bg-gradient-to-r from-indigo-600 to-cyan-400"
+            style={{
+              animation:
+                'cveateScanActivity 2s ease-in-out infinite',
+            }}
+          />
+        </div>
+
+        <p className="text-xs text-slate-400">
+          Activity indicator - not an exact completion percentage
+        </p>
+      </div>
+
+      {evaluationNotice && (
+        <p
+          role="status"
+          className="text-xs text-amber-700 bg-amber-50 rounded-xl px-4 py-3"
+        >
+          {evaluationNotice}
+        </p>
+      )}
+
+      <div className="rounded-2xl bg-indigo-50/70 border border-indigo-100 p-5 text-left space-y-2">
+        <div className="flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full bg-indigo-600 animate-pulse" />
+
+          <span className="text-sm font-bold text-indigo-800">
+            {evaluationElapsed < 180
+              ? 'AI evaluation is running'
+              : evaluationElapsed < 300
+                ? 'Still evaluating your answers'
+                : 'Taking longer than expected'}
+          </span>
+        </div>
+
+        <p className="text-xs leading-relaxed text-slate-600">
+          {evaluationElapsed < 180
+            ? 'Your interview report will appear automatically when ready. This may take 2-3 minutes.'
+            : evaluationElapsed < 300
+              ? 'Detailed evaluations may take a little longer. We are checking for your completed report.'
+              : 'We are continuing to check for your report. Please keep this page open if possible.'}
+        </p>
+      </div>
+
+      <p className="text-xs text-slate-400">
+        If you refresh, we will attempt to recover your evaluation
+        using the same request ID.
+      </p>
+
+    </div>
+  </div>
+)}
 
         {/* Evaluation Report Result View */}
         {interviewResult && (
@@ -490,7 +910,7 @@ export default function InterviewPrepPage() {
               >
                 Start New Assessment
               </button>
-              
+
               <button
                 onClick={handleSaveInterview}
                 disabled={saving || savedSuccess}
