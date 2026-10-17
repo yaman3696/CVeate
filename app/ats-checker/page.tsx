@@ -653,7 +653,7 @@ if (
                                         </div>
                                         <div className="py-1">
                                             <Link href="/profile" onClick={() => setIsProfileOpen(false)} className="block px-4 py-2.5 hover:bg-slate-50 font-medium text-slate-700 transition-colors">Profile Settings</Link>
-                                            <Link href="/history" onClick={() => setIsProfileOpen(false)} className="block px-4 py-2.5 hover:bg-slate-50 font-medium text-slate-700 transition-colors">CV History</Link>
+                                            <Link href="/history" onClick={() => setIsProfileOpen(false)} className="block px-4 py-2.5 hover:bg-slate-50 font-medium text-slate-700 transition-colors">My History</Link>
                                         </div>
                                         <div className="border-t border-slate-100 my-1"></div>
                                         <button onClick={handleLogout} className="w-full text-left px-4 py-2.5 text-red-600 hover:bg-red-50 font-semibold transition-colors flex items-center justify-between cursor-pointer">

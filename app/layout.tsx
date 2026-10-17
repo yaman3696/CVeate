@@ -44,7 +44,7 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
   const fetchUserProfile = async (userId: string) => {
     const { data, error } = await supabase
       .from('profiles')
-      .select('plan_name, ats_chances_remaining, full_name')
+      .select('plan_name, career_credits full_name')
       .eq('id', userId)
       .single()
 
@@ -60,7 +60,7 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
     // Check if profile already exists
     const { data: existingProfile } = await supabase
       .from('profiles')
-      .select('id, full_name, plan_name, ats_chances_remaining')
+      .select('id, full_name, plan_name, career_credits')
       .eq('id', sessionUser.id)
       .maybeSingle()
   
@@ -76,7 +76,7 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
         phone: contactNo,
         contact_number: contactNo,
         plan_name: 'Freemium',
-        ats_chances_remaining: 2,
+        career_credits: 2,
         ats_last_reset: new Date().toISOString()
       })
     } else if (!existingProfile.full_name && googleName) {
@@ -211,7 +211,7 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
             contact_number: contactNumber,
             phone: contactNumber,
             plan_name: 'Freemium',
-            ats_chances_remaining: 2
+            career_credits: 2
           })
         }
 
@@ -374,7 +374,7 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
                           </div>
                           <div className="text-right">
                             <p className="text-[10px] uppercase font-bold text-indigo-600 tracking-wider">ATS Checks</p>
-                            <p className="text-xs font-extrabold text-slate-900">{userProfile?.ats_chances_remaining ?? 2} Left</p>
+                            <p className="text-xs font-extrabold text-slate-900">{userProfile?.career_credits ?? 2} Left</p>
                           </div>
                         </div>
                       </div>
@@ -392,7 +392,7 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
                           onClick={() => setIsProfileOpen(false)}
                           className="block px-4 py-2.5 hover:bg-slate-50 font-medium text-slate-700 transition-colors"
                         >
-                          CV History
+                          My History
                         </Link>
                       </div>
                       <div className="border-t border-slate-100 my-1"></div>

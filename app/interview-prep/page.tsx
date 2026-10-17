@@ -31,6 +31,7 @@ export default function InterviewPrepPage() {
   const [interviewResult, setInterviewResult] = useState<any>(null)
   const [saving, setSaving] = useState(false)
   const [savedSuccess, setSavedSuccess] = useState(false)
+  const [showSaveSuccessModal, setShowSaveSuccessModal] = useState(false)
   const evaluationStartedRef = useRef(false)
 const evaluationFinishedRef = useRef(false)
 
@@ -42,6 +43,7 @@ const [evaluationStartedAt, setEvaluationStartedAt] =
 
 const [evaluationElapsed, setEvaluationElapsed] = useState(0)
 const [evaluationNotice, setEvaluationNotice] = useState('')
+const [isRecoveringEvaluation, setIsRecoveringEvaluation] = useState(false)
 
 const formatEvaluationTime = (seconds: number) => {
   const minutes = Math.floor(seconds / 60)
@@ -258,6 +260,7 @@ useEffect(() => {
   )
 
   if (!requestId) return
+  setIsRecoveringEvaluation(true)
 
   const contextText = sessionStorage.getItem(
     `cveate_interview_context_${userId}`
@@ -497,6 +500,7 @@ useEffect(() => {
     setUserAnswers(completedAnswers)
     setEvaluationStartedAt(startedAt)
     setEvaluationElapsed(0)
+    setIsRecoveringEvaluation(false)
     setEvaluationNotice('')
     setActiveEvaluationId(requestId)
     setEvaluating(true)
@@ -581,15 +585,17 @@ useEffect(() => {
           score: interviewResult.overallScore,
           feedback_summary: interviewResult.summary,
           qa_transcript: questions.map((q, idx) => ({
-            question: q,
-            answer: userAnswers[idx]
-          }))
+          question: q,
+          answer: userAnswers[idx]
+          })),
+          report_data: interviewResult
         })
 
       if (error) throw error
 
       // Permanent history was saved successfully.
       setSavedSuccess(true)
+      setShowSaveSuccessModal(true)
 
       // Clear browser recovery information only after saving.
       clearPendingEvaluation(user.id)
@@ -742,7 +748,7 @@ useEffect(() => {
 
         {/* Evaluating Modal - same design as ATS Checker */}
 {evaluating && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm px-4 py-6 overflow-y-auto">
+  <div className="fixed inset-x-0 bottom-0 top-[88px] z-50 flex items-center justify-center bg-white px-4 py-6 overflow-y-auto">
     <div className="bg-white rounded-3xl p-8 sm:p-12 text-center text-slate-900 shadow-2xl space-y-7 max-w-3xl w-full mx-auto">
 
       <div className="flex justify-center">
@@ -785,13 +791,17 @@ useEffect(() => {
 
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-2xl bg-indigo-50 border border-indigo-100 p-4">
-          <p className="text-xs font-semibold text-indigo-500 mb-2">
-            Time Elapsed
-          </p>
+        <p className="text-xs font-semibold text-indigo-500 mb-2">
+  {isRecoveringEvaluation ? 'Recovery Status' : 'Time Elapsed'}
+</p>
 
-          <p className="text-2xl font-black text-indigo-700 tabular-nums">
-            {formatEvaluationTime(evaluationElapsed)}
-          </p>
+<p className={`font-black text-indigo-700 ${
+  isRecoveringEvaluation ? 'text-sm leading-relaxed' : 'text-2xl tabular-nums'
+}`}>
+  {isRecoveringEvaluation
+    ? 'Retrieving your saved evaluation...'
+    : formatEvaluationTime(evaluationElapsed)}
+</p>
         </div>
 
         <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
@@ -800,7 +810,7 @@ useEffect(() => {
           </p>
 
           <p className="text-2xl font-black text-slate-800">
-            2-3 min
+            2-5 min
           </p>
         </div>
       </div>
@@ -855,7 +865,7 @@ useEffect(() => {
 
         <p className="text-xs leading-relaxed text-slate-600">
           {evaluationElapsed < 180
-            ? 'Your interview report will appear automatically when ready. This may take 2-3 minutes.'
+            ? 'Your interview report will appear automatically when ready. This may take 2-5 minutes.'
             : evaluationElapsed < 300
               ? 'Detailed evaluations may take a little longer. We are checking for your completed report.'
               : 'We are continuing to check for your report. Please keep this page open if possible.'}
@@ -923,6 +933,66 @@ useEffect(() => {
         )}
 
       </div>
+
+      {/* Interview Save Success Modal */}
+{showSaveSuccessModal && (
+  <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm px-4 py-6">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="interview-save-success-title"
+      className="w-full max-w-md rounded-3xl bg-white p-8 sm:p-10 text-center shadow-2xl border border-slate-100"
+    >
+      {/* Success Icon */}
+      <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-50">
+        <svg
+          className="h-11 w-11 text-green-600"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          viewBox="0 0 24 24"
+        >
+          <circle cx="12" cy="12" r="9" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="m8 12 2.5 2.5L16 9"
+          />
+        </svg>
+      </div>
+
+      <h2
+        id="interview-save-success-title"
+        className="text-2xl font-extrabold text-slate-900"
+      >
+        Interview Saved Successfully!
+      </h2>
+
+      <p className="mt-3 text-sm leading-relaxed text-slate-500">
+        Your interview evaluation has been saved to your history.
+        You can revisit your report whenever you need it.
+      </p>
+
+      <div className="mt-8 space-y-3">
+        <button
+          type="button"
+          onClick={() => router.push('/history?tab=interview')}
+          className="w-full rounded-xl bg-indigo-600 px-6 py-3.5 text-sm font-bold text-white shadow-md hover:bg-indigo-500 transition-colors cursor-pointer"
+        >
+          View Interview History →
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setShowSaveSuccessModal(false)}
+          className="w-full rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
       {/* Configuration Wizard Modal */}
       {isWizardOpen && (
