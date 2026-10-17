@@ -408,10 +408,10 @@ fillOpacity=".7"
 Build Your CV.<br />Ace Your <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">Next Interview.</span>
 </h1>
 <p className="mx-auto mt-3 max-w-xl text-[13px] leading-5 text-slate-600 sm:mt-4 sm:text-sm sm:leading-6">
-Create a professional CV for free, check your ATS match with AI, and prepare for your next interview—all in one place.
+Create a professional CV for free, check your ATS match with AI, and prepare for your next interview-all in one place.
 </p>
 <div className="mx-auto mt-6 grid max-w-[860px] grid-cols-1 items-stretch gap-4 text-left md:mt-7 md:grid-cols-2">
-{/* CV Builder — no account required */}
+{/* CV Builder - no account required */}
 <div className="flex h-full flex-col rounded-[26px] border border-indigo-100 bg-white/95 p-5 shadow-[0_15px_45px_rgba(37,43,94,0.08)] transition-transform duration-300 hover:-translate-y-1 sm:p-6">
 <div className="flex flex-wrap items-center gap-3">
 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
@@ -430,7 +430,7 @@ Create a professional CV for free, check your ATS match with AI, and prepare for
 <Link href="/onboard" className="flex w-full items-center justify-center gap-3 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-200 transition-all hover:bg-indigo-700 hover:shadow-xl">Create Your CV Now <span aria-hidden="true">→</span></Link>
 </div>
 </div>
-{/* ATS Checker — intentionally emphasized */}
+{/* ATS Checker - intentionally emphasized */}
 <div className="relative flex h-full flex-col rounded-[26px] border-2 border-violet-400/80 bg-gradient-to-br from-white via-indigo-50/70 to-violet-50/90 p-5 shadow-[0_20px_55px_rgba(99,102,241,0.18)] transition-transform duration-300 hover:-translate-y-1 sm:p-6">
 <div className="absolute -top-4 right-5 rounded-full bg-indigo-600 px-4 py-2 text-[11px] font-bold text-white shadow-lg shadow-indigo-300">✦ AI-powered</div>
 <div className="flex flex-wrap items-center gap-3">
@@ -455,56 +455,56 @@ Create a professional CV for free, check your ATS match with AI, and prepare for
 <p className="mt-4 text-xs text-slate-500">Start with a free CV, or sign in to unlock your ATS match insights.</p>
 </div>
 </section>
-{/* Interview Prep Spotlight — full-width indigo section */}
+{/* Interview Prep Spotlight - full-width indigo section */}
 <section className="relative isolate overflow-hidden bg-indigo-700 px-5 py-16 text-white sm:px-8 sm:py-20 lg:py-24">
-  <div aria-hidden="true" className="pointer-events-none absolute -left-24 -top-24 h-80 w-80 rounded-full bg-violet-400/20 blur-3xl" />
-  <div aria-hidden="true" className="pointer-events-none absolute -bottom-32 right-0 h-96 w-96 rounded-full bg-blue-400/20 blur-3xl" />
-  <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[0.08]" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
-  <div className="relative mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1fr_1.05fr] lg:gap-16">
-  <div className="text-center lg:text-left">
-      <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.16em] text-indigo-100 backdrop-blur-sm">
-        <span aria-hidden="true">✦</span> AI-powered interview preparation
-      </div>
-      <h2 className="mx-auto mt-6 max-w-xl text-[38px] font-black leading-[1.1] tracking-tight sm:text-5xl lg:mx-0 lg:text-[56px]">
-        Practice Smarter.<br /><span className="text-indigo-200">Interview Better.</span>
-      </h2>
-      <p className="mx-auto mt-5 max-w-lg text-base leading-7 text-indigo-100/90 lg:mx-0">
-        Prepare for real interview questions, receive detailed AI feedback, and build the confidence to stand out in your next interview.
-      </p>
-      <div className="mt-7 flex flex-wrap justify-center gap-x-6 gap-y-3 text-sm font-medium text-indigo-100 lg:justify-start">
-        {['Role-focused questions', 'Actionable AI feedback', 'Track your progress'].map((feature) => (
-          <div key={feature} className="flex items-center gap-2"><span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs">✓</span>{feature}</div>
-        ))}
-      </div>
-      <Link href="/interview-prep" className="mt-9 inline-flex items-center justify-center gap-3 rounded-xl bg-white px-7 py-3.5 text-sm font-extrabold text-indigo-700 shadow-[0_14px_32px_rgba(20,20,80,0.2)] transition-transform hover:-translate-y-1 hover:bg-indigo-50">
-        Start Interview Prep <span aria-hidden="true" className="text-lg">→</span>
-      </Link>
+    <div aria-hidden="true" className="pointer-events-none absolute -left-24 -top-24 h-80 w-80 rounded-full bg-violet-400/20 blur-3xl" />
+    <div aria-hidden="true" className="pointer-events-none absolute -bottom-32 right-0 h-96 w-96 rounded-full bg-blue-400/20 blur-3xl" />
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[0.08]" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
+    <div className="relative mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1fr_1.05fr] lg:gap-16">
+    <div className="text-center lg:text-left">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.16em] text-indigo-100 backdrop-blur-sm">
+                <span aria-hidden="true">✦</span> AI-powered interview preparation
+            </div>
+            <h2 className="mx-auto mt-6 max-w-xl text-[38px] font-black leading-[1.1] tracking-tight sm:text-5xl lg:mx-0 lg:text-[56px]">
+                Practice Smarter.<br /><span className="text-indigo-200">Interview Better.</span>
+            </h2>
+            <p className="mx-auto mt-5 max-w-lg text-base leading-7 text-indigo-100/90 lg:mx-0">
+                Prepare for real interview questions, receive detailed AI feedback, and build the confidence to stand out in your next interview.
+            </p>
+            <div className="mt-7 flex flex-wrap justify-center gap-x-6 gap-y-3 text-sm font-medium text-indigo-100 lg:justify-start">
+                {['Role-focused questions', 'Actionable AI feedback', 'Track your progress'].map((feature) => (
+                    <div key={feature} className="flex items-center gap-2"><span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs">✓</span>{feature}</div>
+                ))}
+            </div>
+            <Link href="/interview-prep" className="mt-9 inline-flex items-center justify-center gap-3 rounded-xl bg-white px-7 py-3.5 text-sm font-extrabold text-indigo-700 shadow-[0_14px_32px_rgba(20,20,80,0.2)] transition-transform hover:-translate-y-1 hover:bg-indigo-50">
+                Start Interview Prep <span aria-hidden="true" className="text-lg">→</span>
+            </Link>
+        </div>
+        {/* Decorative interview dashboard preview: sample content, not real user results */}
+        <div aria-hidden="true" className="relative mx-auto w-full max-w-[540px]">
+            <div className="absolute -inset-5 rounded-[36px] bg-white/10 blur-2xl" />
+            <div className="relative overflow-hidden rounded-[28px] border border-white/25 bg-white/95 p-5 text-slate-900 shadow-[0_28px_90px_rgba(15,15,70,0.28)] sm:p-7">
+                <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-5">
+                    <div className="flex items-center gap-3">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-100 text-xl text-indigo-600">✦</div>
+                        <div><div className="text-sm font-extrabold">AI Interview Coach</div><div className="mt-0.5 text-xs text-slate-500">Practice session · Preview</div></div>
+                    </div>
+                    <span className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-[11px] font-bold text-emerald-700"><span className="h-2 w-2 rounded-full bg-emerald-500" />Ready</span>
+                </div>
+                <div className="mt-6 rounded-2xl border border-indigo-100 bg-indigo-50/80 p-5">
+                    <div className="text-[11px] font-extrabold uppercase tracking-widest text-indigo-600">Sample interview question</div>
+                    <p className="mt-3 text-base font-bold leading-6 text-slate-800 sm:text-lg">"Tell me about a challenge you faced at work and how you solved it."</p>
+                    <div className="mt-4 flex items-center gap-2 text-xs font-medium text-indigo-500"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-200/80">✦</span> Practice your response with AI</div>
+                </div>
+                <div className="mt-5 grid grid-cols-2 gap-3">
+                    <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"><div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-100 text-violet-600">◎</div><div className="mt-3 text-sm font-extrabold">Smart Feedback</div><p className="mt-1 text-xs leading-5 text-slate-500">Know what to improve</p></div>
+                    <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"><div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">↗</div><div className="mt-3 text-sm font-extrabold">Progress Insights</div><p className="mt-1 text-xs leading-5 text-slate-500">Learn from every attempt</p></div>
+                </div>
+                <div className="mt-5 flex items-center gap-3 rounded-xl bg-slate-50 px-4 py-3 text-xs font-medium text-slate-500"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">✓</span>Personalized practice to help you feel interview-ready.</div>
+            </div>
+            <div className="absolute -right-2 -top-5 hidden rotate-3 rounded-xl border border-white/30 bg-violet-500 px-4 py-2 text-xs font-bold text-white shadow-lg sm:block">✦ Practice with AI</div>
+        </div>
     </div>
-    {/* Decorative interview dashboard preview: sample content, not real user results */}
-    <div aria-hidden="true" className="relative mx-auto w-full max-w-[540px]">
-      <div className="absolute -inset-5 rounded-[36px] bg-white/10 blur-2xl" />
-      <div className="relative overflow-hidden rounded-[28px] border border-white/25 bg-white/95 p-5 text-slate-900 shadow-[0_28px_90px_rgba(15,15,70,0.28)] sm:p-7">
-        <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-100 text-xl text-indigo-600">✦</div>
-            <div><div className="text-sm font-extrabold">AI Interview Coach</div><div className="mt-0.5 text-xs text-slate-500">Practice session · Preview</div></div>
-          </div>
-          <span className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-[11px] font-bold text-emerald-700"><span className="h-2 w-2 rounded-full bg-emerald-500" />Ready</span>
-        </div>
-        <div className="mt-6 rounded-2xl border border-indigo-100 bg-indigo-50/80 p-5">
-          <div className="text-[11px] font-extrabold uppercase tracking-widest text-indigo-600">Sample interview question</div>
-          <p className="mt-3 text-base font-bold leading-6 text-slate-800 sm:text-lg">“Tell me about a challenge you faced at work and how you solved it.”</p>
-          <div className="mt-4 flex items-center gap-2 text-xs font-medium text-indigo-500"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-200/80">✦</span> Practice your response with AI</div>
-        </div>
-        <div className="mt-5 grid grid-cols-2 gap-3">
-          <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"><div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-100 text-violet-600">◎</div><div className="mt-3 text-sm font-extrabold">Smart Feedback</div><p className="mt-1 text-xs leading-5 text-slate-500">Know what to improve</p></div>
-          <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"><div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">↗</div><div className="mt-3 text-sm font-extrabold">Progress Insights</div><p className="mt-1 text-xs leading-5 text-slate-500">Learn from every attempt</p></div>
-        </div>
-        <div className="mt-5 flex items-center gap-3 rounded-xl bg-slate-50 px-4 py-3 text-xs font-medium text-slate-500"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">✓</span>Personalized practice to help you feel interview-ready.</div>
-      </div>
-      <div className="absolute -right-2 -top-5 hidden rotate-3 rounded-xl border border-white/30 bg-violet-500 px-4 py-2 text-xs font-bold text-white shadow-lg sm:block">✦ Practice with AI</div>
-    </div>
-  </div>
 </section>
 {/* About Section */}
 <section id="about" className="mx-auto max-w-6xl px-6 py-20 border-t border-slate-100 text-center">
@@ -516,20 +516,20 @@ Cveat was born out of a universal job-seeking frustration: qualified professiona
 {/* Features Section */}
 <section className="mx-auto max-w-6xl px-6 py-16 border-t border-slate-100">
 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-<div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-<div className="h-10 w-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-lg mb-4">01</div>
-<h3 className="text-lg font-bold text-slate-900 mb-2">4-Step Guided Wizard</h3>
-<p className="text-sm text-slate-600">Quickly input your personal details, work experience, education, and skills without feeling overwhelmed.</p>
+<div className="group rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-indigo-600 hover:bg-indigo-600 hover:shadow-xl hover:shadow-indigo-200/70">
+<div className="h-10 w-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-lg mb-4 transition-colors duration-300 group-hover:bg-white/20 group-hover:text-white">01</div>
+<h3 className="text-lg font-bold text-slate-900 mb-2 transition-colors duration-300 group-hover:text-white">4-Step Guided Wizard</h3>
+<p className="text-sm text-slate-600 transition-colors duration-300 group-hover:text-indigo-50">Quickly input your personal details, work experience, education, and skills without feeling overwhelmed.</p>
 </div>
-<div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-<div className="h-10 w-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-lg mb-4">02</div>
-<h3 className="text-lg font-bold text-slate-900 mb-2">ATS-Friendly Layouts</h3>
-<p className="text-sm text-slate-600">Designed specifically to parse cleanly through automated corporate tracking systems and recruiter filters.</p>
+<div className="group rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-indigo-600 hover:bg-indigo-600 hover:shadow-xl hover:shadow-indigo-200/70">
+<div className="h-10 w-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-lg mb-4 transition-colors duration-300 group-hover:bg-white/20 group-hover:text-white">02</div>
+<h3 className="text-lg font-bold text-slate-900 mb-2 transition-colors duration-300 group-hover:text-white">ATS-Friendly Layouts</h3>
+<p className="text-sm text-slate-600 transition-colors duration-300 group-hover:text-indigo-50">Designed specifically to parse cleanly through automated corporate tracking systems and recruiter filters.</p>
 </div>
-<div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-<div className="h-10 w-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-lg mb-4">03</div>
-<h3 className="text-lg font-bold text-slate-900 mb-2">Instant PDF Export</h3>
-<p className="text-sm text-slate-600">Export your resume into a clean, professional PDF document with one click-no formatting mess.</p>
+<div className="group rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-indigo-600 hover:bg-indigo-600 hover:shadow-xl hover:shadow-indigo-200/70">
+<div className="h-10 w-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-lg mb-4 transition-colors duration-300 group-hover:bg-white/20 group-hover:text-white">03</div>
+<h3 className="text-lg font-bold text-slate-900 mb-2 transition-colors duration-300 group-hover:text-white">Instant PDF Export</h3>
+<p className="text-sm text-slate-600 transition-colors duration-300 group-hover:text-indigo-50">Export your resume into a clean, professional PDF document with one click-no formatting mess.</p>
 </div>
 </div>
 </section>
@@ -656,7 +656,7 @@ className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-base 
 ✕
 </button>
 <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto text-xl font-bold">
-��
+🔒
 </div>
 <div className="space-y-1">
 <h3 className="text-lg font-bold text-slate-900">Authentication Required</h3>
@@ -794,19 +794,19 @@ const isOpen = openFaqIndex === index
 return (
 <div
 key={index}
-className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm transition-all"
+className="group rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-indigo-600 hover:bg-indigo-600 hover:shadow-lg hover:shadow-indigo-200/60"
 >
 <button
 onClick={() => setOpenFaqIndex(isOpen ? null : index)}
-className="w-full flex items-center justify-between p-6 text-left font-bold text-slate-900 hover:text-indigo-600 transition-colors cursor-pointer"
+className="w-full flex items-center justify-between p-6 text-left font-bold text-slate-900 transition-colors duration-300 group-hover:text-white cursor-pointer" aria-expanded={isOpen}
 >
 <span className="text-base">{faq.question}</span>
-<span className={`transform transition-transform duration-300 text-indigo-600 font-bold text-lg ${isOpen ? 'rotate-45' : ''}`}>
+<span className={`transform transition-transform duration-300 text-indigo-600 group-hover:text-white font-bold text-lg ${isOpen ? 'rotate-45' : ''}`}>
 +
 </span>
 </button>
 {isOpen && (
-<div className="px-6 pb-6 text-sm text-slate-600 leading-relaxed border-t border-slate-50 pt-4">
+<div className="px-6 pb-6 text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-4 transition-colors duration-300 group-hover:border-white/25 group-hover:text-indigo-50">
 {faq.answer}
 </div>
 )}
@@ -824,7 +824,7 @@ className="w-full flex items-center justify-between p-6 text-left font-bold text
 </div>
 <div className="flex items-center gap-3">
 <Link href="/blog">
-<button className="rounded-xl border border-slate-200 bg-white px-6 py-3 text-xs font-semibold text-indigo-600 shadow-sm hover:bg-slate-50 transition-all cursor-pointer whitespace-nowrap">
+<button className="rounded-xl border border-indigo-200 bg-white px-6 py-3 text-xs font-semibold text-indigo-600 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-indigo-600 hover:bg-indigo-600 hover:text-white hover:shadow-lg hover:shadow-indigo-200 cursor-pointer whitespace-nowrap">
 See More Blogs
 </button>
 </Link>
@@ -846,18 +846,18 @@ Admin Dashboard
 ) : (
 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
 {latestBlogs.map((blog) => (
-<div key={blog.id} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col justify-between space-y-4 hover:shadow-md transition-all">
+<div key={blog.id} className="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col justify-between space-y-4 transition-all duration-300 hover:-translate-y-1.5 hover:border-indigo-300 hover:shadow-xl hover:shadow-indigo-100/80">
 <div>
-<span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-md border border-indigo-100">
+<span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-md border border-indigo-100 transition-colors duration-300 group-hover:border-indigo-200 group-hover:bg-indigo-100">
 {blog.category}
 </span>
-<h3 className="text-base font-bold text-slate-900 mt-3 leading-snug">{blog.title}</h3>
+<h3 className="text-base font-bold text-slate-900 mt-3 leading-snug transition-colors duration-300 group-hover:text-indigo-700">{blog.title}</h3>
 <p className="text-xs text-slate-600 mt-2 leading-relaxed line-clamp-3">{blog.excerpt}</p>
 </div>
 <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
 <span className="text-[11px] text-slate-400">{new Date(blog.created_at).toLocaleDateString()}</span>
 <Link href={`/articles/${blog.slug}`}>
-<span className="font-bold text-indigo-600 hover:text-indigo-700 cursor-pointer inline-block">Read Article </span>
+<span className="font-bold text-indigo-600 hover:text-indigo-700 cursor-pointer inline-block transition-transform duration-300 group-hover:translate-x-1">Read Article </span>
 </Link>
 </div>
 </div>
@@ -907,3 +907,4 @@ Contact Support
 </div>
 )
 }
+

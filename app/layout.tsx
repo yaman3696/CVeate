@@ -5,6 +5,19 @@ import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/utils/supabaseClient'
 import './globals.css'
+import { Inter, Manrope } from 'next/font/google'
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+})
+
+const manrope = Manrope({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-manrope',
+})
 
 // Inner component to handle client-side pathname, search params, and navigation hooks safely
 function NavigationWrapper({ children }: { children: React.ReactNode }) {
@@ -690,7 +703,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-white text-slate-900 antialiased font-sans">
+      <body
+  className={`${inter.variable} ${manrope.variable} bg-white text-slate-900 antialiased font-sans`}
+>
         <Suspense fallback={<div className="min-h-screen bg-white" />}>
           <NavigationWrapper>
             {children}
