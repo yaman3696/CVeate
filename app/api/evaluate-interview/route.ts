@@ -327,6 +327,9 @@ Return ONLY valid JSON without markdown backticks.
         response = await ai.models.generateContent({
           model: 'models/gemini-3.8-flash',
           contents: [{ text: prompt }],
+          config: {
+            responseMimeType: 'application/json',
+          },
         })
         break
       } catch (error: any) {
@@ -348,6 +351,42 @@ Return ONLY valid JSON without markdown backticks.
         )
       }
     }
+
+    // Track Gemini token usage for interview evaluations.
+// Logging failures must not affect reports or Career Credits.
+if (response?.usageMetadata) {
+  try {
+    const usage = response.usageMetadata
+
+    const { error: usageError } = await supabaseAdmin
+      .from('cveate_ai_usage')
+      .insert({
+        user_id: user.id,
+        request_id: requestId,
+        transaction_id: null,
+        feature: 'interview_evaluation',
+        model: response.modelVersion || 'gemini-3.8-flash',
+        input_tokens: usage.promptTokenCount ?? 0,
+        output_tokens: usage.candidatesTokenCount ?? 0,
+        thinking_tokens: usage.thoughtsTokenCount ?? 0,
+        total_tokens: usage.totalTokenCount ?? 0,
+        estimated_cost_inr: null,
+        status: 'generated',
+      })
+
+    if (usageError) {
+      console.error(
+        '[INTERVIEW][USAGE_LOGGING_FAILED]',
+        usageError
+      )
+    }
+  } catch (usageError) {
+    console.error(
+      '[INTERVIEW][USAGE_LOGGING_FAILED]',
+      usageError
+    )
+  }
+}
 
     const rawText = response?.text || ''
 

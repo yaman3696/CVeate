@@ -1,0 +1,328 @@
+
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAdmin } from '@/lib/require-admin'
+import { supabaseAdmin } from '@/lib/supabase-admin'
+
+export async function GET(request: NextRequest) {
+  // Keep request-specific access outside try for Next.js 16.
+  const authorizationHeader =
+    request.headers.get('authorization')
+
+  try {
+    const admin = await requireAdmin(authorizationHeader)
+
+    if (!admin) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 403 }
+      )
+    }
+
+    const [
+      usageResult,
+      purchasesResult,
+      grantsResult,
+      transactionsResult,
+    ] = await Promise.all([
+      supabaseAdmin
+        .from('cveate_ai_usage')
+        .select(
+          'id, feature, model, input_tokens, output_tokens, thinking_tokens, estimated_cost_inr, status, transaction_id, created_at'
+        )
+        .order('created_at', { ascending: false })
+        .limit(10000),
+
+      supabaseAdmin
+        .from('cveate_credit_purchases')
+        .select('amount_paise, credits, status'),
+
+      supabaseAdmin
+        .from('cveate_credit_grants')
+        .select(
+          'grant_type, original_credits, remaining_credits'
+        ),
+
+      supabaseAdmin
+        .from('career_credit_transactions')
+        .select('id, status')
+        .limit(10000),
+    ])
+
+    if (usageResult.error) throw usageResult.error
+    if (purchasesResult.error) throw purchasesResult.error
+    if (grantsResult.error) throw grantsResult.error
+    if (transactionsResult.error) {
+      throw transactionsResult.error
+    }
+
+    const usage = usageResult.data ?? []
+    const purchases = purchasesResult.data ?? []
+    const grants = grantsResult.data ?? []
+    const transactions = transactionsResult.data ?? []
+
+    const estimatedAiCostInr = usage.reduce(
+      (sum, row) =>
+        sum + Number(row.estimated_cost_inr ?? 0),
+      0
+    )
+
+    const totalInputTokens = usage.reduce(
+      (sum, row) =>
+        sum + Number(row.input_tokens ?? 0),
+      0
+    )
+
+    const totalOutputTokens = usage.reduce(
+      (sum, row) =>
+        sum +
+        Number(row.output_tokens ?? 0) +
+        Number(row.thinking_tokens ?? 0),
+      0
+    )
+
+    const completedPurchases = purchases.filter(
+      (row) => row.status === 'completed'
+    )
+
+    const revenueInr = completedPurchases.reduce(
+      (sum, row) =>
+        sum + Number(row.amount_paise ?? 0) / 100,
+      0
+    )
+
+    const outstandingCredits = grants.reduce(
+      (sum, row) =>
+        sum + Number(row.remaining_credits ?? 0),
+      0
+    )
+
+    const freeCreditsIssued = grants
+      .filter((row) => row.grant_type === 'trial')
+      .reduce(
+        (sum, row) =>
+          sum + Number(row.original_credits ?? 0),
+        0
+      )
+
+    const estimatedContributionInr =
+      revenueInr - estimatedAiCostInr
+
+    const contributionMarginPercent =
+      revenueInr > 0
+        ? (estimatedContributionInr / revenueInr) * 100
+        : null
+
+    // Preserve the existing feature summary.
+    const featureMap: Record<
+      string,
+      {
+        feature: string
+        requests: number
+        inputTokens: number
+        outputTokens: number
+        estimatedCostInr: number
+      }
+    > = {}
+
+    for (const row of usage) {
+      const feature = row.feature || 'unknown'
+
+      if (!featureMap[feature]) {
+        featureMap[feature] = {
+          feature,
+          requests: 0,
+          inputTokens: 0,
+          outputTokens: 0,
+          estimatedCostInr: 0,
+        }
+      }
+
+      featureMap[feature].requests += 1
+
+      featureMap[feature].inputTokens += Number(
+        row.input_tokens ?? 0
+      )
+
+      featureMap[feature].outputTokens +=
+        Number(row.output_tokens ?? 0) +
+        Number(row.thinking_tokens ?? 0)
+
+      featureMap[feature].estimatedCostInr += Number(
+        row.estimated_cost_inr ?? 0
+      )
+    }
+
+    // Map ATS credit transaction IDs to their final status.
+    const transactionStatusMap = new Map(
+      transactions.map((row) => [
+        row.id,
+        row.status,
+      ])
+    )
+
+    const completedTransactions = transactions.filter(
+      (row) => row.status === 'completed'
+    )
+
+    const refundedTransactions = transactions.filter(
+      (row) => row.status === 'refunded'
+    )
+
+    const completedIds = new Set(
+      completedTransactions.map((row) => row.id)
+    )
+
+    const refundedIds = new Set(
+      refundedTransactions.map((row) => row.id)
+    )
+
+    const atsUsage = usage.filter(
+      (row) => row.feature === 'ats_checker'
+    )
+
+    const completedAtsUsage = atsUsage.filter(
+      (row) =>
+        row.transaction_id &&
+        completedIds.has(row.transaction_id)
+    )
+
+    const refundedAtsUsage = atsUsage.filter(
+      (row) =>
+        row.transaction_id &&
+        refundedIds.has(row.transaction_id)
+    )
+
+    const completedAiCostInr =
+      completedAtsUsage.reduce(
+        (sum, row) =>
+          sum + Number(row.estimated_cost_inr ?? 0),
+        0
+      )
+
+    const refundedAiCostInr =
+      refundedAtsUsage.reduce(
+        (sum, row) =>
+          sum + Number(row.estimated_cost_inr ?? 0),
+        0
+      )
+
+    const linkedCompletedTransactionCount =
+      new Set(
+        completedAtsUsage.map((row) => row.transaction_id)
+      ).size
+
+    const linkedRefundedTransactionCount =
+      new Set(
+        refundedAtsUsage.map((row) => row.transaction_id)
+      ).size
+
+    const totalRecordedAtsAiCostInr =
+      atsUsage.reduce(
+        (sum, row) =>
+          sum + Number(row.estimated_cost_inr ?? 0),
+        0
+      )
+
+    const averageCostPerLinkedCompletedReportInr =
+      linkedCompletedTransactionCount > 0
+        ? totalRecordedAtsAiCostInr /
+          linkedCompletedTransactionCount
+        : null
+
+    // Preserve recentUsage, but show final ATS credit
+    // status when a matching transaction exists.
+    const recentUsage = usage.slice(0, 20).map((row) => {
+      const transactionStatus =
+        row.feature === 'ats_checker' &&
+        row.transaction_id
+          ? transactionStatusMap.get(row.transaction_id)
+          : undefined
+
+      return {
+        ...row,
+        generation_status: row.status,
+        status: transactionStatus ?? row.status,
+        transaction_status: transactionStatus ?? null,
+      }
+    })
+
+    return NextResponse.json(
+      {
+        generatedAt: new Date().toISOString(),
+
+        summary: {
+          totalRequests: usage.length,
+          totalInputTokens,
+          totalOutputTokens,
+          estimatedAiCostInr,
+          revenueInr,
+          estimatedContributionInr,
+          contributionMarginPercent,
+          outstandingCredits,
+          freeCreditsIssued,
+        },
+
+        features: Object.values(featureMap),
+
+        atsRefundTracking: {
+          completedTransactions:
+            completedTransactions.length,
+
+          refundedTransactions:
+            refundedTransactions.length,
+
+          completedAiUsageRecords:
+            completedAtsUsage.length,
+
+          refundedAiUsageRecords:
+            refundedAtsUsage.length,
+
+          linkedCompletedTransactions:
+            linkedCompletedTransactionCount,
+
+          linkedRefundedTransactions:
+            linkedRefundedTransactionCount,
+
+          completedAiCostInr,
+          refundedAiCostInr,
+
+          totalRecordedAtsAiCostInr,
+
+          averageCostPerLinkedCompletedReportInr,
+        },
+
+        recentUsage,
+
+        warnings: [
+          'AI costs are modeled paid-tier estimates, not actual Google charges.',
+          'Contribution excludes hosting, payment fees, taxes, and other expenses.',
+          'Usage and transaction metrics are limited to 10,000 records each.',
+          'Purchase revenue assumes successful purchases use status completed.',
+          'Outstanding credits are credit units, not a monetary liability.',
+          'ATS credit transaction counts can differ from recorded Gemini usage counts.',
+          'Average ATS cost includes recorded refund overhead and uses linked completed transactions as its denominator.',
+        ],
+      },
+      {
+        headers: {
+          'Cache-Control': 'private, no-store',
+        },
+      }
+    )
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      'digest' in error &&
+      error.digest === 'NEXT_PRERENDER_INTERRUPTED'
+    ) {
+      throw error
+    }
+
+    console.error('AI Economics API error:', error)
+
+    return NextResponse.json(
+      { error: 'Failed to load AI economics data' },
+      { status: 500 }
+    )
+  }
+}

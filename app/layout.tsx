@@ -57,7 +57,7 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
   const fetchUserProfile = async (userId: string) => {
     const { data, error } = await supabase
       .from('profiles')
-      .select('plan_name, career_credits full_name')
+      .select('plan_name, career_credits, full_name')
       .eq('id', userId)
       .single()
 
@@ -81,17 +81,7 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
     const contactNo = sessionUser.user_metadata?.contact_number || sessionUser.user_metadata?.phone || ''
   
     if (!existingProfile) {
-      // Insert fresh record matching your exact schema columns
-      await supabase.from('profiles').upsert({
-        id: sessionUser.id,
-        email: sessionUser.email,
-        full_name: googleName,
-        phone: contactNo,
-        contact_number: contactNo,
-        plan_name: 'Freemium',
-        career_credits: 2,
-        ats_last_reset: new Date().toISOString()
-      })
+      console.warn('Profile not found. Check the signup trigger.')
     } else if (!existingProfile.full_name && googleName) {
       // Preserve custom name if Google name is newer/available
       await supabase.from('profiles')
@@ -216,17 +206,7 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
           throw error
         }
 
-        if (data?.user) {
-          await supabase.from('profiles').upsert({
-            id: data.user.id,
-            email: email,
-            full_name: fullName,
-            contact_number: contactNumber,
-            phone: contactNumber,
-            plan_name: 'Freemium',
-            career_credits: 2
-          })
-        }
+        
 
         setSuccessMessage('Account created successfully! Please check your email for verification.')
       } else {
@@ -365,7 +345,12 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
               {user ? (
                 <div className="relative" ref={dropdownRef}>
                   <button
-                    onClick={() => setIsProfileOpen(!isProfileOpen)}
+                    onClick={() => {
+                      if (!isProfileOpen) {
+                        fetchUserProfile(user.id)
+                      }
+                      setIsProfileOpen(!isProfileOpen)
+                    }}
                     className="flex items-center gap-2 rounded-xl bg-indigo-700/80 border border-indigo-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition-all cursor-pointer"
                   >
                     <div className="h-7 w-7 rounded-full bg-white text-indigo-700 font-bold flex items-center justify-center text-xs">
@@ -386,8 +371,14 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
                             <p className="text-xs font-extrabold text-slate-900">{userProfile?.plan_name || 'Freemium'}</p>
                           </div>
                           <div className="text-right">
-                            <p className="text-[10px] uppercase font-bold text-indigo-600 tracking-wider">ATS Checks</p>
-                            <p className="text-xs font-extrabold text-slate-900">{userProfile?.career_credits ?? 2} Left</p>
+                          <p className="text-[10px] uppercase font-bold text-indigo-600 tracking-wider">
+  Career Credits
+</p>
+<p className="text-xs font-extrabold text-slate-900">
+  {userProfile?.career_credits == null
+    ? 'Loading...'
+    : `${userProfile.career_credits} Left`}
+</p>
                           </div>
                         </div>
                       </div>

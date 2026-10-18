@@ -306,7 +306,9 @@ answer: 'Our AI scanner allows you to paste any target job description and uploa
 },
 {
 question: 'How do the free daily check credits renew?',
-answer: 'Every user starts on our Freemium plan with 2 free ATS check credits that automatically refresh every 24 hours. If you upgrade to a Daily Pass or Monthly Pass, your credits are scaled accordingly and will safely transition back to your standard freemium limits once your pass duration ends.'
+
+answer: 'Every new user receives 3 complimentary Career Credits upon signup, available once per account. You can use Career Credits for AI-powered ATS resume analysis and interview evaluation. Credits do not automatically reset every 24 hours or every month. Additional credit packs are coming soon.'
+
 },
 {
 question: 'Is my personal data and resume content secure?',
@@ -397,7 +399,7 @@ fillOpacity=".7"
 </div>
 <div className="ats-globe-pulse absolute inset-[33%] flex items-center justify-center rounded-3xl border border-indigo-200 bg-indigo-600/85 text-2xl font-black tracking-wider text-white shadow-[0_0_35px_rgba(79,70,229,0.4)]">ATS</div>
 </div>
-<div aria-hidden="true" className="pointer-events-none absolute right-[3%] top-[160px] hidden rotate-3 rounded-2xl border border-indigo-100 bg-white/90 px-5 py-3 text-xs font-semibold text-slate-500 shadow-sm xl:block">Match Score <span className="ml-2 font-extrabold text-emerald-500">85% <span className="font-normal text-slate-400">sample</span></span></div>
+<div aria-hidden="true" className="pointer-events-none absolute right-[3%] top-[160px] hidden rotate-3 rounded-2xl border border-indigo-100 bg-white/90 px-5 py-3 text-xs font-semibold text-slate-500 shadow-sm xl:block">Match Score <span className="ml-2 font-extrabold text-emerald-500">85% <span className="font-normal text-slate-400">match</span></span></div>
 <div aria-hidden="true" className="pointer-events-none absolute right-[1.5%] top-[405px] hidden -rotate-3 rounded-2xl border border-indigo-100 bg-white/90 px-5 py-3 text-xs font-semibold text-slate-500 shadow-sm xl:block">Keyword Gap <span className="ml-2 font-bold text-indigo-600">Analysis</span></div>
 <div aria-hidden="true" className="pointer-events-none absolute right-[4%] top-[525px] hidden rotate-2 rounded-2xl border border-indigo-100 bg-white/90 px-5 py-3 text-xs font-semibold text-slate-500 shadow-sm xl:block">Smart Suggestions <span className="ml-1 font-bold text-indigo-600">✦</span></div>
 <div className="relative z-10 mx-auto max-w-[940px] text-center">
@@ -441,7 +443,7 @@ Create a professional CV for free, check your ATS match with AI, and prepare for
 </div>
 <h2 className="mt-3 text-xl font-extrabold tracking-tight text-slate-900">Check ATS Score</h2>
 <p className="mt-2 text-sm leading-6 text-slate-600">See how well your CV matches a job description and get actionable AI insights.</p>
-<div className="mt-3 flex items-start gap-2 rounded-xl border border-indigo-100 bg-indigo-100/70 px-3 py-3 text-sm font-bold text-indigo-700"><span aria-hidden="true">✦</span><span>Get 2 free ATS checks every 24 hours.</span></div>
+<div className="mt-3 flex items-start gap-2 rounded-xl border border-indigo-100 bg-indigo-100/70 px-3 py-3 text-sm font-bold text-indigo-700"><span aria-hidden="true">✦</span><span><span>Get 3 free Career Credits when you sign up. No daily resets.</span></span></div>
 <div className="mt-3 space-y-2 text-[13px] text-slate-600">
 {['AI-powered ATS match score', 'Missing keyword analysis', 'Personalized improvement tips'].map((feature) => (
 <div key={feature} className="flex items-center gap-3"><span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">✓</span><span>{feature}</span></div>
