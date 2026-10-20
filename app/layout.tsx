@@ -90,15 +90,12 @@ const fetchUserProfile = async (userId: string) => {
       return
     }
 
-    const packMap: Record<string, string> = {
-      '1900_3_INR': 'Starter',
-      '4900_10_INR': 'Growth',
-      '9900_25_INR': 'Career Pro',
-    }
+    const packageName =
+  typeof latestPurchase.package_name === 'string'
+    ? latestPurchase.package_name.trim()
+    : ''
 
-    const key = `${latestPurchase.amount_paise}_${latestPurchase.credits}_${latestPurchase.currency}`
-
-    setLatestPurchasedPack(packMap[key] || 'Purchased Credits')
+setLatestPurchasedPack(packageName || 'Purchased Credits')
   } catch (error) {
     console.error('Unable to load latest purchased pack:', error)
   }

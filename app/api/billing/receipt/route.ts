@@ -39,7 +39,7 @@ try {
 
     const { data: purchase, error: purchaseError } = await supabaseAdmin
       .from('cveate_credit_purchases')
-      .select('id, user_id, provider, provider_payment_id, amount_paise, currency, credits, status, created_at')
+      .select('id, user_id, provider, provider_payment_id, package_name, amount_paise, currency, credits, status, created_at')
       .eq('id', purchaseId)
       .eq('user_id', auth.user.id)
       .eq('status', 'completed')
@@ -88,36 +88,66 @@ try {
     }
 
     const date = new Date(purchase.created_at)
-    const purchaseDate = Number.isNaN(date.getTime()) ? 'Unavailable' :
-      new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeZone: 'Asia/Kolkata' }).format(date)
-    page.drawText('Payment confirmed', { x: margin, y: 729, size: 16, font: bold, color: ink })
-    page.drawText('This receipt confirms payment for CVeat Career Credits.', { x: margin, y: 707, size: 10, font: regular, color: muted })
-    line(688)
-    field('Date', purchaseDate, 664)
-    field('Purchase', `${purchase.credits} Career Credits`, 638)
-    field('Payment status', 'Paid', 612)
-    field('Amount paid', `INR ${(purchase.amount_paise / 100).toFixed(2)}`, 586)
-    line(567)
+const purchaseDate = Number.isNaN(date.getTime()) ? 'Unavailable' :
+  new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeZone: 'Asia/Kolkata' }).format(date)
 
-    page.drawText('BILLED TO', { x: margin, y: 542, size: 11, font: bold, color: indigo })
-    const address = [billing.address_line1, billing.address_line2, billing.city, billing.state, billing.postal_code, billing.country]
-      .map(printable).filter(Boolean)
-    field('Name', billing.billing_name, 515)
-    field('Email', billing.billing_email, 489)
-    // Split address into safe-sized lines to avoid overflowing the page.
-    let addressY = 463
-    for (const part of address) {
-      let remaining = part
-      while (remaining && addressY >= 330) {
-        let segment = remaining
-        while (segment.length && regular.widthOfTextAtSize(segment, 10) > 310) segment = segment.slice(0, -1)
-        if (!segment) break
-        page.drawText(segment, { x: 230, y: addressY, size: 10, font: regular, color: ink })
-        remaining = remaining.slice(segment.length)
-        addressY -= 17
-      }
+page.drawText('Payment confirmed', { x: margin, y: 729, size: 16, font: bold, color: ink })
+page.drawText('This receipt confirms payment for CVeat Career Credits.', { x: margin, y: 707, size: 10, font: regular, color: muted })
+
+line(688)
+field('Date', purchaseDate, 664)
+field('Package', purchase.package_name?.trim() || 'Career Credits', 638)
+field('Purchase', `${purchase.credits} Career Credits`, 612)
+field('Payment status', 'Paid', 586)
+field('Amount paid', `INR ${(purchase.amount_paise / 100).toFixed(2)}`, 560)
+line(541)
+
+page.drawText('BILLED TO', { x: margin, y: 516, size: 11, font: bold, color: indigo })
+
+const address = [
+  billing.address_line1,
+  billing.address_line2,
+  billing.city,
+  billing.state,
+  billing.postal_code,
+  billing.country,
+].map(printable).filter(Boolean)
+
+field('Name', billing.billing_name, 489)
+field('Email', billing.billing_email, 463)
+
+// Split address into safe-sized lines to avoid overflowing the page.
+let addressY = 437
+
+for (const part of address) {
+  let remaining = part
+
+  while (remaining && addressY >= 330) {
+    let segment = remaining
+
+    while (
+      segment.length &&
+      regular.widthOfTextAtSize(segment, 10) > 310
+    ) {
+      segment = segment.slice(0, -1)
     }
-    line(309)
+
+    if (!segment) break
+
+    page.drawText(segment, {
+      x: 230,
+      y: addressY,
+      size: 10,
+      font: regular,
+      color: ink,
+    })
+
+    remaining = remaining.slice(segment.length)
+    addressY -= 17
+  }
+}
+
+line(309)
     page.drawText('TRANSACTION DETAILS', { x: margin, y: 284, size: 11, font: bold, color: indigo })
     field('Payment reference', purchase.provider_payment_id || 'Unavailable', 257)
     field('Purchase ID', purchase.id, 231)

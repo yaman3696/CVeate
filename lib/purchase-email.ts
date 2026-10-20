@@ -12,15 +12,16 @@ type EmailJob = {
 }
 
 type Purchase = {
-  id: string
-  user_id: string
-  provider: string
-  provider_order_id: string
-  amount_paise: number
-  currency: string
-  credits: number
-  status: string
-}
+    id: string
+    user_id: string
+    provider: string
+    provider_order_id: string
+    package_name: string | null
+    amount_paise: number
+    currency: string
+    credits: number
+    status: string
+  }
 
 function formatINR(paise: number): string {
   return new Intl.NumberFormat('en-IN', {
@@ -93,8 +94,8 @@ export async function processPurchaseConfirmation(
       await supabaseAdmin
         .from('cveate_credit_purchases')
         .select(
-          'id, user_id, provider, provider_order_id, amount_paise, currency, credits, status'
-        )
+            'id, user_id, provider, provider_order_id, package_name, amount_paise, currency, credits, status'
+          )
         .eq('id', purchaseId)
         .single<Purchase>()
 
@@ -110,7 +111,9 @@ export async function processPurchaseConfirmation(
 
     // 4. Build the branded confirmation email.
     const amount = formatINR(purchase.amount_paise)
-    const safeAmount = escapeHtml(amount)
+const packageName = purchase.package_name?.trim() || 'Career Credits'
+const safePackageName = escapeHtml(packageName)
+const safeAmount = escapeHtml(amount)
     const safeOrderId = escapeHtml(purchase.provider_order_id)
     const safeCredits = escapeHtml(String(purchase.credits))
     const billingUrl = 'https://cveat.in/billing'
@@ -121,8 +124,9 @@ export async function processPurchaseConfirmation(
       'Thank you for your purchase from CVeat.',
       'Your Career Credits have been added to your account and are ready to use.',
       '',
-      `Career Credits added: +${purchase.credits}`,
-      `Amount paid: ${amount}`,
+      `Package purchased: ${packageName}`,
+`Career Credits added: +${purchase.credits}`,
+`Amount paid: ${amount}`,
       `Razorpay order ID: ${purchase.provider_order_id}`,
       '',
       `View your payment and download your receipt: ${billingUrl}`,
@@ -163,9 +167,13 @@ export async function processPurchaseConfirmation(
                   <td style="padding:20px 20px 8px;">
                     <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
                       <tr>
-                        <td style="font-size:14px;color:#64748b;padding-bottom:14px;">Career Credits added</td>
-                        <td align="right" style="font-size:16px;font-weight:800;color:#4f46e5;padding-bottom:14px;">+${safeCredits}</td>
-                      </tr>
+  <td style="font-size:14px;color:#64748b;padding-bottom:14px;">Package purchased</td>
+  <td align="right" style="font-size:16px;font-weight:800;color:#0f172a;padding-bottom:14px;">${safePackageName}</td>
+</tr>
+<tr>
+  <td style="font-size:14px;color:#64748b;padding-bottom:14px;">Career Credits added</td>
+  <td align="right" style="font-size:16px;font-weight:800;color:#4f46e5;padding-bottom:14px;">+${safeCredits}</td>
+</tr>
                       <tr>
                         <td style="font-size:14px;color:#64748b;padding-bottom:14px;">Amount paid</td>
                         <td align="right" style="font-size:16px;font-weight:800;color:#0f172a;padding-bottom:14px;">${safeAmount}</td>
@@ -183,7 +191,6 @@ export async function processPurchaseConfirmation(
                 </tr>
               </table>
 
-              <p style="margin:24px 0 14px;text-align:center;">Ready to take the next step in your career?</p>
               <table role="presentation" border="0" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center" bgcolor="#4f46e5" style="border-radius:12px;box-shadow:0 4px 10px rgba(79,70,229,0.3);">

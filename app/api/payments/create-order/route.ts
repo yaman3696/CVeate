@@ -97,14 +97,17 @@ const { data: purchase, error: purchaseError } =
 await supabaseAdmin
 .from('cveate_credit_purchases')
 .insert({
-user_id: auth.user.id,
-provider: 'razorpay',
-provider_order_id: order.id,
-amount_paise: creditPackage.price_paise,
-currency: 'INR',
-credits: creditPackage.credits,
-status: 'created',
-})
+    user_id: auth.user.id,
+    provider: 'razorpay',
+    provider_order_id: order.id,
+    package_id: creditPackage.id,
+    package_key: creditPackage.package_key,
+    package_name: creditPackage.name,
+    amount_paise: creditPackage.price_paise,
+    currency: 'INR',
+    credits: creditPackage.credits,
+    status: 'created',
+  })
 .select('id')
 .single()
 if (purchaseError || !purchase) {

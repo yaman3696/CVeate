@@ -5,16 +5,19 @@ import Link from 'next/link'
 import { supabase } from '@/utils/supabaseClient'
 
 type Purchase = {
-  id: string
-  provider: string
-  provider_order_id: string | null
-  provider_payment_id: string | null
-  amount_paise: number
-  currency: string
-  credits: number
-  status: string
-  created_at: string
-}
+    id: string
+    provider: string
+    provider_order_id: string | null
+    provider_payment_id: string | null
+    package_id: string | null
+    package_key: string | null
+    package_name: string | null
+    amount_paise: number
+    currency: string
+    credits: number
+    status: string
+    created_at: string
+  }
 
 export default function BillingPage() {
   const [purchases, setPurchases] = useState<Purchase[]>([])
@@ -132,8 +135,9 @@ export default function BillingPage() {
               <table className="w-full min-w-[680px] text-left text-sm">
                 <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                   <tr>
-                    <th className="px-6 py-4 font-semibold">Date</th>
-                    <th className="px-6 py-4 font-semibold">Credits</th>
+                  <th className="px-6 py-4 font-semibold">Date</th>
+<th className="px-6 py-4 font-semibold">Package</th>
+<th className="px-6 py-4 font-semibold">Credits</th>
                     <th className="px-6 py-4 font-semibold">Amount</th>
                     <th className="px-6 py-4 font-semibold">Status</th>
                     <th className="px-6 py-4 font-semibold">Receipt</th>
@@ -142,8 +146,17 @@ export default function BillingPage() {
                 <tbody className="divide-y divide-slate-100">
                   {purchases.map((purchase) => (
                     <tr key={purchase.id} className="align-top text-slate-700">
-                      <td className="whitespace-nowrap px-6 py-4">{new Date(purchase.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
-                      <td className="px-6 py-4 font-semibold">{purchase.credits}</td>
+                      <td className="whitespace-nowrap px-6 py-4">
+  {new Date(purchase.created_at).toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })}
+</td>
+<td className="whitespace-nowrap px-6 py-4 font-semibold">
+  {purchase.package_name?.trim() || 'Career Credits'}
+</td>
+<td className="px-6 py-4 font-semibold">{purchase.credits}</td>
                       <td className="whitespace-nowrap px-6 py-4 font-semibold">{formatMoney(purchase.amount_paise, purchase.currency)}</td>
                       <td className="px-6 py-4">
                         <span className={`inline-block rounded-full px-2.5 py-1 text-xs font-semibold ${purchase.status === 'completed' ? 'bg-green-50 text-green-700' : purchase.status === 'created' ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>

@@ -16,7 +16,7 @@ export async function GET(request: Request) {
 
   const { data, error } = await supabaseAdmin
     .from('cveate_credit_purchases')
-    .select('id, provider, provider_order_id, provider_payment_id, amount_paise, currency, credits, status, created_at')
+    .select('id, provider, provider_order_id, provider_payment_id, package_id, package_key, package_name, amount_paise, currency, credits, status, created_at')
     .eq('user_id', auth.user.id)
     .order('created_at', { ascending: false })
     .limit(100)
