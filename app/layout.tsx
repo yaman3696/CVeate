@@ -43,18 +43,65 @@ const [successMessage, setSuccessMessage] = useState('')
 // Session & Profile Dropdown State
 const [user, setUser] = useState<any>(null)
 const [userProfile, setUserProfile] = useState<any>(null)
+const [latestPurchasedPack, setLatestPurchasedPack] = useState<string>('Free')
 const [isProfileOpen, setIsProfileOpen] = useState(false)
 const dropdownRef = useRef<HTMLDivElement | null>(null)
 // Fetch user profile plan and ATS credits from Supabase
 const fetchUserProfile = async (userId: string) => {
-const { data, error } = await supabase
-.from('profiles')
-.select('plan_name, career_credits, full_name')
-.eq('id', userId)
-.single()
-if (data) {
-setUserProfile(data)
-}
+  const { data } = await supabase
+    .from('profiles')
+    .select('career_credits, full_name')
+    .eq('id', userId)
+    .single()
+
+  if (data) {
+    setUserProfile(data)
+  }
+
+  try {
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData.session?.access_token
+
+    if (!token || sessionData.session?.user.id !== userId) {
+      setLatestPurchasedPack('Free')
+      return
+    }
+
+    const response = await fetch('/api/billing/purchases', {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: 'no-store',
+    })
+
+    if (!response.ok) return
+
+    const result = await response.json()
+
+    const latestPurchase = result.purchases?.find(
+      (purchase: {
+        status: string
+        amount_paise: number
+        credits: number
+        currency: string
+      }) => purchase.status === 'completed'
+    )
+
+    if (!latestPurchase) {
+      setLatestPurchasedPack('Free')
+      return
+    }
+
+    const packMap: Record<string, string> = {
+      '1900_3_INR': 'Starter',
+      '4900_10_INR': 'Growth',
+      '9900_25_INR': 'Career Pro',
+    }
+
+    const key = `${latestPurchase.amount_paise}_${latestPurchase.credits}_${latestPurchase.currency}`
+
+    setLatestPurchasedPack(packMap[key] || 'Purchased Credits')
+  } catch (error) {
+    console.error('Unable to load latest purchased pack:', error)
+  }
 }
 // Sync profile data on login, preserving email signup names against Google OAuth overwrites
 const syncGoogleProfile = async (sessionUser: any) => {
@@ -243,6 +290,7 @@ localStorage.clear()
 sessionStorage.clear()
 setUser(null)
 setUserProfile(null)
+setLatestPurchasedPack('Free')
 window.location.href = '/'
 }
 const handleQuickDownload = async () => {
@@ -323,8 +371,12 @@ className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-sem
 <p className="text-[11px] text-slate-500 truncate mt-0.5">{user.email}</p>
 <div className="mt-3 flex items-center justify-between bg-indigo-50 border border-indigo-100 rounded-xl px-3 py-2">
 <div>
-<p className="text-[10px] uppercase font-bold text-indigo-600 tracking-wider">Active Plan</p>
-<p className="text-xs font-extrabold text-slate-900">{userProfile?.plan_name || 'Freemium'}</p>
+<p className="text-[10px] uppercase font-bold text-indigo-600 tracking-wider">
+  Latest Purchased Pack
+</p>
+<p className="text-xs font-extrabold text-slate-900">
+  {latestPurchasedPack}
+</p>
 </div>
 <div className="text-right">
 <p className="text-[10px] uppercase font-bold text-indigo-600 tracking-wider">
