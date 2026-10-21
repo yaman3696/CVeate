@@ -1,8 +1,9 @@
 'use client'
 import type { ReactNode } from 'react'
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import AnimatedNetwork from '@/components/AnimatedNetwork'
 type Experience = { role: string; company: string; duration: string; bullets: string; startDate?: string; endDate?: string; current?: boolean }
 type Qualification = { degree: string; institution: string; year: string; startDate?: string; endDate?: string; current?: boolean }
 type Project = { name: string; role: string; technologies: string; link: string; startDate: string; endDate: string; current: boolean; description: string }
@@ -178,8 +179,109 @@ style={{ minHeight: rows * 23 }} />
 <p className="px-3 pb-2 text-[10px] text-slate-400">Select text to format. Click List again to unlist. Press Enter to add paragraphs.</p>
 </div>
 }
+type AIReviewSuggestion = {
+  id: string
+  fieldPath: string
+  section: string
+  currentText: string
+  suggestedText: string
+  reason: string
+  requiresConfirmation: boolean
+}
+type AIReviewResult = {
+  overallScore: number
+  summary: string
+  strengths: string[]
+  priorities: string[]
+  suggestions: AIReviewSuggestion[]
+}
+// Only editable prose fields are eligible for AI replacements. Identity, dates,
+// qualifications, certifications, skills and factual labels stay user-controlled.
+function allowedReviewPath(path: string): boolean {
+  return path === 'bio' || path === 'headline' ||
+    /^experiences\.\d+\.bullets$/.test(path) ||
+    /^projects\.\d+\.description$/.test(path) ||
+    /^(technicalSkills|softSkills|hobbies|languages|skillGroups\.\d+\.skills)$/.test(path)
+}
+function reviewText(value: string): string {
+  return value.replace(/<\s*\/\s*(?:li|p|div|ul|ol)\s*>/gi, '\n')
+    .replace(/<\s*br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;|&#160;/gi, ' ').replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<').replace(/&gt;/gi, '>')
+    .replace(/\n{3,}/g, '\n\n').trim()
+}
+function reviewFieldLabel(path: string, cv: ResumeData | null): string {
+  const match = /^(experiences|qualifications|projects)\.(\d+)\.(\w+)$/.exec(path)
+  if (match) {
+    const index = Number(match[2]); const field = match[3]
+    const names: Record<string, string> = { bullets: 'Responsibilities', description: 'Description', degree: 'Qualification', institution: 'Institution' }
+    if (match[1] === 'experiences') {
+      const item = cv?.experiences[index]
+      return `Experience ${index + 1}${item?.role ? ' · ' + item.role : ''}${item?.company ? ' · ' + item.company : ''} · ${names[field] || field}`
+    }
+    if (match[1] === 'qualifications') return `Qualification ${index + 1} · ${names[field] || field}`
+    return `Project ${index + 1}${cv?.projects[index]?.name ? ' · ' + cv.projects[index].name : ''} · ${names[field] || field}`
+  }
+  const labels: Record<string, string> = { bio: 'Professional summary', headline: 'Professional headline', technicalSkills: 'Technical skills', softSkills: 'Soft skills', hobbies: 'Hobbies', languages: 'Languages' }
+  const group = /^skillGroups\.(\d+)\.skills$/.exec(path)
+  if (group) return `Skill group ${Number(group[1]) + 1}${cv?.skillGroups?.[Number(group[1])]?.name ? ' · ' + cv.skillGroups[Number(group[1])].name : ''}`
+  return labels[path] || 'CV improvement'
+}
+// Allow one-click changes to factual lists only when they preserve the same items
+// and each altered token is a minor spelling/punctuation correction.
+function isMinorCorrection(before: string, after: string): boolean {
+  const words = (v: string) => reviewText(v).split(/([,;\n])/).flatMap(part => part.split(/\s+/)).map(x => x.trim()).filter(Boolean)
+  const x = words(before), y = words(after)
+  if (x.length !== y.length || x.length === 0) return false
+  let changes = 0
+  for (let i = 0; i < x.length; i++) {
+    if (x[i].toLowerCase() === y[i].toLowerCase()) continue
+    changes++
+    const left = x[i].toLowerCase(), right = y[i].toLowerCase()
+    if (left === ',' || right === ',' || left === ';' || right === ';') return false
+    if (Math.abs(left.length - right.length) > 2 || left.length < 3 || right.length < 3) return false
+    // Bounded edit distance, allowing simple typos but not adding a new skill.
+    const d = Array.from({ length: left.length + 1 }, (_, j) => j)
+    for (let k = 1; k <= right.length; k++) {
+      let prev = d[0]; d[0] = k
+      for (let j = 1; j <= left.length; j++) {
+        const old = d[j]
+        d[j] = Math.min(d[j] + 1, d[j - 1] + 1, prev + (left[j - 1] === right[k - 1] ? 0 : 1))
+        prev = old
+      }
+    }
+    if (d[left.length] > 2) return false
+  }
+  return changes > 0 && changes <= 3
+}
+function isSafeReviewChange(s: AIReviewSuggestion): boolean {
+  if (allowedReviewPath(s.fieldPath)) return true
+  if (/^(technicalSkills|softSkills|hobbies|languages|skillGroups\.\d+\.skills)$/.test(s.fieldPath))
+    return isMinorCorrection(s.currentText, s.suggestedText)
+  return false
+}
+function readReviewField(data: ResumeData, path: string): string | null {
+  if (!allowedReviewPath(path)) return null
+  const parts = path.split('.')
+  let value: unknown = data
+  for (const part of parts) {
+    if (Array.isArray(value) && /^\d+$/.test(part)) value = value[Number(part)]
+    else if (value !== null && typeof value === 'object') value = (value as Record<string, unknown>)[part]
+    else return null
+  }
+  return typeof value === 'string' ? value : null
+}
+function isAIReviewResult(value: unknown): value is AIReviewResult {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+  const result = value as Record<string, unknown>
+  return typeof result.overallScore === 'number' &&
+    typeof result.summary === 'string' &&
+    Array.isArray(result.strengths) && Array.isArray(result.priorities) &&
+    Array.isArray(result.suggestions)
+}
 function DashboardContent() {
-const searchParams = useSearchParams()
+  const router = useRouter()
+  const searchParams = useSearchParams()
 const [cvData, setCvData] = useState<ResumeData>(EMPTY)
 const [loaded, setLoaded] = useState(false)
 const [userId, setUserId] = useState<string | null>(null)
@@ -187,12 +289,25 @@ const [saveState, setSaveState] = useState<'saved' | 'saving' | 'error'>('saved'
 const [savingHistory, setSavingHistory] = useState(false)
 const [downloading, setDownloading] = useState(false)
 const [message, setMessage] = useState('')
+const [showAIReview, setShowAIReview] = useState(false)
+const [reviewLoading, setReviewLoading] = useState(false)
+const [reviewStartedAt, setReviewStartedAt] = useState<number | null>(null)
+const [reviewElapsed, setReviewElapsed] = useState(0)
+const [reviewPending, setReviewPending] = useState(false)
+const [reviewError, setReviewError] = useState('')
+const [reviewResult, setReviewResult] = useState<AIReviewResult | null>(null)
+const [reviewConfirmations, setReviewConfirmations] = useState<Record<string, boolean>>({})
+const [appliedReviewIds, setAppliedReviewIds] = useState<string[]>([])
+const [reviewSource, setReviewSource] = useState<ResumeData | null>(null)
+const reviewRequestIdRef = useRef<string | null>(null)
+
 const [active, setActive] = useState('personal')
 const [mobileTab, setMobileTab] = useState<'edit' | 'preview'>('edit')
 const [cvTitle, setCvTitle] = useState('My Resume')
 const accent = PALETTE[cvData.accentColor || 'indigo'] || PALETTE.indigo
 const latestRef = useRef(cvData)
 const initialDownloadRef = useRef(false)
+const pendingActionHandledRef = useRef(false)
 const storageKey = userId ? `cveate_resume_data_${userId}` : 'cveate_resume_data_guest'
 const profileKey = userId ? `cveate_profile_${userId}` : 'cveate_profile'
 const update = useCallback((patch: Partial<ResumeData>) => {
@@ -208,6 +323,53 @@ const { data: { session } } = await supabase.auth.getSession()
 if (cancelled) return
 const id = session?.user?.id ?? null
 setUserId(id)
+if (id) {
+  const pendingAction = sessionStorage.getItem('cveate_pending_cv_action')
+
+  const pendingDraft = pendingAction
+    ? sessionStorage.getItem('cveate_pending_guest_cv') ||
+      localStorage.getItem('cveate_pending_guest_cv')
+    : null
+
+  if (pendingDraft) {
+    try {
+      const parsed = normalize(JSON.parse(pendingDraft))
+
+      if (!cancelled) {
+        try {
+          const restoredDraft = JSON.stringify(parsed)
+      
+          sessionStorage.setItem(
+            `cveate_resume_data_${id}`,
+            restoredDraft
+          )
+      
+          localStorage.setItem(
+            `cveate_profile_${id}`,
+            restoredDraft
+          )
+      
+          setCvData(parsed)
+          latestRef.current = parsed
+          setLoaded(true)
+      
+          sessionStorage.removeItem('cveate_pending_guest_cv')
+          localStorage.removeItem('cveate_pending_guest_cv')
+        } catch (saveError) {
+          console.error('Unable to save restored CV:', saveError)
+      
+          setCvData(parsed)
+          latestRef.current = parsed
+          setLoaded(true)
+        }
+      }
+      
+      return
+    } catch (error) {
+      console.error('Unable to restore guest CV:', error)
+    }
+  }
+}
 const keys = id ? [`cveate_resume_data_${id}`, `cveate_profile_${id}`] : ['cveate_resume_data_guest', 'cveate_profile']
 for (const key of keys) {
 const raw = sessionStorage.getItem(key) || localStorage.getItem(key)
@@ -248,7 +410,10 @@ setSaveState('saved')
 }, 450)
 return () => window.clearTimeout(timer)
 }, [cvData, loaded, storageKey, profileKey])
-const downloadPDF = useCallback(async (data: ResumeData) => {
+const downloadPDF = useCallback(async (
+  data: ResumeData,
+  saveFile = true
+) => {
 const { jsPDF } = await import('jspdf')
 const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' })
 const left = 17, right = 17, width = 210 - left - right, bottom = 278
@@ -432,13 +597,215 @@ y += 2
 })
 }
 const filename = (data.fullName.trim() || 'My_Resume').replace(/[^a-z0-9 _-]/gi, '').trim().replace(/\s+/g, '_') || 'My_Resume'
-doc.save(`${filename}_CV.pdf`)
+if (saveFile) {
+  doc.save(`${filename}_CV.pdf`)
+}
+
+return doc.output('blob')
 }, [])
 useEffect(() => {
 if (!loaded || searchParams.get('download') !== 'true' || initialDownloadRef.current) return
 initialDownloadRef.current = true
 void downloadPDF(latestRef.current).catch(error => { console.error(error); setMessage('PDF download failed. Please try again.') })
 }, [loaded, searchParams, downloadPDF])
+useEffect(() => {
+  if (!loaded || !userId || pendingActionHandledRef.current) return
+
+  const action = sessionStorage.getItem('cveate_pending_cv_action')
+
+  if (action !== 'ai-review') return
+
+pendingActionHandledRef.current = true
+sessionStorage.removeItem('cveate_pending_cv_action')
+
+if (action === 'ai-review') {
+  setShowAIReview(true)
+}
+}, [loaded, userId])
+useEffect(() => {
+  if (!reviewLoading || reviewStartedAt === null) return
+  const tick = () => setReviewElapsed(Math.floor((Date.now() - reviewStartedAt) / 1000))
+  tick()
+  const timer = setInterval(tick, 1000)
+  return () => clearInterval(timer)
+}, [reviewLoading, reviewStartedAt])
+const formatReviewElapsed = (v: number) => `${String(Math.floor(v / 60)).padStart(2, '0')}:${String(v % 60).padStart(2, '0')}`
+const handleGenerateAIReview = async () => {
+  if (reviewLoading || !loaded) return
+  setReviewLoading(true)
+  setReviewStartedAt(Date.now())
+  setReviewElapsed(0)
+  setReviewError('')
+  try {
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+    const token = sessionData.session?.access_token
+    if (sessionError || !token) throw new Error('Please sign in to review your CV.')
+    if (!reviewRequestIdRef.current) reviewRequestIdRef.current = crypto.randomUUID()
+    const source = structuredClone(latestRef.current)
+    const response = await fetch('/api/review-cv', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        'x-review-request-id': reviewRequestIdRef.current,
+      },
+      body: JSON.stringify({ cvData: source }),
+    })
+    const result: unknown = await response.json()
+    const payload = result && typeof result === 'object' ? result as Record<string, unknown> : {}
+    if (response.status === 202 || payload.processing === true) {
+      setReviewPending(true)
+      setReviewError('The previous request is still processing. Check its status using the same request ID. No additional credit will be reserved.')
+      return
+    }
+    if (!response.ok) {
+      if (payload.refunded === true) { reviewRequestIdRef.current = null; setReviewPending(false) }
+      if (payload.insufficientCredits === true) {
+        throw new Error('You need 1 Career Credit to generate this review. Visit Pricing to get credits.')
+      }
+      throw new Error(typeof payload.error === 'string' ? payload.error : 'Unable to review your CV.')
+    }
+    if (!isAIReviewResult(result)) throw new Error('The review response was incomplete. Please retry.')
+    setReviewSource(source)
+    setReviewPending(false)
+    setReviewResult(result)
+    setAppliedReviewIds([])
+    setReviewConfirmations({})
+    // Keep the request ID so reopening or retrying can retrieve this saved review.
+  } catch (error) {
+    setReviewError(error instanceof Error ? error.message : 'Unable to review your CV.')
+  } finally {
+    setReviewLoading(false)
+  }
+}
+const applyReviewSuggestion = (suggestion: AIReviewSuggestion) => {
+  if (!reviewSource || appliedReviewIds.includes(suggestion.id)) return
+  if (suggestion.requiresConfirmation && !reviewConfirmations[suggestion.id]) return
+  const original = readReviewField(reviewSource, suggestion.fieldPath)
+  const current = readReviewField(latestRef.current, suggestion.fieldPath)
+  if (original === null || original !== suggestion.currentText || current !== original) {
+    setReviewError('This CV field has changed since the review. Please review the field manually before applying.')
+    return
+  }
+  const parts = suggestion.fieldPath.split('.')
+  if (!isSafeReviewChange(suggestion)) return
+  const newText = reviewText(suggestion.suggestedText)
+  if (!newText.trim()) return
+  const next = structuredClone(latestRef.current)
+  if (parts.length === 1 && (parts[0] === 'bio' || parts[0] === 'headline')) {
+    if (parts[0] === 'bio') next.bio = legacyToRich(newText)
+    else next.headline = newText
+  } else if (parts[0] === 'experiences' && parts[2] === 'bullets') {
+    const index = Number(parts[1])
+    if (!next.experiences[index]) return
+    next.experiences[index].bullets = legacyToRich(newText)
+  } else if (parts[0] === 'projects' && parts[2] === 'description') {
+    const index = Number(parts[1])
+    if (!next.projects[index]) return
+    next.projects[index].description = legacyToRich(newText)
+  } else if (parts.length === 1 && ['softSkills', 'hobbies', 'languages', 'technicalSkills'].includes(parts[0])) {
+    if (parts[0] === 'technicalSkills' && Array.isArray(next.technicalSkills)) return
+    ;(next as Record<string, unknown>)[parts[0]] = newText
+  } else if (parts[0] === 'skillGroups' && parts[2] === 'skills') {
+    const index = Number(parts[1])
+    if (!next.skillGroups?.[index]) return
+    next.skillGroups[index].skills = newText
+  } else return
+  latestRef.current = next
+  setCvData(next)
+  setSaveState('saving')
+  setAppliedReviewIds(prev => [...prev, suggestion.id])
+  setReviewError('')
+}
+const preserveGuestCV = () => {
+  if (!loaded || userId) return
+
+  try {
+    const draft = JSON.stringify(cvData)
+
+    localStorage.setItem('cveate_pending_guest_cv', draft)
+    sessionStorage.setItem('cveate_pending_guest_cv', draft)
+  } catch (error) {
+    console.error('Unable to preserve guest CV:', error)
+  }
+}
+const handleCheckATSRef = useRef<() => Promise<void>>(async () => {})
+
+useEffect(() => {
+  handleCheckATSRef.current = handleCheckATS
+
+  if (
+    loaded &&
+    userId &&
+    !pendingActionHandledRef.current &&
+    sessionStorage.getItem('cveate_pending_cv_action') === 'ats-match'
+  ) {
+    pendingActionHandledRef.current = true
+sessionStorage.removeItem('cveate_pending_cv_action')
+void handleCheckATSRef.current()
+  }
+})
+const handleCheckATS = async () => {
+  if (!loaded) return
+
+  setMessage('')
+
+  try {
+    const { data: { session } } = await supabase.auth.getSession()
+
+    if (!session) {
+      preserveGuestCV()
+    
+      sessionStorage.setItem('cveate_pending_cv_action', 'ats-match')
+    
+      window.dispatchEvent(
+        new CustomEvent('open-auth-modal', {
+          detail: 'signin',
+        })
+      )
+    
+      return
+    }
+
+    const pdfBlob = await downloadPDF(latestRef.current, false)
+
+    if (!pdfBlob.size) {
+      throw new Error('Unable to prepare your CV.')
+    }
+
+    const reader = new FileReader()
+
+    reader.onload = () => {
+      try {
+        const result = reader.result
+
+        if (typeof result !== 'string') {
+          throw new Error('Unable to read the generated PDF.')
+        }
+
+        sessionStorage.setItem(
+          `cveate_ats_builder_pdf_${session.user.id}`,
+          result
+        )
+
+        router.push('/ats-checker?source=builder')
+      } catch (error) {
+        console.error(error)
+        setMessage('Unable to transfer your CV. Please try again.')
+      }
+    }
+
+    reader.onerror = () => {
+      setMessage('Unable to prepare your CV for ATS checking.')
+    }
+
+    reader.readAsDataURL(pdfBlob)
+
+  } catch (error) {
+    console.error(error)
+    setMessage('Unable to prepare your CV for ATS checking.')
+  }
+}
 const handleDownload = async () => {
 setDownloading(true); setMessage('')
 try { await downloadPDF(cvData) }
@@ -491,6 +858,87 @@ const portfolioValue = cvData.portfolioLinks?.filter(Boolean).join(', ') || cvDa
 const contact = [[cvData.city, cvData.state, cvData.pincode].filter(Boolean).join(', '), cvData.phone, cvData.email].filter(Boolean)
 return (
 <main className="min-h-screen bg-slate-50 px-3 py-6 text-slate-900 sm:px-6 lg:py-8">
+{showAIReview && (
+  <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 p-3" onMouseDown={e => { if (e.target === e.currentTarget && !reviewLoading) setShowAIReview(false) }}>
+    <div role="dialog" aria-modal="true" aria-labelledby="ai-review-title" className="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+      <div className="flex shrink-0 items-center justify-between border-b border-slate-100 px-5 py-4">
+        <div><h2 id="ai-review-title" className="text-lg font-extrabold text-slate-900">AI CV Review</h2><p className="mt-1 text-xs text-slate-500">Review and apply improvements to your CV individually.</p></div>
+        <button type="button" disabled={reviewLoading} onClick={() => setShowAIReview(false)} aria-label="Close AI CV Review" className="rounded-lg px-3 py-2 text-sm font-bold text-slate-500 hover:bg-slate-100 disabled:opacity-50">Close</button>
+      </div>
+      <div className="space-y-4 overflow-y-auto p-5">
+        {!reviewResult && !reviewLoading && (
+          <div className="space-y-3 rounded-xl border border-indigo-100 bg-indigo-50 p-4 text-sm text-indigo-950">
+            <p className="font-extrabold">Personalized CV improvements</p>
+            <p>Gemini will review the CV you have entered and suggest field-specific improvements. Nothing is applied automatically.</p>
+            <p className="font-bold">1 Career Credit is used for a completed review. Failed processing is eligible for a credit refund.</p>
+            <p className="text-xs">Do not accept claims, skills or achievements that you cannot verify. Suggested wording may require your edits.</p>
+          </div>
+        )}
+        {reviewLoading && <div className="space-y-5 rounded-2xl border border-indigo-100 bg-white p-5 text-center">
+          <div className="relative mx-auto flex h-20 w-20 items-center justify-center">
+            <div className="absolute inset-0 animate-ping rounded-full bg-indigo-100 opacity-40" />
+            <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 text-2xl text-white shadow-lg">✦</div>
+          </div>
+          <h3 className="text-lg font-extrabold text-slate-900">CVeate AI is reviewing your CV</h3>
+          <p className="text-sm text-slate-500">Reviewing clarity, accuracy and opportunities to improve your CV.</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-xl bg-indigo-50 p-4"><p className="text-xs font-semibold text-indigo-600">Time Elapsed</p><p className="mt-2 text-2xl font-black tabular-nums text-indigo-700">{formatReviewElapsed(reviewElapsed)}</p></div>
+            <div className="rounded-xl bg-slate-50 p-4"><p className="text-xs font-semibold text-slate-500">Status</p><p className="mt-2 text-sm font-bold text-slate-700">Processing</p></div>
+          </div>
+          <div className="h-2.5 overflow-hidden rounded-full bg-indigo-100"><div className="h-full w-1/3 animate-pulse rounded-full bg-gradient-to-r from-indigo-600 to-cyan-400" /></div>
+          <p className="text-xs text-slate-500">Activity indicator, not an exact completion percentage.</p>
+          <div className="space-y-2 text-left text-xs text-slate-600">
+            <p>✓ CV received and request authenticated</p>
+            <p>◌ Analyzing sections and drafting improvements</p>
+            <p>◌ Validating suggestions and saving your review</p>
+          </div>
+          <p className="text-xs text-slate-500">Keep this page open while the review runs.</p>
+        </div>}
+        {reviewError && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{reviewError}</p>}
+        {reviewResult && (
+          <div className="space-y-5">
+            <div className="rounded-xl border border-indigo-100 bg-indigo-50 p-4">
+              <div className="flex items-center gap-3"><span className="text-3xl font-extrabold text-indigo-700">{reviewResult.overallScore}/100</span><span className="text-xs font-semibold text-indigo-800">AI CV assessment</span></div>
+              <p className="mt-2 text-sm text-slate-700">{reviewResult.summary}</p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div><h3 className="text-sm font-extrabold text-slate-800">Strengths</h3><ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-slate-700">{reviewResult.strengths.map((item, i) => <li key={i}>{item}</li>)}</ul></div>
+              <div><h3 className="text-sm font-extrabold text-slate-800">Priorities</h3><ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-slate-700">{reviewResult.priorities.map((item, i) => <li key={i}>{item}</li>)}</ul></div>
+            </div>
+            <div><h3 className="text-sm font-extrabold text-slate-800">Suggested improvements</h3><p className="mt-1 text-xs text-slate-500">Apply only changes that accurately describe you. Edits to credentials, skills and factual details must be made manually.</p></div>
+            {reviewResult.suggestions.length === 0 && <p className="text-sm text-slate-600">No individual text replacements were suggested.</p>}
+            {reviewResult.suggestions.map((suggestion, index) => {
+              const safe = isSafeReviewChange(suggestion)
+              const sourceMatches = reviewSource ? readReviewField(reviewSource, suggestion.fieldPath) === suggestion.currentText : false
+              const unchanged = readReviewField(cvData, suggestion.fieldPath) === suggestion.currentText
+              const applied = appliedReviewIds.includes(suggestion.id)
+              return <div key={`${suggestion.id}-${index}`} className="space-y-3 rounded-xl border border-slate-200 p-4">
+                <div className="flex items-start justify-between gap-3"><div><p className="text-sm font-bold text-slate-900">{reviewFieldLabel(suggestion.fieldPath, reviewSource)}</p><p className="text-xs text-slate-500">{reviewFieldLabel(suggestion.fieldPath, reviewSource)}</p></div>{applied && <span className="text-xs font-bold text-emerald-700">Applied</span>}</div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-lg bg-slate-50 p-3"><p className="mb-1 text-xs font-bold text-slate-500">Original</p><p className="whitespace-pre-wrap break-words text-xs text-slate-700">{plainText(suggestion.currentText)}</p></div>
+                  <div className="rounded-lg bg-indigo-50 p-3"><p className="mb-1 text-xs font-bold text-indigo-700">Suggested</p><p className="whitespace-pre-wrap break-words text-xs text-slate-800">{reviewText(suggestion.suggestedText)}</p></div>
+                </div>
+                <p className="text-xs text-slate-600"><strong>Why:</strong> {reviewText(suggestion.reason)}</p>
+                {suggestion.requiresConfirmation && safe && <label className="flex items-start gap-2 text-xs text-slate-700"><input type="checkbox" className="mt-0.5 accent-indigo-600" checked={!!reviewConfirmations[suggestion.id]} onChange={e => setReviewConfirmations(prev => ({ ...prev, [suggestion.id]: e.target.checked }))} /><span>I verified that this suggestion is accurate and does not add unsupported facts.</span></label>}
+                {!safe && <p className="text-xs text-amber-700">This change is not verified as a spelling-only correction. Review and edit this field manually.</p>}
+                {safe && !unchanged && !applied && <p className="text-xs text-amber-700">The field has changed since this review. Apply manually or generate a new review.</p>}
+                <button type="button" disabled={!safe || !sourceMatches || !unchanged || applied || (suggestion.requiresConfirmation && !reviewConfirmations[suggestion.id])} onClick={() => applyReviewSuggestion(suggestion)} className="rounded-lg bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300">{applied ? 'Applied' : 'Apply this improvement'}</button>
+              </div>
+            })}
+          </div>
+        )}
+      </div>
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-slate-100 bg-white px-5 py-4">
+        <p className="text-xs text-slate-500">{reviewResult ? 'Saved review: reopening does not use another credit.' : '1 Career Credit per completed review'}</p>
+        <div className="flex gap-2">
+          {reviewResult && <button type="button" onClick={() => { setReviewResult(null); setReviewSource(null); setReviewError(''); setReviewPending(false); reviewRequestIdRef.current = null }} className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-bold text-slate-700">Start new review</button>}
+          {!reviewResult && <button type="button" disabled={reviewLoading} onClick={() => void handleGenerateAIReview()} className="rounded-lg bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white disabled:opacity-60">{reviewLoading ? 'Reviewing CV...' : reviewPending ? 'Check review status' : reviewRequestIdRef.current ? 'Retry / Check review' : 'Generate AI Review'}</button>}
+          {reviewResult && <button type="button" onClick={() => setShowAIReview(false)} className="rounded-lg bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white">Done</button>}
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 <div className="mx-auto max-w-[1500px] space-y-5">
 <header className="flex flex-col gap-4 rounded-2xl border border-indigo-100 bg-white p-4 shadow-sm sm:p-5 lg:flex-row lg:items-center lg:justify-between">
 <div>
@@ -513,6 +961,123 @@ className="rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white sha
 </div>
 </header>
 {message && <div role="status" className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-900">{message}</div>}
+
+
+{/* Compact AI CV Toolbar */}
+<div className="relative isolate overflow-hidden rounded-2xl border border-indigo-400/30 bg-gradient-to-r from-indigo-700 via-indigo-600 to-violet-600 px-4 py-3 shadow-md shadow-indigo-200/40">
+
+  {/* Animated dotted network — same technique as ATS Checker */}
+<div
+  className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
+  aria-hidden="true"
+>
+  <AnimatedNetwork />
+</div>
+
+  {/* Toolbar content */}
+  <div className="relative z-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+
+    <div className="flex items-center gap-3">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/15 text-white backdrop-blur-sm">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="m12 3 1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2L12 3Z" />
+          <path d="m19 17 .7 2.3L22 20l-2.3.7L19 23l-.7-2.3L16 20l2.3-.7L19 17Z" />
+        </svg>
+      </div>
+
+      <div>
+        <h3 className="text-sm font-extrabold text-white">
+          AI CV Tools
+        </h3>
+        <p className="text-xs text-indigo-100">
+          Improve your CV or check its match with a job.
+        </p>
+      </div>
+    </div>
+
+    <div className="flex flex-wrap items-center gap-2">
+
+      {/* AI CV Review */}
+      <button
+        type="button"
+        onClick={async () => {
+          if (!loaded) return
+        
+          const { data: { session }, error } = await supabase.auth.getSession()
+        
+          if (error || !session) {
+            preserveGuestCV()
+            sessionStorage.setItem('cveate_pending_cv_action', 'ai-review')
+          
+            window.dispatchEvent(
+              new CustomEvent('open-auth-modal', {
+                detail: 'signin',
+              })
+            )
+            return
+          }
+        
+          setShowAIReview(true)
+        }}
+disabled={!loaded}
+        className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/30 bg-white/15 px-4 py-2.5 text-xs font-bold text-white backdrop-blur-sm transition hover:bg-white/25 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        <svg
+          width="15"
+          height="15"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3" />
+          <path d="m16 4 4 4-9 9-4 1 1-4 8-10Z" />
+        </svg>
+        AI CV Review
+      </button>
+
+      {/* ATS Match */}
+      <button
+        type="button"
+        onClick={handleCheckATS}
+        disabled={!loaded}
+        className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-2.5 text-xs font-bold text-indigo-700 shadow-sm transition hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        <svg
+          width="15"
+          height="15"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3" />
+          <path d="m9 12 3 3 9-9" />
+        </svg>
+        Check ATS Match
+      </button>
+
+    </div>
+  </div>
+</div>
+
+
 <div className="flex gap-2 rounded-xl bg-white p-1 shadow-sm lg:hidden">
 <button type="button" onClick={() => setMobileTab('edit')} className={`flex-1 rounded-lg px-3 py-2 text-sm font-bold ${mobileTab === 'edit' ? 'bg-indigo-600 text-white' : 'text-slate-600'}`}>Edit CV</button>
 <button type="button" onClick={() => setMobileTab('preview')} className={`flex-1 rounded-lg px-3 py-2 text-sm font-bold ${mobileTab === 'preview' ? 'bg-indigo-600 text-white' : 'text-slate-600'}`}>Preview CV</button>

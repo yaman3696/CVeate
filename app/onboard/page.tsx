@@ -137,13 +137,63 @@ return <div className="overflow-hidden rounded-xl border border-slate-200 bg-whi
 </div>
 }
 // Defined outside OnboardingContent so React does not remount the input on every keystroke.
-function Field({ name, value, onChange, placeholder = '', type = 'text', required = false }: { name: string; value: string; onChange: (s: string) => void; placeholder?: string; type?: string; required?: boolean }) {
-return <label className="block"><span className={label}>{name}{required && ' *'}</span><input className={input} type={type} value={value} placeholder={placeholder} onChange={e => onChange(e.target.value)} /></label>
+function Field({
+  name,
+  value,
+  onChange,
+  placeholder = '',
+  type = 'text',
+  required = false,
+  disabled = false,
+  min,
+}: {
+  name: string
+  value: string
+  onChange: (s: string) => void
+  placeholder?: string
+  type?: string
+  required?: boolean
+  disabled?: boolean
+  min?: string
+}) {
+  return (
+    <label className="block">
+      <span className={label}>
+        {name}{required && ' *'}
+      </span>
+      <input
+        className={`${input} disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400`}
+        type={type}
+        value={value}
+        placeholder={placeholder}
+        disabled={disabled}
+        min={min}
+        onChange={e => onChange(e.target.value)}
+      />
+    </label>
+  )
 }
 function OnboardingContent() {
 const router = useRouter(); const params = useSearchParams()
 const [step, setStep] = useState(1); const [data, setData] = useState<FormData>(EMPTY)
-const [error, setError] = useState(''); const [saving, setSaving] = useState(false); const [autofilled, setAutofilled] = useState(false)
+const [error, setError] = useState('');
+useEffect(() => {
+  if (!error) return
+
+  const timer = window.setTimeout(() => {
+    const errorElement = document.getElementById('onboarding-error')
+
+    if (errorElement) {
+      errorElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+    }
+  }, 100)
+
+  return () => window.clearTimeout(timer)
+}, [error])
+const [saving, setSaving] = useState(false); const [autofilled, setAutofilled] = useState(false)
 const [showCategories, setShowCategories] = useState(false); const [builder, setBuilder] = useState({ verb: 'Created', task: '', tools: '', result: '' }); const [builderIndex, setBuilderIndex] = useState<number | null>(null)
 const patch = (next: Partial<FormData>) => setData(prev => ({ ...prev, ...next }))
 useEffect(() => {
@@ -178,11 +228,82 @@ if (step === 1 && data.pincode && !/^\d{6}$/.test(data.pincode)) { setError('PIN
 if (step === 2 && data.experiences.some(e => (e.role || e.company || textOnly(e.bullets) || e.startDate || e.duration) && (!e.role.trim() || !e.company.trim() || !textOnly(e.bullets)))) { setError('Complete each started work experience, or remove the incomplete entry. Freshers can skip this step.'); return }
 if (step === 3 && data.projects.some(p => (p.name || p.role || p.technologies || p.link || p.startDate || textOnly(p.description)) && !p.name.trim())) { setError('Please name each project you started, or remove the incomplete entry.'); return }
     if (step === 3 && data.certifications.some(c => (c.name || c.issuer || c.issueDate || c.credentialId || c.url) && !c.name.trim())) { setError('Please name each certification you started, or remove the incomplete entry.'); return }
-    if (step === 3 && data.qualifications.some(q => (q.degree || q.institution || q.year || q.startDate) && (!q.degree.trim() || !q.institution.trim()))) { setError('Complete the degree and institution for each started education entry.'); return }
+    if (
+      step === 3 &&
+      !data.qualifications.some(
+        q => q.degree.trim() && q.institution.trim()
+      )
+    ) {
+      setError('Please add at least one qualification with its degree or course name and institution.')
+      return
+    }
+    if (
+      step === 4 &&
+      !data.technicalSkills.split(',').some(skill => skill.trim()) &&
+      !data.skillGroups.some(group =>
+        group.skills.split(',').some(skill => skill.trim())
+      )
+    ) {
+      setError('Please add at least one skill before continuing.')
+      return
+    }
 setError(''); setStep(n => Math.min(n + 1, 4)); window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 const submit = async () => {
-setSaving(true); setError('')
+  const invalidExperience = data.experiences.some(e =>
+    (e.current && !!e.endDate) ||
+    (!e.current &&
+      !!e.startDate &&
+      !!e.endDate &&
+      e.endDate < e.startDate)
+  )
+
+  const invalidQualification = data.qualifications.some(q =>
+    (q.current && !!q.endDate) ||
+    (!q.current &&
+      !!q.startDate &&
+      !!q.endDate &&
+      q.endDate < q.startDate)
+  )
+
+  if (invalidExperience || invalidQualification) {
+    setError(
+      'Please correct the dates. End month cannot be earlier than Start month, and current positions must not have an End month.'
+    )
+    setStep(invalidExperience ? 2 : 3)
+    return
+  }
+  // Require at least one complete qualification
+  const hasQualification = data.qualifications.some(
+    q => q.degree.trim() && q.institution.trim()
+  )
+
+  if (!hasQualification) {
+    setError('Please add at least one qualification with its degree or course name and institution.')
+    setStep(3)
+    return
+  }
+
+  // Require at least one skill
+  const hasSkill =
+    data.technicalSkills.split(',').some(skill => skill.trim()) ||
+    data.skillGroups.some(group =>
+      group.skills.split(',').some(skill => skill.trim())
+    )
+
+  if (!hasSkill) {
+    setError('Please add at least one skill before creating your CV.')
+    return
+  }
+
+  // Require at least one known language
+  if (!data.languages.split(',').some(language => language.trim())) {
+    setError('Please add at least one language you know before creating your CV.')
+    return
+  }
+
+  setSaving(true)
+  setError('')
 try {
 const { data: auth } = await supabase.auth.getSession()
 const experiences = data.experiences.filter(e => e.role.trim() || e.company.trim() || textOnly(e.bullets))
@@ -211,7 +332,7 @@ return <main className="min-h-screen bg-slate-50 px-3 py-8 text-slate-900 sm:px-
 <div className="mb-6 flex items-start justify-between gap-3 border-b border-slate-100 pb-5"><div><h1 className="text-xl font-extrabold">{['', 'Personal information', 'Experience & achievements', 'Education, projects & certificates', 'Skills & expertise'][step]}</h1><p className="mt-1 text-xs text-slate-500">Create and download your CV without signing in. Writing tips are always free.</p></div><span className="shrink-0 rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700">Step {step} of 4</span></div>
 <div className="mb-6 grid grid-cols-4 gap-2">{[1,2,3,4].map(n => <div key={n} className={`h-1.5 rounded-full ${n <= step ? 'bg-indigo-600' : 'bg-slate-100'}`} />)}</div>
 {autofilled && <div className="mb-5 rounded-xl bg-indigo-50 p-3 text-xs text-indigo-800">Your ATS analysis details have been pre-filled. Review them before continuing.</div>}
-{error && <div role="alert" className="mb-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+{error && <div id="onboarding-error" role="alert" className="scroll-mt-32 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
 {step === 1 && <div className="space-y-5">
 <div className="grid gap-4 sm:grid-cols-2"><label><span className={label}>Career stage</span><select className={input} value={data.careerStage} onChange={e => patch({ careerStage: e.target.value })}><option value="fresher">Student / Fresher</option><option value="experienced">Experienced professional</option><option value="manager">Manager / Team lead</option><option value="senior">Senior leader / Executive</option></select></label><label><span className={label}>Profession / target field</span><select className={input} value={data.profession} onChange={e => patch({ profession: e.target.value })}>{professionOptions.map(([v, t]) => <option key={v} value={v}>{t}</option>)}</select></label></div>
 {tipsBox([data.careerStage === 'fresher' ? 'Highlight projects, internships, volunteering and relevant coursework. Employment is not required.' : data.careerStage === 'senior' ? 'Emphasize strategic scope, leadership and business outcomes.' : data.careerStage === 'manager' ? 'Highlight team leadership, coordination, delivery and process improvements.' : 'Highlight relevant tools, achievements and verified outcomes.', `Example style: ${examples[data.profession]}`])}
@@ -223,7 +344,33 @@ return <main className="min-h-screen bg-slate-50 px-3 py-8 text-slate-900 sm:px-
 {step === 2 && <div className="space-y-5">
 {tipsBox([data.careerStage === 'fresher' ? 'No previous job? Leave experience empty. Your education and skills can still form a valid CV.' : 'Describe each role using specific action verbs, relevant tools and genuine results.', `Example for your field: ${examples[data.profession]}`])}
 {data.experiences.map((e, i) => <div key={i} className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50/50 p-4"><div className="flex justify-between"><strong className="text-sm">Experience {i + 1}</strong><button type="button" className="text-xs font-semibold text-red-600" onClick={() => patch({ experiences: data.experiences.filter((_, n) => n !== i) })}>Remove</button></div>
-<div className="grid gap-3 sm:grid-cols-2"><Field name="Role / job title" value={e.role} onChange={role => changeExp(i, { role })} /><Field name="Company / organization" value={e.company} onChange={company => changeExp(i, { company })} /><Field name="Start month" type="month" value={e.startDate || ''} onChange={startDate => changeExp(i, { startDate })} /><Field name="End month" type="month" value={e.endDate || ''} onChange={endDate => changeExp(i, { endDate })} /></div>
+<div className="grid gap-3 sm:grid-cols-2"><Field name="Role / job title" value={e.role} onChange={role => changeExp(i, { role })} /><Field name="Company / organization" value={e.company} onChange={company => changeExp(i, { company })} /><Field
+  name="Start month"
+  type="month"
+  value={e.startDate || ''}
+  onChange={startDate =>
+    changeExp(i, {
+      startDate,
+      endDate:
+        e.endDate && startDate && e.endDate < startDate
+          ? ''
+          : e.endDate,
+    })
+  }
+/>
+
+<Field
+  name="End month"
+  type="month"
+  value={e.current ? '' : e.endDate || ''}
+  min={e.startDate || undefined}
+  disabled={!!e.current}
+  onChange={endDate => {
+    if (e.current) return
+    if (e.startDate && endDate && endDate < e.startDate) return
+    changeExp(i, { endDate })
+  }}
+/></div>
 <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={!!e.current} onChange={ev => changeExp(i, { current: ev.target.checked, endDate: ev.target.checked ? '' : e.endDate })} />I currently work here</label>
 {!e.startDate && <Field name="Legacy duration (optional)" value={e.duration} onChange={duration => changeExp(i, { duration })} placeholder="e.g. Jan 2023 – Dec 2024" />}
 <div><p className={label}>Key achievements / responsibilities</p><RichEditor ariaLabel={`Experience ${i + 1} achievements`} value={e.bullets} onChange={bullets => changeExp(i, { bullets })} /><div className="mt-2">{tipsBox(writingTips(e.bullets, 'bullets', data.careerStage))}</div></div>
@@ -234,7 +381,37 @@ return <main className="min-h-screen bg-slate-50 px-3 py-8 text-slate-900 sm:px-
 </div>}
 {step === 3 && <div className="space-y-5">
 {tipsBox([data.careerStage === 'fresher' ? 'Put your most relevant education first. Academic projects can be described in the experience section for now.' : 'List relevant degrees and professional qualifications; prioritize recent or job-relevant education.'])}
-{data.qualifications.map((q, i) => <div key={i} className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/50 p-4"><div className="flex justify-between"><strong className="text-sm">Qualification {i + 1}</strong><button type="button" className="text-xs font-semibold text-red-600" onClick={() => patch({ qualifications: data.qualifications.filter((_, n) => n !== i) })}>Remove</button></div><Field name="Degree / qualification" value={q.degree} onChange={degree => changeEdu(i, { degree })} /><Field name="Institution / university" value={q.institution} onChange={institution => changeEdu(i, { institution })} /><div className="grid gap-3 sm:grid-cols-2"><Field name="Start month (optional)" type="month" value={q.startDate || ''} onChange={startDate => changeEdu(i, { startDate })} /><Field name="End month (optional)" type="month" value={q.endDate || ''} onChange={endDate => changeEdu(i, { endDate, year: endDate ? endDate.slice(0, 4) : q.year })} /></div><label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={!!q.current} onChange={ev => changeEdu(i, { current: ev.target.checked, endDate: ev.target.checked ? '' : q.endDate })} />Currently studying</label><Field name="Passing year (legacy / optional)" value={q.year} onChange={year => changeEdu(i, { year: year.replace(/\D/g, '').slice(0, 4) })} placeholder="e.g. 2026" /></div>)}
+{data.qualifications.map((q, i) => <div key={i} className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/50 p-4"><div className="flex justify-between"><strong className="text-sm">Qualification {i + 1}</strong><button type="button" className="text-xs font-semibold text-red-600" onClick={() => patch({ qualifications: data.qualifications.filter((_, n) => n !== i) })}>Remove</button></div><Field name="Degree / qualification" value={q.degree} onChange={degree => changeEdu(i, { degree })} /><Field name="Institution / university" value={q.institution} onChange={institution => changeEdu(i, { institution })} /><div className="grid gap-3 sm:grid-cols-2"><Field
+  name="Start month (optional)"
+  type="month"
+  value={q.startDate || ''}
+  onChange={startDate =>
+    changeEdu(i, {
+      startDate,
+      endDate:
+        q.endDate && startDate && q.endDate < startDate
+          ? ''
+          : q.endDate,
+    })
+  }
+/>
+
+<Field
+  name="End month (optional)"
+  type="month"
+  value={q.current ? '' : q.endDate || ''}
+  min={q.startDate || undefined}
+  disabled={!!q.current}
+  onChange={endDate => {
+    if (q.current) return
+    if (q.startDate && endDate && endDate < q.startDate) return
+
+    changeEdu(i, {
+      endDate,
+      year: endDate ? endDate.slice(0, 4) : q.year,
+    })
+  }}
+/></div><label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={!!q.current} onChange={ev => changeEdu(i, { current: ev.target.checked, endDate: ev.target.checked ? '' : q.endDate })} />Currently studying</label><Field name="Passing year (legacy / optional)" value={q.year} onChange={year => changeEdu(i, { year: year.replace(/\D/g, '').slice(0, 4) })} placeholder="e.g. 2026" /></div>)}
 <button type="button" className={button} onClick={() => patch({ qualifications: [...data.qualifications, blankEdu()] })}>+ Add qualification</button>
       <div className="space-y-4 border-t border-slate-200 pt-5">
         <div><h3 className="text-sm font-extrabold text-indigo-700">Projects (optional)</h3><p className="mt-1 text-xs text-slate-500">Academic, personal, freelance, volunteer and professional projects all count. Especially useful for freshers. Include only work you actually completed.</p></div>
@@ -260,7 +437,7 @@ return <main className="min-h-screen bg-slate-50 px-3 py-8 text-slate-900 sm:px-
 <label className="block"><span className={label}>Quick-add skills (comma-separated)</span><textarea className={input} rows={3} value={data.technicalSkills} onChange={e => patch({ technicalSkills: e.target.value })} placeholder="e.g. Excel, Figma, Customer Research, Python" /></label>
 <button type="button" className="text-xs font-bold text-indigo-700" onClick={() => setShowCategories(v => !v)}>{showCategories ? '− Hide' : '+ Organize'} skills by category (optional)</button>
 {showCategories && <div className="space-y-3 rounded-xl bg-indigo-50/50 p-3">{data.skillGroups.map((g, i) => <div key={i} className="space-y-2 rounded-xl border bg-white p-3"><Field name="Category" value={g.name} onChange={name => patch({ skillGroups: data.skillGroups.map((x, n) => n === i ? { ...x, name } : x) })} placeholder="e.g. Design Tools" /><Field name="Skills (comma-separated)" value={g.skills} onChange={skills => patch({ skillGroups: data.skillGroups.map((x, n) => n === i ? { ...x, skills } : x) })} /><button type="button" className="text-xs font-bold text-red-600" onClick={() => patch({ skillGroups: data.skillGroups.filter((_, n) => n !== i) })}>Remove category</button></div>)}<button type="button" className={button} onClick={() => patch({ skillGroups: [...data.skillGroups, { name: '', skills: '' }] })}>+ Add category</button>{repeatedSkills.length > 0 && <p className="text-xs text-amber-700">Skills already in categories will not be repeated in the dashboard: {repeatedSkills.join(', ')}</p>}</div>}
-<Field name="Soft skills (optional)" value={data.softSkills} onChange={softSkills => patch({ softSkills })} placeholder="Communication, Leadership" /><Field name="Languages (optional)" value={data.languages} onChange={languages => patch({ languages })} /><Field name="Hobbies & interests (optional)" value={data.hobbies} onChange={hobbies => patch({ hobbies })} />
+<Field name="Soft skills (optional)" value={data.softSkills} onChange={softSkills => patch({ softSkills })} placeholder="Communication, Leadership" /><Field name="Languages *" value={data.languages} onChange={languages => patch({ languages })} /><Field name="Hobbies & interests (optional)" value={data.hobbies} onChange={hobbies => patch({ hobbies })} />
 <div className="rounded-xl border border-green-100 bg-green-50 p-3 text-xs text-green-900"><strong>You're ready to create your CV.</strong> The next page lets you edit, preview and download your PDF without logging in or spending Career Credits.</div>
 </div>}
 <div className="mt-8 flex justify-between border-t border-slate-100 pt-6">{step > 1 ? <button type="button" className={button} onClick={() => { setError(''); setStep(step - 1) }}>Back</button> : <span />}{step < 4 ? <button type="button" className="rounded-xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white hover:bg-indigo-700" onClick={next}>Continue</button> : <button type="button" disabled={saving} className="rounded-xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white disabled:opacity-50" onClick={submit}>{saving ? 'Creating…' : 'Create My CV →'}</button>}</div>
