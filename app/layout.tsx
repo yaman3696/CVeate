@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/utils/supabaseClient'
 import './globals.css'
+import { clearAtsDraft } from '@/lib/ats-draft-storage'
 import { Inter, Manrope } from 'next/font/google'
 const inter = Inter({
 subsets: ['latin'],
@@ -288,6 +289,11 @@ sessionStorage.clear()
 setUser(null)
 setUserProfile(null)
 setLatestPurchasedPack('Free')
+try {
+  await clearAtsDraft()
+} catch (error) {
+  console.error('Unable to clear ATS draft on logout:', error)
+}
 window.location.href = '/'
 }
 const handleQuickDownload = async () => {
