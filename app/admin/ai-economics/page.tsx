@@ -1,8 +1,10 @@
 
 'use client'
 
+import ExportExcelButton from '@/components/admin/ExportExcelButton'
+import type { ExcelSheet } from '@/lib/exports/excel'
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
+
 import { supabase } from '@/lib/supabase'
 
 type Summary = {
@@ -140,6 +142,13 @@ export default function AiEconomicsPage() {
         )
 
         if (response.status === 403) {
+          const errorResult = await response.json().catch(() => null)
+        
+          if (errorResult?.error === 'MFA_REQUIRED') {
+            window.location.replace('/admin/mfa')
+            return
+          }
+        
           throw new Error(
             'Access denied. This dashboard is for admins only.'
           )
@@ -180,6 +189,99 @@ export default function AiEconomicsPage() {
     }
   }, [refreshKey])
 
+
+  const getEconomicsExcelSheets = async (): Promise<ExcelSheet[]> => {
+    if (!data) {
+      throw new Error('AI Economics data is not available')
+    }
+
+    const s = data.summary
+    const a = data.atsRefundTracking
+
+    return [
+      {
+        name: 'Financial Summary',
+        headers: ['Metric', 'Value'],
+        rows: [
+          ['Recorded Revenue (INR)', s.revenueInr],
+          ['Modeled AI Cost (INR)', s.estimatedAiCostInr],
+          ['Estimated Contribution (INR)', s.estimatedContributionInr],
+          ['Contribution Margin (%)', s.contributionMarginPercent],
+          ['AI Usage Records', s.totalRequests],
+          ['Input Tokens', s.totalInputTokens],
+          ['Output + Thinking Tokens', s.totalOutputTokens],
+          ['Outstanding Credit Units', s.outstandingCredits],
+          ['Free Credits Issued', s.freeCreditsIssued],
+        ],
+      },
+      {
+        name: 'ATS Refund Analysis',
+        headers: ['Metric', 'Value'],
+        rows: [
+          ['Completed ATS Transactions', a.completedTransactions],
+          ['Refunded ATS Transactions', a.refundedTransactions],
+          ['Completed AI Usage Records', a.completedAiUsageRecords],
+          ['Refunded AI Usage Records', a.refundedAiUsageRecords],
+          ['Linked Completed Transactions', a.linkedCompletedTransactions],
+          ['Linked Refunded Transactions', a.linkedRefundedTransactions],
+          ['Completed ATS AI Cost (INR)', a.completedAiCostInr],
+          ['Refunded ATS AI Cost (INR)', a.refundedAiCostInr],
+          ['Total Recorded ATS AI Cost (INR)', a.totalRecordedAtsAiCostInr],
+          [
+            'Average Cost Per Linked Completed Report (INR)',
+            a.averageCostPerLinkedCompletedReportInr,
+          ],
+        ],
+      },
+      {
+        name: 'Feature Costs',
+        headers: [
+          'Feature',
+          'Requests',
+          'Input Tokens',
+          'Output + Thinking Tokens',
+          'Modeled Cost (INR)',
+        ],
+        rows: data.features.map((feature) => [
+          feature.feature,
+          feature.requests,
+          feature.inputTokens,
+          feature.outputTokens,
+          feature.estimatedCostInr,
+        ]),
+      },
+      {
+        name: 'Recent AI Usage',
+        headers: [
+          'Date',
+          'Feature',
+          'Model',
+          'Status',
+          'Input Tokens',
+          'Output Tokens',
+          'Thinking Tokens',
+          'Modeled Cost (INR)',
+        ],
+        rows: data.recentUsage.map((item) => [
+          item.created_at,
+          item.feature,
+          item.model,
+          item.status,
+          item.input_tokens,
+          item.output_tokens,
+          item.thinking_tokens,
+          item.estimated_cost_inr,
+        ]),
+      },
+      {
+        name: 'Reporting Notes',
+        headers: ['Warning'],
+        rows: data.warnings.map((warning) => [warning]),
+      },
+    ]
+  }
+
+
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-900 sm:px-6">
       <div className="mx-auto max-w-7xl space-y-8">
@@ -197,12 +299,16 @@ export default function AiEconomicsPage() {
           </div>
 
           <div className="flex gap-3">
-            <Link
-              href="/"
-              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium"
-            >
-              Home
-            </Link>
+
+<ExportExcelButton
+  sheets={getEconomicsExcelSheets}
+  fileName={`CVeat_AI_Economics_${new Date()
+    .toISOString()
+    .slice(0, 10)}.xlsx`}
+  disabled={loading || !data}
+/>
+
+            
             <button
               type="button"
               onClick={() => setRefreshKey((v) => v + 1)}

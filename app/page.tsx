@@ -23,32 +23,28 @@ rating: 5,
 text: '',
 })
 const [formError, setFormError] = useState('')
-const [isAdmin, setIsAdmin] = useState(false)
-// Check active user session, admin status, and load user ID
+
+// Load the signed-in user ID for homepage features.
 useEffect(() => {
-const checkUserSession = async () => {
-const { data: { user } } = await supabase.auth.getUser()
-const OWNER_EMAIL = 'yaman.kashyap@gmail.com'
-if (user) {
-setCurrentUserId(user.id)
-if (user.email === OWNER_EMAIL) {
-setIsAdmin(true)
-}
-} else {
-setCurrentUserId(null)
-setIsAdmin(false)
-}
-}
-checkUserSession()
-}, [])
+    const checkUserSession = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+  
+      setCurrentUserId(user?.id ?? null)
+    }
+  
+    void checkUserSession()
+  }, [])
 // Fetch latest 3 blogs from Supabase[cite: 6]
 useEffect(() => {
 const fetchLatestBlogs = async () => {
-const { data, error } = await supabase
-.from('blogs')
-.select('*')
-.order('created_at', { ascending: false })
-.limit(3)
+    const { data, error } = await supabase
+    .from('blogs')
+    .select('*')
+    .eq('status', 'published')
+    .order('published_at', { ascending: false })
+    .limit(3)
 if (data) {
 setLatestBlogs(data)
 }
@@ -111,13 +107,18 @@ initial: 'A'
 ]
 }
 // Sort items so current user's review is always pinned to the top
-if (userId) {
-items.sort((a, b) => {
-if (a.user_id === userId) return -1
-if (b.user_id === userId) return 1
-return 0
-})
+
+ // Sort items so the current user's review is pinned to the top
+ if (userId) {
+  items.sort(
+    (a: { user_id: string }, b: { user_id: string }) => {
+      if (a.user_id === userId && b.user_id !== userId) return -1
+      if (b.user_id === userId && a.user_id !== userId) return 1
+      return 0
+    }
+  )
 }
+
 setTestimonials(items)
 }
 useEffect(() => {
@@ -830,13 +831,6 @@ className="w-full flex items-center justify-between p-6 text-left font-bold text
 See More Blogs
 </button>
 </Link>
-{isAdmin && (
-<Link href="/admin/blog">
-<button className="rounded-xl bg-amber-500 px-4 py-3 text-xs font-bold text-white shadow-sm hover:bg-amber-600 transition-all cursor-pointer whitespace-nowrap">
-Admin Dashboard
-</button>
-</Link>
-)}
 </div>
 </div>
 {/* Dynamic Latest 3 Blogs Grid */}

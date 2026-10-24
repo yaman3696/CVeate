@@ -22,6 +22,7 @@ const router = useRouter()
 const pathname = usePathname()
 const searchParams = useSearchParams()
 const isAtsCheckerPage = pathname === '/ats-checker'
+const isAdminPage = pathname === '/admin' || pathname.startsWith('/admin/')
 const navTheme = isAtsCheckerPage ? 'light' : 'indigo'
 const isLightNav = navTheme === 'light'
 const [isAuthOpen, setIsAuthOpen] = useState(false)
@@ -318,6 +319,7 @@ alert('First create and save CV to use this feature.')
 return (
 <>
 {/* Global Navigation Bar */}
+{!isAdminPage && (
 <nav
 className={`sticky top-0 z-50 shadow-md ${
 isLightNav
@@ -472,6 +474,7 @@ aria-label="Toggle Menu"
 </div>
 )}
 </nav>
+)}
 <main>{children}</main>
 {/* Global Auth Modal */}
 {isAuthOpen && (

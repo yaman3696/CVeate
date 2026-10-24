@@ -27,44 +27,111 @@ export default function EditBlogPage() {
   })
 
   // Restrict access exclusively to admin email & fetch blog data
-  useEffect(() => {
-    const checkAuthAndFetchBlog = async () => {
-      const { data: { user }, error: authError } = await supabase.auth.getUser()
-      const OWNER_EMAIL = 'yaman.kashyap@gmail.com'
+  
+useEffect(() => {
+  let active = true
 
-      if (authError || !user || user.email !== OWNER_EMAIL) {
-        router.push('/')
+  const checkAuthAndFetchBlog = async () => {
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      if (!session) {
+        router.replace('/')
         return
       }
 
-      if (id) {
-        const { data, error: fetchError } = await supabase
-          .from('blogs')
-          .select('*')
-          .eq('id', id)
-          .single()
+      const accessResponse = await fetch('/api/admin/access', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        cache: 'no-store',
+      })
 
-        if (fetchError || !data) {
-          setError('Blog post not found.')
-        } else {
-          setBlogForm({
-            title: data.title,
-            slug: data.slug,
-            category: data.category,
-            excerpt: data.excerpt,
-            content: data.content,
-          })
-          if (contentEditableRef.current) {
-            contentEditableRef.current.innerHTML = data.content
-          }
-        }
+      if (!accessResponse.ok) {
+        router.replace('/')
+        return
       }
-      setLoading(false)
-      isInitialLoad.current = false
-    }
 
-    checkAuthAndFetchBlog()
-  }, [id, router])
+      const access = await accessResponse.json()
+
+      if (!access.authorized) {
+        router.replace('/')
+        return
+      }
+
+      if (!access.mfaVerified) {
+        router.replace('/admin/mfa')
+        return
+      }
+
+      if (typeof id !== 'string') {
+        throw new Error('Invalid article ID.')
+      }
+
+      const response = await fetch(
+        `/api/admin/blogs/${encodeURIComponent(id)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          cache: 'no-store',
+        }
+      )
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        if (result.error === 'MFA_REQUIRED') {
+          router.replace('/admin/mfa')
+          return
+        }
+
+        if (result.error === 'ADMIN_REQUIRED') {
+          router.replace('/')
+          return
+        }
+
+        throw new Error(result.error || 'Unable to load article.')
+      }
+
+      if (!active) return
+
+      const blog = result.blog
+
+      setBlogForm({
+        title: blog.title ?? '',
+        slug: blog.slug ?? '',
+        category: blog.category ?? 'ATS Optimization',
+        excerpt: blog.excerpt ?? '',
+        content: blog.content ?? '',
+      })
+
+      if (contentEditableRef.current) {
+        contentEditableRef.current.innerHTML = blog.content ?? ''
+      }
+
+      isInitialLoad.current = false
+    } catch (err) {
+      if (active) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : 'Unable to load article.'
+        )
+      }
+    } finally {
+      if (active) setLoading(false)
+    }
+  }
+
+  void checkAuthAndFetchBlog()
+
+  return () => {
+    active = false
+  }
+}, [id, router])
 
   // Sync contenteditable on initial load if ref mounts later
   useEffect(() => {
@@ -100,47 +167,92 @@ export default function EditBlogPage() {
 
   // Insert or wrap selected text with a hyperlink
   const insertLink = () => {
-    const url = prompt('Enter the link URL (e.g. https://cveate.com/onboard or /ats-checker):', 'https://')
+    const url = prompt('Enter the link URL (e.g. https://cveat.in/onboard or /ats-checker):', 'https://')
     if (!url) return
     document.execCommand('createLink', false, url)
   }
 
-  const handleUpdateBlog = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSubmitting(true)
-    setError('')
-    setMessage('')
+  
+const handleUpdateBlog = async (
+  status: 'draft' | 'published'
+) => {
+  if (submitting) return
 
-    if (!blogForm.title || !blogForm.slug || !blogForm.excerpt || !blogForm.content) {
-      setError('Please fill out all required fields.')
-      setSubmitting(false)
+  setSubmitting(true)
+  setError('')
+  setMessage('')
+
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+
+    if (!session) {
+      router.replace('/')
       return
     }
 
-    try {
-      const { error: updateError } = await supabase
-        .from('blogs')
-        .update({
-          title: blogForm.title,
-          slug: blogForm.slug,
-          category: blogForm.category,
-          excerpt: blogForm.excerpt,
-          content: blogForm.content,
-        })
-        .eq('id', id)
-
-      if (updateError) throw updateError
-
-      setMessage('Blog updated successfully!')
-      setTimeout(() => {
-        router.push('/blog')
-      }, 1000)
-    } catch (err: any) {
-      setError(err.message || 'Failed to update blog.')
-    } finally {
-      setSubmitting(false)
+    if (typeof id !== 'string') {
+      throw new Error('Invalid article ID.')
     }
+
+    const content =
+      contentEditableRef.current?.innerHTML ?? blogForm.content
+
+    const response = await fetch(
+      `/api/admin/blogs/${encodeURIComponent(id)}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        cache: 'no-store',
+        body: JSON.stringify({
+          ...blogForm,
+          content,
+          status,
+        }),
+      }
+    )
+
+    const result = await response.json()
+
+    if (!response.ok) {
+      if (result.error === 'MFA_REQUIRED') {
+        router.replace('/admin/mfa')
+        return
+      }
+
+      if (result.error === 'ADMIN_REQUIRED') {
+        router.replace('/')
+        return
+      }
+
+      throw new Error(
+        result.error || 'Unable to update article.'
+      )
+    }
+
+    setMessage(
+      status === 'draft'
+        ? 'Draft saved successfully!'
+        : 'Blog published successfully!'
+    )
+
+    router.push('/admin/blog')
+    router.refresh()
+  } catch (err) {
+    setError(
+      err instanceof Error
+        ? err.message
+        : 'Unable to update article.'
+    )
+  } finally {
+    setSubmitting(false)
   }
+}
+
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center text-slate-600">Loading Article Editor...</div>
@@ -153,7 +265,7 @@ export default function EditBlogPage() {
           <div>
             <h1 className="text-2xl font-extrabold text-slate-900">Edit Blog Post</h1>
           </div>
-          <Link href="/blog">
+          <Link href="/admin/blog">
             <button className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-all cursor-pointer">
                Back to Blog
             </button>
@@ -163,7 +275,13 @@ export default function EditBlogPage() {
         {error && <div className="mb-4 rounded-xl bg-red-50 border border-red-200 p-3 text-xs font-semibold text-red-600">{error}</div>}
         {message && <div className="mb-4 rounded-xl bg-green-50 border border-green-200 p-3 text-xs font-semibold text-green-600">{message}</div>}
 
-        <form onSubmit={handleUpdateBlog} className="space-y-5">
+        <form
+  onSubmit={(e) => {
+    e.preventDefault()
+    void handleUpdateBlog('published')
+  }}
+  className="space-y-5"
+>
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Blog Title *</label>
             <input
@@ -278,20 +396,29 @@ export default function EditBlogPage() {
               contentEditable
               suppressContentEditableWarning
               onInput={(e) => setBlogForm({ ...blogForm, content: e.currentTarget.innerHTML })}
-              className="w-full min-h-[260px] rounded-xl border border-slate-200 p-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-slate-900 bg-white overflow-y-auto"
+              className="w-full min-h-[260px] rounded-xl border border-slate-200 p-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-slate-900 bg-white overflow-y-auto [&_a]:text-indigo-600 [&_a]:font-semibold [&_a]:underline [&_a]:underline-offset-2 [&_a]:decoration-indigo-500 hover:[&_a]:text-indigo-800"
               style={{ whiteSpace: 'pre-wrap' }}
             />
           </div>
 
-          <div className="flex justify-end pt-4">
-            <button
-              type="submit"
-              disabled={submitting}
-              className="rounded-xl bg-indigo-600 px-8 py-3 text-sm font-semibold text-white shadow-md hover:bg-indigo-500 transition-all cursor-pointer disabled:opacity-50"
-            >
-              {submitting ? 'Saving Changes...' : 'Update Blog Post'}
-            </button>
-          </div>
+          <div className="flex flex-wrap justify-end gap-3 pt-4">
+  <button
+    type="button"
+    disabled={submitting}
+    onClick={() => void handleUpdateBlog('draft')}
+    className="rounded-xl border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+  >
+    {submitting ? 'Saving...' : 'Save Draft'}
+  </button>
+
+  <button
+    type="submit"
+    disabled={submitting}
+    className="rounded-xl bg-indigo-600 px-8 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+  >
+    {submitting ? 'Publishing...' : 'Publish Blog'}
+  </button>
+</div>
         </form>
       </div>
     </div>

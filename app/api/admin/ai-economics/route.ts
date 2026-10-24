@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/require-admin'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { requireAdminMfa } from '@/lib/require-admin-mfa'
 
 export async function GET(request: NextRequest) {
   // Keep request-specific access outside try for Next.js 16.
@@ -17,6 +18,18 @@ export async function GET(request: NextRequest) {
         { status: 403 }
       )
     }
+
+    const mfaVerified = await requireAdminMfa(authorizationHeader)
+
+if (!mfaVerified) {
+  return NextResponse.json(
+    { error: 'MFA_REQUIRED' },
+    {
+      status: 403,
+      headers: { 'Cache-Control': 'no-store' },
+    }
+  )
+}
 
     const [
       usageResult,

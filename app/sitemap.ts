@@ -1,18 +1,35 @@
-import { supabase } from '@/lib/supabase'
-import { MetadataRoute } from 'next'
+
+import type { MetadataRoute } from 'next'
+import { supabaseAdmin } from '@/lib/supabase-admin'
+import { cacheLife } from 'next/cache'
+
+async function getPublishedBlogUrls() {
+  'use cache'
+
+  cacheLife('minutes')
+
+  const { data, error } = await supabaseAdmin
+    .from('blogs')
+    .select('slug, created_at, updated_at')
+    .eq('status', 'published')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    throw new Error(`Unable to generate blog sitemap: ${error.message}`)
+  }
+
+  return data ?? []
+}
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://cveat.in'
 
-  // Fetch all published blog slugs from Supabase
-  const { data: blogs } = await supabase
-    .from('blogs')
-    .select('slug, created_at')
+  const blogs = await getPublishedBlogUrls()
 
-  const blogUrls = (blogs || []).map((blog) => ({
-    url: `${baseUrl}/articles/${blog.slug}`,
-    lastModified: new Date(blog.created_at),
-    changeFrequency: 'weekly' as const,
+  const blogUrls: MetadataRoute.Sitemap = blogs.map((blog) => ({
+    url: `${baseUrl}/articles/${encodeURIComponent(blog.slug)}`,
+    lastModified: new Date(blog.updated_at || blog.created_at),
+    changeFrequency: 'weekly',
     priority: 0.8,
   }))
 

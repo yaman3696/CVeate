@@ -313,7 +313,7 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
   return (
     <>
       {/* Global Navigation Bar */}
-{!isAtsCheckerPage && (
+{(
   <nav
     className={`sticky top-0 z-50 shadow-md ${
       isLightNav
