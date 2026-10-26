@@ -1,8 +1,10 @@
 
 import { NextRequest, NextResponse } from 'next/server'
+import { checkAdminPermission } from '@/lib/admin-permissions'
 import { requireAdmin } from '@/lib/require-admin'
 import { requireAdminMfa } from '@/lib/require-admin-mfa'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { recordAdminAudit } from '@/lib/admin-audit'
 import { sanitizeBlogHtml } from '@/lib/blog/sanitize-html'
 
 const noStore = {
@@ -34,6 +36,8 @@ async function checkAccess(request: NextRequest) {
     }
   }
 
+  const permissionDenied = await checkAdminPermission(admin.id, request.method === 'POST' ? 'blog.create' : 'blog.read')
+  if (permissionDenied) return { error: permissionDenied }
   return { admin }
 }
 
@@ -112,6 +116,11 @@ export async function POST(request: NextRequest) {
       { error: 'Invalid publishing status.' },
       { status: 400, headers: noStore }
     )
+  }
+
+  if (status === 'published') {
+    const denied = await checkAdminPermission(access.admin!.id, 'blog.publish')
+    if (denied) return denied
   }
 
   const getText = (value: unknown) =>
@@ -218,8 +227,10 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  const auditRecorded = await recordAdminAudit({ actorId: access.admin!.id, action: 'blog.created', resourceId: data.id, summary: title || 'Untitled draft', metadata: { status, slug: data.slug } })
+
   return NextResponse.json(
-    { success: true, blog: data },
+    { success: true, blog: data, auditRecorded },
     { status: 201, headers: noStore }
   )
 }

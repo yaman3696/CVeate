@@ -1,9 +1,12 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
+import { getAdminMfaHref } from '@/lib/admin-navigation'
+import type { AdminAccessPermission } from '@/lib/admin-permission-catalog'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard,
   Users,
@@ -21,15 +24,22 @@ import {
 
 const navigation = [
   { label: 'Overview', href: '/admin', icon: LayoutDashboard },
-  { label: 'Users', href: '/admin/users', icon: Users, disabled: true },
+  { label: 'Users', href: '/admin/users', icon: Users },
   { label: 'Enterprises', href: '/admin/enterprises', icon: Building2, disabled: true },
   { label: 'Blog Management', href: '/admin/blog', icon: FileText },
   { label: 'AI Economics', href: '/admin/ai-economics', icon: BrainCircuit },
-  { label: 'Revenue', href: '/admin/revenue', icon: Wallet, disabled: true },
-  { label: 'Permissions', href: '/admin/permissions', icon: ShieldCheck, disabled: true },
-  { label: 'Audit Logs', href: '/admin/audit', icon: ScrollText, disabled: true },
+  { label: 'Revenue', href: '/admin/revenue', icon: Wallet },
+  { label: 'Permissions', href: '/admin/permissions', icon: ShieldCheck },
+  { label: 'Employees', href: '/admin/employees', icon: Users },
+  { label: 'Audit Logs', href: '/admin/audit', icon: ScrollText },
   { label: 'Settings', href: '/admin/settings', icon: Settings, disabled: true },
 ]
+
+const sectionPermissions: Record<string, AdminAccessPermission> = {
+  '/admin': 'overview.read', '/admin/users': 'users.read', '/admin/blog': 'blog.read',
+  '/admin/ai-economics': 'ai_economics.read', '/admin/revenue': 'revenue.read',
+  '/admin/audit': 'audit.read', '/admin/permissions': 'permissions.manage', '/admin/employees': 'permissions.manage',
+}
 
 export default function AdminLayout({
   children,
@@ -37,7 +47,31 @@ export default function AdminLayout({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
+  const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
+
+  const [access, setAccess] = useState<{ permissions: string[]; ready: boolean } | null>(null)
+  useEffect(() => {
+    if (pathname === '/admin/mfa') return
+    const controller = new AbortController()
+    async function load() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (controller.signal.aborted) return
+        if (!session) { router.replace('/'); return }
+        const response = await fetch('/api/admin/access', { headers: { Authorization: `Bearer ${session.access_token}` }, cache: 'no-store', signal: controller.signal })
+        const result = await response.json()
+        if (controller.signal.aborted) return
+        if (!response.ok || !result.authorized) { router.replace('/'); return }
+        if (!result.mfaVerified) { router.replace(getAdminMfaHref(pathname + window.location.search)); return }
+        setAccess({ permissions: result.permissions ?? [], ready: result.permissionsReady !== false })
+      } catch { if (!controller.signal.aborted) setAccess({ permissions: [], ready: false }) }
+    }
+    void load()
+    return () => controller.abort()
+  }, [pathname, router])
+  const section = Object.keys(sectionPermissions).find(path => path !== '/admin' && (pathname === path || pathname.startsWith(path + '/'))) || '/admin'
+  const needed = pathname === '/admin/blog/new' ? 'blog.create' : pathname.startsWith('/admin/blog/edit/') ? 'blog.update' : sectionPermissions[section]
 
   // MFA setup and verification use a separate focused screen.
   if (pathname === '/admin/mfa') {
@@ -89,12 +123,12 @@ export default function AdminLayout({
               pathname === item.href ||
               (item.href !== '/admin' && pathname.startsWith(item.href + '/'))
 
-            if (item.disabled) {
+            if (item.disabled || (access && sectionPermissions[item.href] && !access.permissions.includes(sectionPermissions[item.href]))) {
               return (
                 <div
                   key={item.href}
                   className="flex cursor-not-allowed items-center gap-3 rounded-xl px-3 py-3 text-sm text-slate-600"
-                  title="Coming soon"
+                  title={item.disabled ? "Coming soon" : "Access not granted"}
                 >
                   <Icon size={18} />
                   <span>{item.label}</span>
@@ -151,7 +185,7 @@ export default function AdminLayout({
           </span>
         </header>
 
-        <div className="min-w-0">{children}</div>
+        <div className="min-w-0">{!access ? <p className="p-8">Checking permissions…</p> : !access.ready ? <div className="p-8"><h2 className="text-xl font-bold">Permissions unavailable</h2><p className="mt-3 text-sm">Complete the permission database setup first. If setup is complete, try refreshing or check your connection.</p></div> : pathname !== '/admin/denied' && needed && !access.permissions.includes(needed) ? <div className="p-8"><h2 className="text-xl font-bold">Access not granted</h2><p className="mt-3 text-sm">Ask the designated owner to grant access to this section.</p></div> : children}</div>
       </div>
     </div>
   )

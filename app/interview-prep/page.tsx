@@ -85,14 +85,14 @@ const finishEvaluation = (
 }
 
   const professionCategories = [
-    { name: 'Coding & Software Development', tag: 'coding', icon: <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg> },
-    { name: 'UI/UX & Visual Designing', tag: 'designing', icon: <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg> },
-    { name: 'Product Management', tag: 'product', icon: <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg> },
-    { name: 'Finance', tag: 'finance', icon: <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
-    { name: 'Graphic Designing', tag: 'graphicdesigning', icon: <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg> },
-    { name: 'Video Editing', tag: 'videoediting', icon: <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg> },
-    { name: 'HR (Human Resources)', tag: 'hr', icon: <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg> },
-    { name: 'Data Analytics', tag: 'dataanalytics', icon: <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg> }
+    { name: 'Coding & Software Development', tag: 'coding', icon: <svg className="w-4 h-4 text-indigo-600 dark:text-indigo-300 transition-colors duration-300" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg> },
+    { name: 'UI/UX & Visual Designing', tag: 'designing', icon: <svg className="w-4 h-4 text-indigo-600 dark:text-indigo-300 transition-colors duration-300" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg> },
+    { name: 'Product Management', tag: 'product', icon: <svg className="w-4 h-4 text-indigo-600 dark:text-indigo-300 transition-colors duration-300" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg> },
+    { name: 'Finance', tag: 'finance', icon: <svg className="w-4 h-4 text-indigo-600 dark:text-indigo-300 transition-colors duration-300" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
+    { name: 'Graphic Designing', tag: 'graphicdesigning', icon: <svg className="w-4 h-4 text-indigo-600 dark:text-indigo-300 transition-colors duration-300" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg> },
+    { name: 'Video Editing', tag: 'videoediting', icon: <svg className="w-4 h-4 text-indigo-600 dark:text-indigo-300 transition-colors duration-300" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg> },
+    { name: 'HR (Human Resources)', tag: 'hr', icon: <svg className="w-4 h-4 text-indigo-600 dark:text-indigo-300 transition-colors duration-300" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg> },
+    { name: 'Data Analytics', tag: 'dataanalytics', icon: <svg className="w-4 h-4 text-indigo-600 dark:text-indigo-300 transition-colors duration-300" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg> }
   ]
 
   const positionOptions = ['Internship', 'Junior', 'Intermediate', 'Senior', 'Team Lead', 'Manager', 'HOD']
@@ -611,10 +611,10 @@ useEffect(() => {
     }
   }
 
-  if (authLoading) return <div className="min-h-screen flex items-center justify-center text-slate-600 bg-slate-50">Verifying session...</div>
+  if (authLoading) return <div className="min-h-screen flex items-center justify-center text-slate-600 bg-slate-50 dark:bg-[#0B1120] dark:text-slate-100 dark:text-slate-300 transition-colors duration-300">Verifying session...</div>
 
   return (
-    <div className="min-h-screen bg-slate-50 py-16 px-6 text-slate-900 flex flex-col justify-center relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50 py-16 px-6 text-slate-900 flex flex-col justify-center relative overflow-hidden dark:bg-[#0B1120] dark:text-slate-100 transition-colors duration-300">
       {/* Dotted Network Canvas Background */}
       <canvas
         ref={canvasRef}
@@ -655,22 +655,22 @@ useEffect(() => {
           <div>
             <button
               onClick={() => { setQuestions([]); setInterviewResult(null); setSelectedCategory(''); }}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white/95 px-4 py-2 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 cursor-pointer"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white/95 px-4 py-2 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 cursor-pointer dark:bg-[#1B263B] dark:text-slate-300 dark:border-slate-700/70 dark:hover:bg-[#26344D] dark:shadow-black/25 transition-colors duration-300"
             >
               ← Back to Categories
             </button>
           </div>
         ) : questions.length === 0 && !interviewResult && (
           <div className="text-center space-y-4 max-w-3xl mx-auto">
-            <span className="inline-block rounded-full bg-indigo-50 px-4 py-1 text-xs font-bold uppercase tracking-wider text-indigo-600 border border-indigo-100">
+            <span className="inline-block rounded-full bg-indigo-50 px-4 py-1 text-xs font-bold uppercase tracking-wider text-indigo-600 border border-indigo-100 dark:bg-indigo-400/15 dark:text-indigo-300 dark:border-slate-700/70 transition-colors duration-300">
               Structured Assessment
             </span>
             {/* Heading updated so "Timed Assessments" sits on two rows */}
-            <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl text-slate-900 leading-tight">
+            <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl text-slate-900 leading-tight dark:text-slate-100 transition-colors duration-300">
               Master Your Interview with <br />
-              <span className="text-indigo-600">Timed Assessments</span>
+              <span className="text-indigo-600 dark:text-indigo-300 transition-colors duration-300">Timed Assessments</span>
             </h1>
-            <p className="text-sm text-slate-600 leading-relaxed max-w-xl mx-auto">
+            <p className="text-sm text-slate-600 leading-relaxed max-w-xl mx-auto dark:text-slate-300 transition-colors duration-300">
               Select your target profession category to begin a 30-minute position-specific assessment.
             </p>
           </div>
@@ -683,17 +683,17 @@ useEffect(() => {
               <button
                 key={cat.tag}
                 onClick={() => handleCategorySelect(cat.name)}
-                className="bg-white/90 backdrop-blur-sm rounded-3xl border border-slate-200 p-6 shadow-sm hover:border-indigo-600 hover:shadow-md transition-all text-left flex flex-col justify-between space-y-4 cursor-pointer group"
+                className="bg-white/90 backdrop-blur-sm rounded-3xl border border-slate-200 p-6 shadow-sm hover:border-indigo-600 hover:shadow-md transition-all text-left flex flex-col justify-between space-y-4 cursor-pointer group dark:bg-[#1B263B] dark:border-slate-700/70 dark:hover:border-indigo-400/60 dark:shadow-black/25 dark:hover:shadow-black/25"
               >
                 <div className="space-y-3">
-                  <div className="h-8 w-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <div className="h-8 w-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-105 transition-transform dark:bg-indigo-400/15 dark:text-indigo-300">
                     {cat.icon}
                   </div>
-                  <h4 className="text-base font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                  <h4 className="text-base font-bold text-slate-900 group-hover:text-indigo-600 transition-colors dark:text-slate-100 dark:group-hover:text-indigo-200">
                     {cat.name}
                   </h4>
                 </div>
-                <p className="text-xs font-semibold text-indigo-600 flex items-center gap-1">
+                <p className="text-xs font-semibold text-indigo-600 flex items-center gap-1 dark:text-indigo-300 transition-colors duration-300">
                   Configure & Start →
                 </p>
               </button>
@@ -703,42 +703,42 @@ useEffect(() => {
 
         {/* Active Assessment Question View */}
         {questions.length > 0 && !interviewResult && !evaluating && (
-          <div className="bg-white/95 backdrop-blur-sm rounded-3xl p-8 sm:p-10 shadow-xl border border-slate-200 space-y-6 max-w-3xl mx-auto">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-              <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-3 py-1 rounded-md">
+          <div className="bg-white/95 backdrop-blur-sm rounded-3xl p-8 sm:p-10 shadow-xl border border-slate-200 space-y-6 max-w-3xl mx-auto dark:bg-[#1B263B] dark:border-slate-700/70 dark:shadow-black/25 transition-colors duration-300">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-700/70 transition-colors duration-300">
+              <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-3 py-1 rounded-md dark:bg-indigo-400/15 dark:text-indigo-300 transition-colors duration-300">
                 Question {currentIndex + 1} of {questions.length} ({selectedCategory})
               </span>
               <div className="flex items-center gap-4">
-                <span className="text-xs font-bold text-slate-500">Position: {selectedPosition}</span>
-                <span className={`text-xs font-bold px-3.5 py-1.5 rounded-full ${timeLeft < 300 ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-slate-100 text-slate-700'}`}>
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 transition-colors duration-300">Position: {selectedPosition}</span>
+                <span className={`text-xs font-bold px-3.5 py-1.5 rounded-full ${timeLeft < 300 ? 'bg-red-100 text-red-600 animate-pulse dark:bg-red-400/15 dark:text-red-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-700/60 dark:text-slate-200'}`}>
                   ⏱️ {Math.floor(timeLeft / 60)}:{('0' + (timeLeft % 60)).slice(-2)} remaining
                 </span>
               </div>
             </div>
 
-            <h2 className="text-lg sm:text-xl font-bold text-slate-900 leading-snug">{questions[currentIndex]}</h2>
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900 leading-snug dark:text-slate-100 transition-colors duration-300">{questions[currentIndex]}</h2>
 
             <div className="space-y-2">
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">Your Answer</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 transition-colors duration-300">Your Answer</label>
               <textarea
                 rows={6}
                 value={currentAnswer}
                 onChange={(e) => setCurrentAnswer(e.target.value)}
                 placeholder="Type your detailed answer here..."
-                className="w-full rounded-2xl border border-slate-200 p-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-slate-900 resize-none"
+                className="w-full rounded-2xl border border-slate-200 p-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-slate-900 resize-none dark:text-slate-100 dark:border-slate-700/70 dark:bg-[#111C30] dark:focus:ring-indigo-400 dark:placeholder:text-slate-400 dark:[color-scheme:dark] transition-colors duration-300"
               />
             </div>
 
-            <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+            <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-700/70 transition-colors duration-300">
               <button
                 onClick={() => handleNextOrSkipQuestion(true)}
-                className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer"
+                className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer dark:bg-[#1B263B] dark:text-slate-300 dark:border-slate-700/70 dark:hover:bg-[#26344D] transition-colors duration-300"
               >
                 Skip Question
               </button>
               <button
                 onClick={() => handleNextOrSkipQuestion(false)}
-                className="rounded-xl bg-indigo-600 px-6 py-3 text-xs font-semibold text-white shadow-md hover:bg-indigo-500 cursor-pointer"
+                className="rounded-xl bg-indigo-600 px-6 py-3 text-xs font-semibold text-white shadow-md hover:bg-indigo-500 cursor-pointer dark:hover:bg-indigo-700 dark:shadow-black/25 transition-colors duration-300"
               >
                 {currentIndex < questions.length - 1 ? 'Next Question ->' : 'Submit & Get Evaluation'}
               </button>
@@ -748,14 +748,14 @@ useEffect(() => {
 
         {/* Evaluating Modal - same design as ATS Checker */}
 {evaluating && (
-  <div className="fixed inset-x-0 bottom-0 top-[88px] z-50 flex items-center justify-center bg-white px-4 py-6 overflow-y-auto">
-    <div className="bg-white rounded-3xl p-8 sm:p-12 text-center text-slate-900 shadow-2xl space-y-7 max-w-3xl w-full mx-auto">
+  <div className="fixed inset-x-0 bottom-0 top-[88px] z-50 flex items-center justify-center bg-white px-4 py-6 overflow-y-auto dark:bg-[#0B1120] transition-colors duration-300">
+    <div className="bg-white rounded-3xl p-8 sm:p-12 text-center text-slate-900 shadow-2xl space-y-7 max-w-3xl w-full mx-auto dark:bg-[#1B263B] dark:text-slate-100 dark:shadow-black/25 transition-colors duration-300">
 
       <div className="flex justify-center">
         <div className="relative flex h-24 w-24 items-center justify-center">
-          <div className="absolute inset-0 rounded-full bg-indigo-100 animate-ping opacity-30" />
+          <div className="absolute inset-0 rounded-full bg-indigo-100 animate-ping opacity-30 dark:bg-indigo-400/15 transition-colors duration-300" />
 
-          <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 shadow-lg shadow-indigo-200">
+          <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 shadow-lg shadow-indigo-200 dark:shadow-black/25 transition-colors duration-300">
             <svg
               className="h-10 w-10 text-white"
               fill="none"
@@ -779,23 +779,23 @@ useEffect(() => {
       </div>
 
       <div className="space-y-2">
-        <h2 className="text-2xl font-extrabold text-slate-900">
+        <h2 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 transition-colors duration-300">
           CVeate AI is evaluating your interview
         </h2>
 
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-slate-500 dark:text-slate-400 transition-colors duration-300">
           We're reviewing your answers, technical accuracy,
           communication, and overall performance.
         </p>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-2xl bg-indigo-50 border border-indigo-100 p-4">
-        <p className="text-xs font-semibold text-indigo-500 mb-2">
+        <div className="rounded-2xl bg-indigo-50 border border-indigo-100 p-4 dark:bg-indigo-400/15 dark:border-slate-700/70 transition-colors duration-300">
+        <p className="text-xs font-semibold text-indigo-500 mb-2 dark:text-indigo-300 transition-colors duration-300">
   {isRecoveringEvaluation ? 'Recovery Status' : 'Time Elapsed'}
 </p>
 
-<p className={`font-black text-indigo-700 ${
+<p className={`font-black text-indigo-700 dark:text-indigo-200 ${
   isRecoveringEvaluation ? 'text-sm leading-relaxed' : 'text-2xl tabular-nums'
 }`}>
   {isRecoveringEvaluation
@@ -804,12 +804,12 @@ useEffect(() => {
 </p>
         </div>
 
-        <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
-          <p className="text-xs font-semibold text-slate-500 mb-2">
+        <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4 dark:bg-[#172238] dark:border-slate-700/70 transition-colors duration-300">
+          <p className="text-xs font-semibold text-slate-500 mb-2 dark:text-slate-400 transition-colors duration-300">
             Estimated Total Wait
           </p>
 
-          <p className="text-2xl font-black text-slate-800">
+          <p className="text-2xl font-black text-slate-800 dark:text-slate-100 transition-colors duration-300">
             2-5 min
           </p>
         </div>
@@ -817,16 +817,16 @@ useEffect(() => {
 
       <div className="space-y-3">
         <div className="flex justify-between text-xs font-semibold">
-          <span className="text-slate-500">
+          <span className="text-slate-500 dark:text-slate-400 transition-colors duration-300">
             Evaluation in progress
           </span>
 
-          <span className="text-indigo-600">
+          <span className="text-indigo-600 dark:text-indigo-300 transition-colors duration-300">
             Processing...
           </span>
         </div>
 
-        <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-indigo-100">
+        <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-indigo-100 dark:bg-indigo-400/15 transition-colors duration-300">
           <div
             className="absolute inset-y-0 left-0 w-1/3 rounded-full bg-gradient-to-r from-indigo-600 to-cyan-400"
             style={{
@@ -836,7 +836,7 @@ useEffect(() => {
           />
         </div>
 
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-slate-400 dark:text-slate-400 transition-colors duration-300">
           Activity indicator - not an exact completion percentage
         </p>
       </div>
@@ -844,17 +844,17 @@ useEffect(() => {
       {evaluationNotice && (
         <p
           role="status"
-          className="text-xs text-amber-700 bg-amber-50 rounded-xl px-4 py-3"
+          className="text-xs text-amber-700 bg-amber-50 rounded-xl px-4 py-3 dark:bg-amber-400/10 dark:text-amber-200 transition-colors duration-300"
         >
           {evaluationNotice}
         </p>
       )}
 
-      <div className="rounded-2xl bg-indigo-50/70 border border-indigo-100 p-5 text-left space-y-2">
+      <div className="rounded-2xl bg-indigo-50/70 border border-indigo-100 p-5 text-left space-y-2 dark:bg-indigo-400/15 dark:border-slate-700/70 transition-colors duration-300">
         <div className="flex items-center gap-2">
           <span className="h-2 w-2 rounded-full bg-indigo-600 animate-pulse" />
 
-          <span className="text-sm font-bold text-indigo-800">
+          <span className="text-sm font-bold text-indigo-800 dark:text-indigo-200 transition-colors duration-300">
             {evaluationElapsed < 180
               ? 'AI evaluation is running'
               : evaluationElapsed < 300
@@ -863,7 +863,7 @@ useEffect(() => {
           </span>
         </div>
 
-        <p className="text-xs leading-relaxed text-slate-600">
+        <p className="text-xs leading-relaxed text-slate-600 dark:text-slate-300 transition-colors duration-300">
           {evaluationElapsed < 180
             ? 'Your interview report will appear automatically when ready. This may take 2-5 minutes.'
             : evaluationElapsed < 300
@@ -872,7 +872,7 @@ useEffect(() => {
         </p>
       </div>
 
-      <p className="text-xs text-slate-400">
+      <p className="text-xs text-slate-400 dark:text-slate-400 transition-colors duration-300">
         If you refresh, we will attempt to recover your evaluation
         using the same request ID.
       </p>
@@ -883,40 +883,40 @@ useEffect(() => {
 
         {/* Evaluation Report Result View */}
         {interviewResult && (
-          <div className="bg-white/95 backdrop-blur-sm rounded-3xl p-8 sm:p-10 shadow-xl border border-slate-200 space-y-6 max-w-3xl mx-auto max-h-[80vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+          <div className="bg-white/95 backdrop-blur-sm rounded-3xl p-8 sm:p-10 shadow-xl border border-slate-200 space-y-6 max-w-3xl mx-auto max-h-[80vh] overflow-y-auto dark:bg-[#1B263B] dark:border-slate-700/70 dark:shadow-black/25 transition-colors duration-300">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-700/70 transition-colors duration-300">
               <div>
-                <h2 className="text-2xl font-extrabold text-slate-900">Assessment Evaluation Report</h2>
-                <p className="text-xs text-slate-500 mt-0.5">Role: {selectedCategory} ({selectedPosition})</p>
+                <h2 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 transition-colors duration-300">Assessment Evaluation Report</h2>
+                <p className="text-xs text-slate-500 mt-0.5 dark:text-slate-400 transition-colors duration-300">Role: {selectedCategory} ({selectedPosition})</p>
               </div>
               <div className="text-right">
-                <span className="text-3xl font-black text-indigo-600">{interviewResult.overallScore}/10</span>
-                <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Overall Score</span>
+                <span className="text-3xl font-black text-indigo-600 dark:text-indigo-300 transition-colors duration-300">{interviewResult.overallScore}/10</span>
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 transition-colors duration-300">Overall Score</span>
               </div>
             </div>
 
-            <div className="rounded-2xl bg-indigo-50 border border-indigo-100 p-5 space-y-2">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-900">Performance Summary</h4>
-              <p className="text-xs text-slate-700 leading-relaxed">{interviewResult.summary}</p>
+            <div className="rounded-2xl bg-indigo-50 border border-indigo-100 p-5 space-y-2 dark:bg-indigo-400/15 dark:border-slate-700/70 transition-colors duration-300">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-900 dark:text-indigo-200 transition-colors duration-300">Performance Summary</h4>
+              <p className="text-xs text-slate-700 leading-relaxed dark:text-slate-300 transition-colors duration-300">{interviewResult.summary}</p>
             </div>
 
             <div className="space-y-4">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Question Breakdown</h3>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 transition-colors duration-300">Question Breakdown</h3>
               <div className="space-y-4">
                 {interviewResult.breakdown?.map((item: any, i: number) => (
-                  <div key={i} className="rounded-2xl border border-slate-200 p-4 space-y-2 bg-slate-50">
-                    <p className="text-xs font-bold text-slate-900">Q{i + 1}: {questions[i]}</p>
-                    <p className="text-xs text-slate-600"><strong>Your Answer:</strong> {userAnswers[i]}</p>
-                    <p className="text-xs text-indigo-600"><strong>Feedback:</strong> {item.feedback}</p>
+                  <div key={i} className="rounded-2xl border border-slate-200 p-4 space-y-2 bg-slate-50 dark:bg-[#172238] dark:border-slate-700/70 transition-colors duration-300">
+                    <p className="text-xs font-bold text-slate-900 dark:text-slate-100 transition-colors duration-300">Q{i + 1}: {questions[i]}</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 transition-colors duration-300"><strong>Your Answer:</strong> {userAnswers[i]}</p>
+                    <p className="text-xs text-indigo-600 dark:text-indigo-300 transition-colors duration-300"><strong>Feedback:</strong> {item.feedback}</p>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+            <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-700/70 transition-colors duration-300">
               <button
                 onClick={() => { setInterviewResult(null); setQuestions([]); setSelectedCategory(''); }}
-                className="rounded-xl border border-slate-200 bg-white px-6 py-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
+                className="rounded-xl border border-slate-200 bg-white px-6 py-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer dark:bg-[#1B263B] dark:text-slate-300 dark:border-slate-700/70 dark:hover:bg-[#26344D] transition-colors duration-300"
               >
                 Start New Assessment
               </button>
@@ -924,7 +924,7 @@ useEffect(() => {
               <button
                 onClick={handleSaveInterview}
                 disabled={saving || savedSuccess}
-                className="rounded-xl bg-indigo-600 px-8 py-3 text-xs font-semibold text-white shadow-md hover:bg-indigo-500 cursor-pointer disabled:opacity-50"
+                className="rounded-xl bg-indigo-600 px-8 py-3 text-xs font-semibold text-white shadow-md hover:bg-indigo-500 cursor-pointer disabled:opacity-50 dark:hover:bg-indigo-700 dark:shadow-black/25 transition-colors duration-300"
               >
                 {savedSuccess ? 'Saved to History!' : (saving ? 'Saving...' : 'Save Report to History')}
               </button>
@@ -936,17 +936,17 @@ useEffect(() => {
 
       {/* Interview Save Success Modal */}
 {showSaveSuccessModal && (
-  <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm px-4 py-6">
+  <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm px-4 py-6 dark:bg-slate-950/75 transition-colors duration-300">
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby="interview-save-success-title"
-      className="w-full max-w-md rounded-3xl bg-white p-8 sm:p-10 text-center shadow-2xl border border-slate-100"
+      className="w-full max-w-md rounded-3xl bg-white p-8 sm:p-10 text-center shadow-2xl border border-slate-100 dark:bg-[#1B263B] dark:border-slate-700/70 dark:shadow-black/25 transition-colors duration-300"
     >
       {/* Success Icon */}
-      <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-50">
+      <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-50 dark:bg-emerald-400/10 transition-colors duration-300">
         <svg
-          className="h-11 w-11 text-green-600"
+          className="h-11 w-11 text-green-600 dark:text-emerald-300 transition-colors duration-300"
           fill="none"
           stroke="currentColor"
           strokeWidth="1.8"
@@ -963,12 +963,12 @@ useEffect(() => {
 
       <h2
         id="interview-save-success-title"
-        className="text-2xl font-extrabold text-slate-900"
+        className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 transition-colors duration-300"
       >
         Interview Saved Successfully!
       </h2>
 
-      <p className="mt-3 text-sm leading-relaxed text-slate-500">
+      <p className="mt-3 text-sm leading-relaxed text-slate-500 dark:text-slate-400 transition-colors duration-300">
         Your interview evaluation has been saved to your history.
         You can revisit your report whenever you need it.
       </p>
@@ -977,7 +977,7 @@ useEffect(() => {
         <button
           type="button"
           onClick={() => router.push('/history?tab=interview')}
-          className="w-full rounded-xl bg-indigo-600 px-6 py-3.5 text-sm font-bold text-white shadow-md hover:bg-indigo-500 transition-colors cursor-pointer"
+          className="w-full rounded-xl bg-indigo-600 px-6 py-3.5 text-sm font-bold text-white shadow-md hover:bg-indigo-500 transition-colors cursor-pointer dark:hover:bg-indigo-700 dark:shadow-black/25"
         >
           View Interview History →
         </button>
@@ -985,7 +985,7 @@ useEffect(() => {
         <button
           type="button"
           onClick={() => setShowSaveSuccessModal(false)}
-          className="w-full rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
+          className="w-full rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer dark:bg-[#1B263B] dark:text-slate-300 dark:border-slate-700/70 dark:hover:bg-[#26344D]"
         >
           Close
         </button>
@@ -996,20 +996,20 @@ useEffect(() => {
 
       {/* Configuration Wizard Modal */}
       {isWizardOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
-          <div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl border border-slate-100 relative text-slate-900 space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-              <h3 className="text-xl font-extrabold text-slate-900">Configure: {selectedCategory}</h3>
-              <button onClick={() => setIsWizardOpen(false)} className="text-slate-400 hover:text-slate-600 font-bold cursor-pointer">✕</button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4 dark:bg-slate-950/75 transition-colors duration-300">
+          <div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl border border-slate-100 relative text-slate-900 space-y-6 dark:bg-[#1B263B] dark:text-slate-100 dark:border-slate-700/70 dark:shadow-black/25 transition-colors duration-300">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-700/70 transition-colors duration-300">
+              <h3 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 transition-colors duration-300">Configure: {selectedCategory}</h3>
+              <button onClick={() => setIsWizardOpen(false)} className="text-slate-400 hover:text-slate-600 font-bold cursor-pointer dark:text-slate-400 dark:hover:text-slate-100 transition-colors duration-300">✕</button>
             </div>
 
             <form onSubmit={handleStartInterview} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Target Position / Seniority *</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1 dark:text-slate-300 transition-colors duration-300">Target Position / Seniority *</label>
                 <select
                   value={selectedPosition}
                   onChange={(e) => setSelectedPosition(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-slate-900 bg-white"
+                  className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-slate-900 bg-white dark:text-slate-100 dark:border-slate-700/70 dark:bg-[#111C30] dark:focus:ring-indigo-400 dark:placeholder:text-slate-400 dark:[color-scheme:dark] transition-colors duration-300"
                 >
                   {positionOptions.map((opt) => (
                     <option key={opt} value={opt}>{opt}</option>
@@ -1021,13 +1021,13 @@ useEffect(() => {
                 <button
                   type="button"
                   onClick={() => setIsWizardOpen(false)}
-                  className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer"
+                  className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer dark:bg-[#1B263B] dark:text-slate-300 dark:border-slate-700/70 dark:hover:bg-[#26344D] transition-colors duration-300"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-indigo-600 px-6 py-3 text-xs font-semibold text-white shadow-md hover:bg-indigo-500 cursor-pointer"
+                  className="rounded-xl bg-indigo-600 px-6 py-3 text-xs font-semibold text-white shadow-md hover:bg-indigo-500 cursor-pointer dark:hover:bg-indigo-700 dark:shadow-black/25 transition-colors duration-300"
                 >
                   Start 30-Min Assessment
                 </button>
@@ -1039,15 +1039,15 @@ useEffect(() => {
 
       {/* Pricing / Pass Modal */}
       {isPricingModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
-          <div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl border border-slate-100 text-center space-y-4 text-slate-900">
-            <h3 className="text-xl font-extrabold text-slate-900">Pass Required for Assessments</h3>
-            <p className="text-xs text-slate-500">Assessments are included with our Daily and Monthly Passes. Upgrade your plan to unlock full access.</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4 dark:bg-slate-950/75 transition-colors duration-300">
+          <div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl border border-slate-100 text-center space-y-4 text-slate-900 dark:bg-[#1B263B] dark:text-slate-100 dark:border-slate-700/70 dark:shadow-black/25 transition-colors duration-300">
+            <h3 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 transition-colors duration-300">Pass Required for Assessments</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 transition-colors duration-300">Assessments are included with our Daily and Monthly Passes. Upgrade your plan to unlock full access.</p>
             <div className="pt-2 flex flex-col gap-2">
               <Link href="/pricing">
-                <button className="w-full rounded-xl bg-indigo-600 py-3 text-xs font-semibold text-white shadow-md hover:bg-indigo-500 cursor-pointer">View Pricing Plans</button>
+                <button className="w-full rounded-xl bg-indigo-600 py-3 text-xs font-semibold text-white shadow-md hover:bg-indigo-500 cursor-pointer dark:hover:bg-indigo-700 dark:shadow-black/25 transition-colors duration-300">View Pricing Plans</button>
               </Link>
-              <button onClick={() => setIsPricingModalOpen(false)} className="w-full rounded-xl border border-slate-200 bg-white py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer">Close</button>
+              <button onClick={() => setIsPricingModalOpen(false)} className="w-full rounded-xl border border-slate-200 bg-white py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer dark:bg-[#1B263B] dark:text-slate-300 dark:border-slate-700/70 dark:hover:bg-[#26344D] transition-colors duration-300">Close</button>
             </div>
           </div>
         </div>

@@ -1,5 +1,6 @@
 
 import 'server-only'
+import { employeeEmail } from '@/lib/employee-domain'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export async function requireAdmin(
@@ -37,5 +38,13 @@ export async function requireAdmin(
     return null
   }
 
+  // Only the designated owner has a personal-email exception.
+  const owner = await supabaseAdmin.from('admin_permission_owners').select('user_id').eq('user_id', user.id).maybeSingle()
+  if (owner.error) return null
+  if (owner.data) return user
+  const email = employeeEmail(user.email)
+  if (!email || !user.email_confirmed_at) return null
+  const employee = await supabaseAdmin.from('admin_employees').select('status, email').eq('user_id', user.id).maybeSingle()
+  if (employee.error || employee.data?.status !== 'active' || employee.data.email !== email) return null
   return user
 }

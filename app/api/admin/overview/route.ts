@@ -1,5 +1,6 @@
 
 import { NextRequest, NextResponse } from 'next/server'
+import { checkAdminPermission } from '@/lib/admin-permissions'
 import { requireAdmin } from '@/lib/require-admin'
 import { requireAdminMfa } from '@/lib/require-admin-mfa'
 import { supabaseAdmin } from '@/lib/supabase-admin'
@@ -26,6 +27,9 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    const permissionDenied = await checkAdminPermission(admin.id, 'overview.read')
+    if (permissionDenied) return permissionDenied
+
     const sevenDaysAgo = new Date(
       Date.now() - 7 * 24 * 60 * 60 * 1000
     ).toISOString()

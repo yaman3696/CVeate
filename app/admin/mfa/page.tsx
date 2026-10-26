@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { getAdminReturnPath } from '@/lib/admin-navigation'
 import { supabase } from '@/lib/supabase'
 
 
 export default function AdminMfaPage() {
   const router = useRouter()
 
+  const [returnTo, setReturnTo] = useState('/admin')
   const [loading, setLoading] = useState(true)
   const [qrCode, setQrCode] = useState('')
   const [factorId, setFactorId] = useState('')
@@ -19,6 +21,8 @@ export default function AdminMfaPage() {
 
   useEffect(() => {
     async function checkSession() {
+      const destination = getAdminReturnPath(new URLSearchParams(window.location.search).get('next'))
+      setReturnTo(destination)
       const { data: { user }, error } = await supabase.auth.getUser()
 
       if (error || !user) {
@@ -74,6 +78,7 @@ setAuthorized(true)
         if (aal?.currentLevel === 'aal2') {
           setVerified(true)
           setMessage('MFA is active for this session.')
+          router.replace(destination === '/admin' ? getAdminReturnPath(access.landingPath) : destination)
         } else {
           setMessage(
             'Authenticator is enrolled. MFA verification is required at login.'
@@ -136,8 +141,16 @@ if (!activeFactorId || !/^\d{6}$/.test(code)) {
         setVerified(true)
         setMessage('MFA verified successfully. Redirecting...')
       
-        // Return to AI Economics after successful verification
-        router.replace('/admin/ai-economics')
+        // Return to the protected page that requested verification.
+        let destination = returnTo
+        if (destination === '/admin') {
+          const { data: current } = await supabase.auth.getSession()
+          if (current.session) {
+            const accessResponse = await fetch('/api/admin/access', { headers: { Authorization: `Bearer ${current.session.access_token}` }, cache: 'no-store' })
+            if (accessResponse.ok) { const access = await accessResponse.json(); destination = getAdminReturnPath(access.landingPath) }
+          }
+        }
+        router.replace(destination)
         return
       } else {
         setMessage('Verification completed. Please check your MFA session.')

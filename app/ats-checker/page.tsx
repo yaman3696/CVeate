@@ -631,10 +631,10 @@ sessionStorage.setItem('cveate_ats_data', JSON.stringify(analysisResult))
 router.push('/onboard?autofill=true')
 }
 if (authLoading) {
-return <div className="min-h-screen flex items-center justify-center text-slate-600">Verifying session...</div>
+return <div className="min-h-screen flex items-center justify-center text-slate-600 dark:bg-[#0B1120] dark:text-slate-300 transition-colors duration-300">Verifying session...</div>
 }
 return (
-<div className="min-h-[calc(100vh-72px)] bg-indigo-600 text-white flex flex-col relative overflow-hidden">
+<div className="min-h-[calc(100vh-72px)] bg-indigo-600 text-white flex flex-col relative overflow-hidden dark:bg-[#101A32] dark:text-slate-100 transition-colors duration-300">
 <canvas
 ref={canvasRef}
 className="fixed inset-0 w-full h-full pointer-events-none z-0"
@@ -657,11 +657,11 @@ animation: siriPulse 2.5s infinite cubic-bezier(0.4, 0, 0.6, 1);
 <div className="flex-grow flex items-start justify-center px-6 pt-10 pb-12 z-10">
 <div className="w-full max-w-3xl">
 {isAnalyzing ? (
-<div className="bg-white rounded-3xl p-8 sm:p-12 text-center text-slate-900 shadow-2xl space-y-7">
+<div className="bg-white rounded-3xl p-8 sm:p-12 text-center text-slate-900 shadow-2xl space-y-7 dark:bg-[#1B263B] dark:text-slate-100 dark:shadow-black/25 transition-colors duration-300">
 <div className="flex justify-center">
 <div className="relative flex h-24 w-24 items-center justify-center">
-<div className="absolute inset-0 rounded-full bg-indigo-100 animate-ping opacity-30" />
-<div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 shadow-lg shadow-indigo-200">
+<div className="absolute inset-0 rounded-full bg-indigo-100 animate-ping opacity-30 dark:bg-indigo-400/15 transition-colors duration-300" />
+<div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 shadow-lg shadow-indigo-200 dark:shadow-black/25 transition-colors duration-300">
 <svg
 className="h-10 w-10 text-white"
 fill="none"
@@ -676,37 +676,37 @@ viewBox="0 0 24 24"
 </div>
 </div>
 <div className="space-y-2">
-<h2 className="text-2xl font-extrabold text-slate-900">
+<h2 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 transition-colors duration-300">
 CVeate AI is analyzing your resume
 </h2>
-<p className="text-sm text-slate-500">
+<p className="text-sm text-slate-500 dark:text-slate-400 transition-colors duration-300">
 We're comparing your resume with the job requirements.
 </p>
 </div>
 <div className="grid grid-cols-2 gap-3">
-<div className="rounded-2xl bg-indigo-50 border border-indigo-100 p-4">
-<p className="text-xs font-semibold text-indigo-500 mb-2">
+<div className="rounded-2xl bg-indigo-50 border border-indigo-100 p-4 dark:bg-indigo-400/15 dark:border-slate-700/70 transition-colors duration-300">
+<p className="text-xs font-semibold text-indigo-500 mb-2 dark:text-indigo-300 transition-colors duration-300">
 Time Elapsed
 </p>
-<p className="text-2xl font-black text-indigo-700 tabular-nums">
+<p className="text-2xl font-black text-indigo-700 tabular-nums dark:text-indigo-200 transition-colors duration-300">
 {formatElapsed(elapsedSeconds)}
 </p>
 </div>
-<div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
-<p className="text-xs font-semibold text-slate-500 mb-2">
+<div className="rounded-2xl bg-slate-50 border border-slate-200 p-4 dark:bg-[#172238] dark:border-slate-700/70 transition-colors duration-300">
+<p className="text-xs font-semibold text-slate-500 mb-2 dark:text-slate-400 transition-colors duration-300">
 Estimated Total Wait
 </p>
-<p className="text-2xl font-black text-slate-800">
+<p className="text-2xl font-black text-slate-800 dark:text-slate-100 transition-colors duration-300">
 2-5 min
 </p>
 </div>
 </div>
 <div className="space-y-3">
 <div className="flex justify-between text-xs font-semibold">
-<span className="text-slate-500">Analysis in progress</span>
-<span className="text-indigo-600">Processing...</span>
+<span className="text-slate-500 dark:text-slate-400 transition-colors duration-300">Analysis in progress</span>
+<span className="text-indigo-600 dark:text-indigo-300 transition-colors duration-300">Processing...</span>
 </div>
-<div className="relative h-2.5 w-full overflow-hidden rounded-full bg-indigo-100">
+<div className="relative h-2.5 w-full overflow-hidden rounded-full bg-indigo-100 dark:bg-indigo-400/15 transition-colors duration-300">
 <div
 className="absolute inset-y-0 left-0 w-1/3 rounded-full bg-gradient-to-r from-indigo-600 to-cyan-400"
 style={{
@@ -714,17 +714,17 @@ animation: 'cveateScanActivity 2s ease-in-out infinite'
 }}
 />
 </div>
-<p className="text-xs text-slate-400">
+<p className="text-xs text-slate-400 dark:text-slate-400 transition-colors duration-300">
 Activity indicator - not an exact completion percentage
 </p>
 </div>
 {scanNotice && (
-<p role="status" className="text-xs text-amber-700 bg-amber-50 rounded-xl px-4 py-3">{scanNotice}</p>
+<p role="status" className="text-xs text-amber-700 bg-amber-50 rounded-xl px-4 py-3 dark:text-amber-200 dark:bg-amber-400/10 transition-colors duration-300">{scanNotice}</p>
 )}
-<div className="rounded-2xl bg-indigo-50/70 border border-indigo-100 p-5 text-left space-y-2">
+<div className="rounded-2xl bg-indigo-50/70 border border-indigo-100 p-5 text-left space-y-2 dark:bg-indigo-400/15 dark:border-slate-700/70 transition-colors duration-300">
 <div className="flex items-center gap-2">
 <span className="h-2 w-2 rounded-full bg-indigo-600 animate-pulse" />
-<span className="text-sm font-bold text-indigo-800">
+<span className="text-sm font-bold text-indigo-800 dark:text-indigo-200 transition-colors duration-300">
 {elapsedSeconds < 180
 ? 'AI analysis is running'
 : elapsedSeconds < 300
@@ -732,7 +732,7 @@ Activity indicator - not an exact completion percentage
 : 'Taking longer than expected'}
 </span>
 </div>
-<p className="text-xs leading-relaxed text-slate-600">
+<p className="text-xs leading-relaxed text-slate-600 dark:text-slate-300 transition-colors duration-300">
 {elapsedSeconds < 180
 ? 'Your report will appear automatically when ready. No need to refresh.'
 : elapsedSeconds < 300
@@ -749,29 +749,29 @@ Activity indicator - not an exact completion percentage
 Evaluate your resume against any job description to uncover missing keywords, formatting traps, and your recruiter match score.
 </p>
 {user && (
-<div className="inline-block bg-white/25 backdrop-blur-sm px-4 py-1.5 rounded-full text-xs font-bold">
+<div className="inline-block bg-white/25 backdrop-blur-sm px-4 py-1.5 rounded-full text-xs font-bold dark:bg-indigo-400/15 dark:text-indigo-200 transition-colors duration-300">
 Remaining Checks: {profile?.career_credits ?? 0}
 </div>
 )}
 </div>
-<form onSubmit={handleAnalyze} className="bg-white text-slate-900 rounded-3xl p-8 shadow-2xl space-y-6">
+<form onSubmit={handleAnalyze} className="bg-white text-slate-900 rounded-3xl p-8 shadow-2xl space-y-6 dark:bg-[#1B263B] dark:text-slate-100 dark:shadow-black/25 transition-colors duration-300">
 <div>
-<label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
-1. Target Job Description (JD) <span className="text-red-500">*</span>
+<label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2 dark:text-slate-300 transition-colors duration-300">
+1. Target Job Description (JD) <span className="text-red-500 dark:text-red-400 transition-colors duration-300">*</span>
 </label>
 <textarea
 rows={5}
 value={jobDescription}
 onChange={(e) => setJobDescription(e.target.value)}
 placeholder="Paste the complete job description text here..."
-className="w-full rounded-xl border border-slate-200 p-4 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-600 leading-relaxed"
+className="w-full rounded-xl border border-slate-200 p-4 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-600 leading-relaxed dark:text-slate-100 dark:border-slate-700/70 dark:bg-[#111C30] dark:focus:ring-indigo-400 dark:placeholder:text-slate-400 dark:[color-scheme:dark] transition-colors duration-300"
 />
 </div>
 <div>
-<label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
-2. Upload Resume (PDF or DOCX) <span className="text-red-500">*</span>
+<label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2 dark:text-slate-300 transition-colors duration-300">
+2. Upload Resume (PDF or DOCX) <span className="text-red-500 dark:text-red-400 transition-colors duration-300">*</span>
 </label>
-<div className="border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center bg-slate-50 relative hover:bg-slate-100 transition-all cursor-pointer">
+<div className="border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center bg-slate-50 relative hover:bg-slate-100 transition-all cursor-pointer dark:bg-[#172238] dark:border-slate-700/70 dark:hover:bg-[#26344D]">
 <input
 type="file"
 accept=".pdf,.docx,.txt"
@@ -783,60 +783,60 @@ setFileName(e.target.files[0].name)
 }}
 className="absolute inset-0 opacity-0 cursor-pointer"
 />
-<p className="text-sm font-semibold text-slate-700">
+<p className="text-sm font-semibold text-slate-700 dark:text-slate-300 transition-colors duration-300">
 {fileName ? `Selected: ${fileName}` : 'Drag & drop your CV file here, or click to browse'}
 </p>
-<p className="text-[11px] text-slate-400 mt-1">Supports PDF, Word, and Text documents</p>
+<p className="text-[11px] text-slate-400 mt-1 dark:text-slate-400 transition-colors duration-300">Supports PDF, Word, and Text documents</p>
 </div>
 </div>
 <button
 type="submit"
-className="w-full rounded-xl bg-indigo-600 py-4 text-sm font-semibold text-white shadow-lg shadow-indigo-200 hover:bg-indigo-500 transition-all cursor-pointer"
+className="w-full rounded-xl bg-indigo-600 py-4 text-sm font-semibold text-white shadow-lg shadow-indigo-200 hover:bg-indigo-500 transition-all cursor-pointer dark:hover:bg-indigo-700 dark:shadow-black/25"
 >
 Analyze Resume Match Score
 </button>
 </form>
 </div>
 ) : (
-<div className="bg-white text-slate-900 rounded-3xl p-8 sm:p-10 shadow-2xl space-y-8">
-<div className="flex flex-col sm:flex-row items-center justify-between border-b border-slate-100 pb-6 gap-4">
+<div className="bg-white text-slate-900 rounded-3xl p-8 sm:p-10 shadow-2xl space-y-8 dark:bg-[#1B263B] dark:text-slate-100 dark:shadow-black/25 transition-colors duration-300">
+<div className="flex flex-col sm:flex-row items-center justify-between border-b border-slate-100 pb-6 gap-4 dark:border-slate-700/70 transition-colors duration-300">
 <div>
-<h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">ATS Analysis Report</h2>
-<p className="text-xs text-slate-500 mt-0.5">Scanned against provided job description via CVeat AI</p>
+<h2 className="text-2xl font-extrabold text-slate-900 tracking-tight dark:text-slate-100 transition-colors duration-300">ATS Analysis Report</h2>
+<p className="text-xs text-slate-500 mt-0.5 dark:text-slate-400 transition-colors duration-300">Scanned against provided job description via CVeat AI</p>
 </div>
 <div className="flex items-center gap-3">
 <div className="text-right">
-<span className="text-3xl font-black text-indigo-600">{analysisResult.matchScore}%</span>
-<span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Match Score</span>
+<span className="text-3xl font-black text-indigo-600 dark:text-indigo-300 transition-colors duration-300">{analysisResult.matchScore}%</span>
+<span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 transition-colors duration-300">Match Score</span>
 </div>
 </div>
 </div>
 <div className="space-y-2">
-<h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Missing Critical Keywords</h3>
+<h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 transition-colors duration-300">Missing Critical Keywords</h3>
 <div className="flex flex-wrap gap-2">
 {analysisResult.missingKeywords?.length > 0 ? (
 analysisResult.missingKeywords.map((kw: string, i: number) => (
-<span key={i} className="rounded-lg bg-red-50 text-red-600 border border-red-100 px-3 py-1 text-xs font-semibold">
+<span key={i} className="rounded-lg bg-red-50 text-red-600 border border-red-100 px-3 py-1 text-xs font-semibold dark:text-red-300 dark:bg-red-400/10 dark:border-red-400/25 transition-colors duration-300">
 {kw}
 </span>
 ))
 ) : (
-<span className="text-xs text-slate-500 italic">None! All key terms are present.</span>
+<span className="text-xs text-slate-500 italic dark:text-slate-400 transition-colors duration-300">None! All key terms are present.</span>
 )}
 </div>
 </div>
 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-<div className="rounded-2xl bg-green-50/60 border border-green-100 p-5 space-y-2">
-<h4 className="text-xs font-bold uppercase tracking-wider text-green-700">Key Strengths</h4>
-<ul className="list-disc list-inside text-xs text-slate-700 space-y-1">
+<div className="rounded-2xl bg-green-50/60 border border-green-100 p-5 space-y-2 dark:bg-emerald-400/10 dark:border-emerald-400/25 transition-colors duration-300">
+<h4 className="text-xs font-bold uppercase tracking-wider text-green-700 dark:text-emerald-300 transition-colors duration-300">Key Strengths</h4>
+<ul className="list-disc list-inside text-xs text-slate-700 space-y-1 dark:text-slate-300 transition-colors duration-300">
 {analysisResult.strengths?.map((s: string, i: number) => (
 <li key={i}>{s}</li>
 ))}
 </ul>
 </div>
-<div className="rounded-2xl bg-amber-50/60 border border-amber-100 p-5 space-y-2">
-<h4 className="text-xs font-bold uppercase tracking-wider text-amber-700">Areas for Improvement</h4>
-<ul className="list-disc list-inside text-xs text-slate-700 space-y-1">
+<div className="rounded-2xl bg-amber-50/60 border border-amber-100 p-5 space-y-2 dark:bg-amber-400/10 dark:border-amber-400/25 transition-colors duration-300">
+<h4 className="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-200 transition-colors duration-300">Areas for Improvement</h4>
+<ul className="list-disc list-inside text-xs text-slate-700 space-y-1 dark:text-slate-300 transition-colors duration-300">
 {analysisResult.weaknesses?.map((w: string, i: number) => (
 <li key={i}>{w}</li>
 ))}
@@ -844,17 +844,17 @@ analysisResult.missingKeywords.map((kw: string, i: number) => (
 </div>
 </div>
 <div className="space-y-3">
-<h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">AI Optimization Action Plan</h3>
+<h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 transition-colors duration-300">AI Optimization Action Plan</h3>
 <div className="space-y-2">
 {analysisResult.suggestions?.map((s: string, i: number) => (
-<div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs text-slate-700 font-medium">
-<span className="text-indigo-600 font-bold">0{i + 1}.</span>
+<div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs text-slate-700 font-medium dark:bg-[#172238] dark:text-slate-300 dark:border-slate-700/70 transition-colors duration-300">
+<span className="text-indigo-600 font-bold dark:text-indigo-300 transition-colors duration-300">0{i + 1}.</span>
 <span>{s}</span>
 </div>
 ))}
 </div>
 </div>
-<div className="flex flex-col sm:flex-row items-center justify-between pt-4 border-t border-slate-100 gap-3">
+<div className="flex flex-col sm:flex-row items-center justify-between pt-4 border-t border-slate-100 gap-3 dark:border-slate-700/70 transition-colors duration-300">
 <button
 onClick={() => {
 setAnalysisResult(null)
@@ -864,13 +864,13 @@ void saveAtsDraft(jobDescription, null).catch((error) => {
     console.error('Unable to remove saved CV:', error)
   })
 }}
-className="w-full sm:w-auto rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-all cursor-pointer"
+className="w-full sm:w-auto rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-all cursor-pointer dark:bg-[#1B263B] dark:text-slate-300 dark:border-slate-700/70 dark:hover:bg-[#26344D]"
 >
 Scan Another Resume
 </button>
 <button
 onClick={handleAutoFillAndBuild}
-className="w-full sm:w-auto rounded-xl bg-indigo-600 px-6 py-3 text-xs font-semibold text-white shadow-lg shadow-indigo-200 hover:bg-indigo-500 transition-all cursor-pointer flex items-center justify-center gap-2"
+className="w-full sm:w-auto rounded-xl bg-indigo-600 px-6 py-3 text-xs font-semibold text-white shadow-lg shadow-indigo-200 hover:bg-indigo-500 transition-all cursor-pointer flex items-center justify-center gap-2 dark:hover:bg-indigo-700 dark:shadow-black/25"
 >
 Auto-Fill Builder & Create Optimized CV
 </button>
@@ -881,14 +881,14 @@ Auto-Fill Builder & Create Optimized CV
 </div>
 {/* Login Required Prompt Modal for Guests */}
 {isLoginPromptOpen && (
-<div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
-<div className="w-full max-w-sm rounded-3xl bg-white p-8 shadow-2xl border border-slate-100 text-center space-y-4 text-slate-900">
-<div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto text-xl font-bold">
+<div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4 dark:bg-slate-950/75 transition-colors duration-300">
+<div className="w-full max-w-sm rounded-3xl bg-white p-8 shadow-2xl border border-slate-100 text-center space-y-4 text-slate-900 dark:bg-[#1B263B] dark:text-slate-100 dark:border-slate-700/70 dark:shadow-black/25 transition-colors duration-300">
+<div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto text-xl font-bold dark:bg-indigo-400/15 dark:text-indigo-300 transition-colors duration-300">
 !
 </div>
 <div className="space-y-1">
-<h3 className="text-lg font-bold text-slate-900">Authentication Required</h3>
-<p className="text-xs text-slate-500">Please sign in or create an account to run your AI ATS resume match check.</p>
+<h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 transition-colors duration-300">Authentication Required</h3>
+<p className="text-xs text-slate-500 dark:text-slate-400 transition-colors duration-300">Please sign in or create an account to run your AI ATS resume match check.</p>
 </div>
 <div className="pt-2 flex flex-col gap-2.5">
 <button
@@ -896,13 +896,13 @@ onClick={() => {
 setIsLoginPromptOpen(false)
 openAuth('signin')
 }}
-className="w-full rounded-xl bg-indigo-600 py-3 text-xs font-semibold text-white shadow-md hover:bg-indigo-500 transition-all cursor-pointer"
+className="w-full rounded-xl bg-indigo-600 py-3 text-xs font-semibold text-white shadow-md hover:bg-indigo-500 transition-all cursor-pointer dark:hover:bg-indigo-700 dark:shadow-black/25"
 >
 Sign In / Sign Up Now
 </button>
 <button
 onClick={() => setIsLoginPromptOpen(false)}
-className="w-full rounded-xl border border-slate-200 bg-white py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-all cursor-pointer"
+className="w-full rounded-xl border border-slate-200 bg-white py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-all cursor-pointer dark:bg-[#1B263B] dark:text-slate-300 dark:border-slate-700/70 dark:hover:bg-[#26344D]"
 >
 Cancel
 </button>
@@ -912,24 +912,24 @@ Cancel
 )}
 {/* Limit Exceeded Modal Popup */}
 {isLimitModalOpen && (
-<div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
-<div className="w-full max-w-sm rounded-3xl bg-white p-8 shadow-2xl border border-slate-100 text-center space-y-4 text-slate-900">
-<div className="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto text-xl font-bold">
+<div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4 dark:bg-slate-950/75 transition-colors duration-300">
+<div className="w-full max-w-sm rounded-3xl bg-white p-8 shadow-2xl border border-slate-100 text-center space-y-4 text-slate-900 dark:bg-[#1B263B] dark:text-slate-100 dark:border-slate-700/70 dark:shadow-black/25 transition-colors duration-300">
+<div className="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto text-xl font-bold dark:text-amber-300 dark:bg-amber-400/10 transition-colors duration-300">
 !
 </div>
 <div className="space-y-1">
-<h3 className="text-lg font-bold text-slate-900">ATS Check Chances Over!</h3>
-<p className="text-xs text-slate-500">You have exhausted your available ATS check credits. Please upgrade to a paid plan on our pricing page to continue scanning resumes.</p>
+<h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 transition-colors duration-300">ATS Check Chances Over!</h3>
+<p className="text-xs text-slate-500 dark:text-slate-400 transition-colors duration-300">You have exhausted your available ATS check credits. Please upgrade to a paid plan on our pricing page to continue scanning resumes.</p>
 </div>
 <div className="pt-2 flex flex-col gap-2.5">
 <Link href="/pricing">
-<button className="w-full rounded-xl bg-indigo-600 py-3 text-xs font-semibold text-white shadow-md hover:bg-indigo-500 transition-all cursor-pointer">
+<button className="w-full rounded-xl bg-indigo-600 py-3 text-xs font-semibold text-white shadow-md hover:bg-indigo-500 transition-all cursor-pointer dark:hover:bg-indigo-700 dark:shadow-black/25">
 View Pricing Plans
 </button>
 </Link>
 <button
 onClick={() => setIsLimitModalOpen(false)}
-className="w-full rounded-xl border border-slate-200 bg-white py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-all cursor-pointer"
+className="w-full rounded-xl border border-slate-200 bg-white py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-all cursor-pointer dark:bg-[#1B263B] dark:text-slate-300 dark:border-slate-700/70 dark:hover:bg-[#26344D]"
 >
 Close
 </button>
@@ -939,11 +939,11 @@ Close
 )}
 {/* Local Auth Modal for ATS Checker */}
 {isAuthOpen && (
-<div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
-<div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl border border-slate-100 relative text-slate-900">
+<div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4 dark:bg-slate-950/75 transition-colors duration-300">
+<div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl border border-slate-100 relative text-slate-900 dark:bg-[#1B263B] dark:text-slate-100 dark:border-slate-700/70 dark:shadow-black/25 transition-colors duration-300">
 <button
   onClick={() => setIsAuthOpen(false)}
-  className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 text-lg font-bold cursor-pointer"
+  className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 text-lg font-bold cursor-pointer dark:text-slate-400 dark:hover:text-slate-100 transition-colors duration-300"
 >
 <svg
   className="h-5 w-5"
@@ -958,40 +958,40 @@ Close
 </svg>
 </button>
 <div className="text-center mb-6">
-<h3 className="text-2xl font-extrabold text-slate-900">
+<h3 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 transition-colors duration-300">
 {isResetMode ? 'Reset Password' : (authMode === 'signin' ? 'Welcome Back to CVeat' : 'Create Your Account')}
 </h3>
-<p className="text-xs text-slate-500 mt-1">
+<p className="text-xs text-slate-500 mt-1 dark:text-slate-400 transition-colors duration-300">
 {isResetMode ? 'Enter your email to receive a secure recovery link' : (authMode === 'signin' ? 'Sign in to access your saved resumes & ATS history' : 'Join thousands of professionals landing interviews faster')}
 </p>
 </div>
 {errorMessage && (
-<div className="mb-4 rounded-xl bg-red-50 border border-red-200 p-3 text-xs font-semibold text-red-600">
+<div className="mb-4 rounded-xl bg-red-50 border border-red-200 p-3 text-xs font-semibold text-red-600 dark:text-red-300 dark:bg-red-400/10 dark:border-red-400/25 transition-colors duration-300">
 {errorMessage}
 </div>
 )}
 {successMessage && (
-<div className="mb-4 rounded-xl bg-green-50 border border-green-200 p-3 text-xs font-semibold text-green-600">
+<div className="mb-4 rounded-xl bg-green-50 border border-green-200 p-3 text-xs font-semibold text-green-600 dark:text-emerald-300 dark:bg-emerald-400/10 dark:border-emerald-400/25 transition-colors duration-300">
 {successMessage}
 </div>
 )}
 {isResetMode ? (
 <form onSubmit={handleForgotPassword} className="space-y-4 text-xs">
 <div>
-<label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Email Address</label>
+<label className="block font-bold uppercase tracking-wider text-slate-600 mb-1 dark:text-slate-300 transition-colors duration-300">Email Address</label>
 <input
 type="email"
 value={email}
 onChange={(e) => setEmail(e.target.value)}
 required
 placeholder="name@example.com"
-className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white"
+className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white dark:text-slate-100 dark:border-slate-700/70 dark:bg-[#111C30] dark:focus:ring-indigo-400 dark:placeholder:text-slate-400 dark:[color-scheme:dark] transition-colors duration-300"
 />
 </div>
 <button
 type="submit"
 disabled={loading}
-className="w-full rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white shadow-md hover:bg-indigo-500 cursor-pointer disabled:opacity-50"
+className="w-full rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white shadow-md hover:bg-indigo-500 cursor-pointer disabled:opacity-50 dark:hover:bg-indigo-700 dark:shadow-black/25 transition-colors duration-300"
 >
 {loading ? 'Sending...' : 'Send Reset Link'}
 </button>
@@ -999,7 +999,7 @@ className="w-full rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white sha
 <button
 type="button"
 onClick={() => { setIsResetMode(false); setErrorMessage(''); setSuccessMessage(''); }}
-className="text-indigo-600 font-bold hover:underline cursor-pointer"
+className="text-indigo-600 font-bold hover:underline cursor-pointer dark:text-indigo-300 transition-colors duration-300"
 >
 Back to Sign In
 </button>
@@ -1010,7 +1010,7 @@ Back to Sign In
 <button
 type="button"
 onClick={handleGoogleAuth}
-className="w-full flex items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white py-3 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-all cursor-pointer"
+className="w-full flex items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white py-3 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-all cursor-pointer dark:bg-[#1B263B] dark:text-slate-300 dark:border-slate-700/70 dark:hover:bg-[#26344D] dark:shadow-black/25"
 >
 <svg className="w-4 h-4" viewBox="0 0 24 24">
 <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
@@ -1021,28 +1021,28 @@ className="w-full flex items-center justify-center gap-3 rounded-xl border borde
 Continue with Google
 </button>
 <div className="relative flex py-2 items-center">
-<div className="flex-grow border-t border-slate-200"></div>
-<span className="flex-shrink mx-4 text-[10px] uppercase font-bold tracking-wider text-slate-400">or email</span>
-<div className="flex-grow border-t border-slate-200"></div>
+<div className="flex-grow border-t border-slate-200 dark:border-slate-700/70 transition-colors duration-300"></div>
+<span className="flex-shrink mx-4 text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-400 transition-colors duration-300">or email</span>
+<div className="flex-grow border-t border-slate-200 dark:border-slate-700/70 transition-colors duration-300"></div>
 </div>
 <form onSubmit={handleEmailAuth} className="space-y-3 text-xs">
 {authMode === 'signup' && (
 <>
 <div>
-<label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Full Name</label>
+<label className="block font-bold uppercase tracking-wider text-slate-600 mb-1 dark:text-slate-300 transition-colors duration-300">Full Name</label>
 <input
 type="text"
 value={fullName}
 onChange={(e) => setFullName(e.target.value)}
 required
 placeholder="e.g. John Doe"
-className="w-full rounded-xl border border-slate-200 px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white"
+className="w-full rounded-xl border border-slate-200 px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white dark:text-slate-100 dark:border-slate-700/70 dark:bg-[#111C30] dark:focus:ring-indigo-400 dark:placeholder:text-slate-400 dark:[color-scheme:dark] transition-colors duration-300"
 />
 </div>
 <div>
-<label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Contact Number (10 Digits)</label>
+<label className="block font-bold uppercase tracking-wider text-slate-600 mb-1 dark:text-slate-300 transition-colors duration-300">Contact Number (10 Digits)</label>
 <div className="flex">
-<span className="inline-flex items-center px-3 rounded-l-xl border border-r-0 border-slate-200 bg-slate-100 text-slate-500 text-xs">+91</span>
+<span className="inline-flex items-center px-3 rounded-l-xl border border-r-0 border-slate-200 bg-slate-100 text-slate-500 text-xs dark:bg-[#26344D] dark:text-slate-400 dark:border-slate-700/70 transition-colors duration-300">+91</span>
 <input
 type="tel"
 maxLength={10}
@@ -1050,25 +1050,25 @@ value={contactNumber}
 onChange={(e) => setContactNumber(e.target.value.replace(/\D/g, ''))}
 required
 placeholder="9876543210"
-className="w-full rounded-r-xl border border-slate-200 px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white"
+className="w-full rounded-r-xl border border-slate-200 px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white dark:text-slate-100 dark:border-slate-700/70 dark:bg-[#111C30] dark:focus:ring-indigo-400 dark:placeholder:text-slate-400 dark:[color-scheme:dark] transition-colors duration-300"
 />
 </div>
 </div>
 </>
 )}
 <div>
-<label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Email Address</label>
+<label className="block font-bold uppercase tracking-wider text-slate-600 mb-1 dark:text-slate-300 transition-colors duration-300">Email Address</label>
 <input
 type="email"
 value={email}
 onChange={(e) => setEmail(e.target.value)}
 required
 placeholder="name@example.com"
-className="w-full rounded-xl border border-slate-200 px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white"
+className="w-full rounded-xl border border-slate-200 px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white dark:text-slate-100 dark:border-slate-700/70 dark:bg-[#111C30] dark:focus:ring-indigo-400 dark:placeholder:text-slate-400 dark:[color-scheme:dark] transition-colors duration-300"
 />
 </div>
 <div>
-<label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Password</label>
+<label className="block font-bold uppercase tracking-wider text-slate-600 mb-1 dark:text-slate-300 transition-colors duration-300">Password</label>
 <div className="relative">
 <input
 type={showPassword ? 'text' : 'password'}
@@ -1076,12 +1076,12 @@ value={password}
 onChange={(e) => setPassword(e.target.value)}
 required
 placeholder="--------"
-className="w-full rounded-xl border border-slate-200 px-4 py-2 pr-10 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white"
+className="w-full rounded-xl border border-slate-200 px-4 py-2 pr-10 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white dark:text-slate-100 dark:border-slate-700/70 dark:bg-[#111C30] dark:focus:ring-indigo-400 dark:placeholder:text-slate-400 dark:[color-scheme:dark] transition-colors duration-300"
 />
 <button
 type="button"
 onClick={() => setShowPassword(!showPassword)}
-className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer dark:text-slate-400 dark:hover:text-slate-100 transition-colors duration-300"
 >
 {showPassword ? (
 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
@@ -1093,7 +1093,7 @@ className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-s
 </div>
 {authMode === 'signup' && (
 <div>
-<label className="block font-bold uppercase tracking-wider text-slate-600 mb-1">Confirm Password</label>
+<label className="block font-bold uppercase tracking-wider text-slate-600 mb-1 dark:text-slate-300 transition-colors duration-300">Confirm Password</label>
 <div className="relative">
 <input
 type={showConfirmPassword ? 'text' : 'password'}
@@ -1101,12 +1101,12 @@ value={confirmPassword}
 onChange={(e) => setConfirmPassword(e.target.value)}
 required
 placeholder="--------"
-className="w-full rounded-xl border border-slate-200 px-4 py-2 pr-10 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white"
+className="w-full rounded-xl border border-slate-200 px-4 py-2 pr-10 text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900 bg-white dark:text-slate-100 dark:border-slate-700/70 dark:bg-[#111C30] dark:focus:ring-indigo-400 dark:placeholder:text-slate-400 dark:[color-scheme:dark] transition-colors duration-300"
 />
 <button
 type="button"
 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer dark:text-slate-400 dark:hover:text-slate-100 transition-colors duration-300"
 >
 {showConfirmPassword ? (
 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
@@ -1124,10 +1124,10 @@ type="checkbox"
 id="terms-checkbox"
 checked={agreeTerms}
 onChange={(e) => setAgreeTerms(e.target.checked)}
-className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer dark:text-indigo-300 dark:border-slate-700/70 dark:focus:ring-indigo-400 dark:[color-scheme:dark] dark:accent-indigo-600 transition-colors duration-300"
 />
-<label htmlFor="terms-checkbox" className="text-[11px] text-slate-600 leading-relaxed cursor-pointer">
-I agree to the <span className="text-indigo-600 font-bold hover:underline">Terms and Conditions</span> and Privacy Policy.
+<label htmlFor="terms-checkbox" className="text-[11px] text-slate-600 leading-relaxed cursor-pointer dark:text-slate-300 transition-colors duration-300">
+I agree to the <span className="text-indigo-600 font-bold hover:underline dark:text-indigo-300 transition-colors duration-300">Terms and Conditions</span> and Privacy Policy.
 </label>
 </div>
 )}
@@ -1136,7 +1136,7 @@ I agree to the <span className="text-indigo-600 font-bold hover:underline">Terms
 <button
 type="button"
 onClick={() => { setIsResetMode(true); setErrorMessage(''); setSuccessMessage(''); }}
-className="text-xs font-bold text-indigo-600 hover:underline cursor-pointer"
+className="text-xs font-bold text-indigo-600 hover:underline cursor-pointer dark:text-indigo-300 transition-colors duration-300"
 >
 Forgot password?
 </button>
@@ -1145,7 +1145,7 @@ Forgot password?
 <button
 type="submit"
 disabled={loading}
-className="w-full mt-2 rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white shadow-md hover:bg-indigo-500 cursor-pointer disabled:opacity-50"
+className="w-full mt-2 rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white shadow-md hover:bg-indigo-500 cursor-pointer disabled:opacity-50 dark:hover:bg-indigo-700 dark:shadow-black/25 transition-colors duration-300"
 >
 {loading ? 'Processing...' : (authMode === 'signin' ? 'Sign In' : 'Create Account')}
 </button>
@@ -1153,11 +1153,11 @@ className="w-full mt-2 rounded-xl bg-indigo-600 py-3 text-sm font-bold text-whit
 </div>
 )}
 {!isResetMode && (
-<div className="mt-6 text-center text-xs text-slate-500">
+<div className="mt-6 text-center text-xs text-slate-500 dark:text-slate-400 transition-colors duration-300">
 {authMode === 'signin' ? (
-<p>Don't have an account? <button onClick={() => setAuthMode('signup')} className="text-indigo-600 font-bold hover:underline cursor-pointer">Sign up</button></p>
+<p>Don't have an account? <button onClick={() => setAuthMode('signup')} className="text-indigo-600 font-bold hover:underline cursor-pointer dark:text-indigo-300 transition-colors duration-300">Sign up</button></p>
 ) : (
-<p>Already have an account? <button onClick={() => setAuthMode('signin')} className="text-indigo-600 font-bold hover:underline cursor-pointer">Sign in</button></p>
+<p>Already have an account? <button onClick={() => setAuthMode('signin')} className="text-indigo-600 font-bold hover:underline cursor-pointer dark:text-indigo-300 transition-colors duration-300">Sign in</button></p>
 )}
 </div>
 )}

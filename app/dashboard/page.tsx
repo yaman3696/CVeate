@@ -88,8 +88,8 @@ seen.add(key)
 return true
 }).join(', ')
 }
-const inputClass = 'w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100'
-const labelClass = 'mb-1 block text-xs font-bold text-slate-600'
+const inputClass = 'w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 dark:text-slate-100 dark:border-slate-700/70 dark:bg-[#111C30] dark:focus:border-indigo-400 dark:focus:ring-indigo-400/25 dark:placeholder:text-slate-400 dark:[color-scheme:dark] dark:disabled:bg-slate-800 dark:disabled:text-slate-500'
+const labelClass = 'mb-1 block text-xs font-bold text-slate-600 dark:text-slate-300 transition-colors duration-300'
 // Keep only a small, safe subset of formatting tags in saved resume content.
 function safeRichHtml(raw: string): string {
 if (typeof document === 'undefined') return raw
@@ -168,15 +168,15 @@ const actions: { command: Parameters<typeof apply>[0]; title: string; icon: stri
 { command: 'undo', icon: 'undo', title: 'Undo' },
 { command: 'redo', icon: 'redo', title: 'Redo' },
 ]
-return <div className="overflow-hidden rounded-xl border border-slate-200 bg-white focus-within:ring-2 focus-within:ring-indigo-100">
-<div className="flex flex-wrap gap-1 border-b border-slate-100 bg-slate-50 p-2" role="toolbar" aria-label="Text formatting">
-{actions.map(action => <button key={action.command} type="button" onMouseDown={e => e.preventDefault()} onClick={() => apply(action.command)} className="rounded px-2.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-indigo-100" title={action.title}><FormatIcon name={action.icon} /></button>)}
+return <div className="overflow-hidden rounded-xl border border-slate-200 bg-white focus-within:ring-2 focus-within:ring-indigo-100 dark:bg-[#1B263B] dark:border-slate-700/70 dark:focus-within:ring-indigo-400/25 transition-colors duration-300">
+<div className="flex flex-wrap gap-1 border-b border-slate-100 bg-slate-50 p-2 dark:bg-[#172238] dark:border-slate-700/70 transition-colors duration-300" role="toolbar" aria-label="Text formatting">
+{actions.map(action => <button key={action.command} type="button" onMouseDown={e => e.preventDefault()} onClick={() => apply(action.command)} className="rounded px-2.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-indigo-100 dark:text-slate-300 dark:hover:bg-[#26344D] transition-colors duration-300" title={action.title}><FormatIcon name={action.icon} /></button>)}
 </div>
 <div ref={ref} contentEditable suppressContentEditableWarning role="textbox" aria-label="Formatted resume text" aria-multiline="true"
 onInput={e => { const next = safeRichHtml(e.currentTarget.innerHTML); currentValue.current = next; onChange(next) }}
-className="min-h-[120px] px-3 py-3 text-sm text-slate-800 outline-none [&_p]:mb-2 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5"
+className="min-h-[120px] px-3 py-3 text-sm text-slate-800 outline-none [&_p]:mb-2 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 dark:text-slate-100 transition-colors duration-300"
 style={{ minHeight: rows * 23 }} />
-<p className="px-3 pb-2 text-[10px] text-slate-400">Select text to format. Click List again to unlist. Press Enter to add paragraphs.</p>
+<p className="px-3 pb-2 text-[10px] text-slate-400 dark:text-slate-400 transition-colors duration-300">Select text to format. Click List again to unlist. Press Enter to add paragraphs.</p>
 </div>
 }
 type AIReviewSuggestion = {
@@ -857,81 +857,81 @@ const skills = ungroupedSkills(cvData)
 const portfolioValue = cvData.portfolioLinks?.filter(Boolean).join(', ') || cvData.portfolio
 const contact = [[cvData.city, cvData.state, cvData.pincode].filter(Boolean).join(', '), cvData.phone, cvData.email].filter(Boolean)
 return (
-<main className="min-h-screen bg-slate-50 px-3 py-6 text-slate-900 sm:px-6 lg:py-8">
+<main className="min-h-screen bg-slate-50 px-3 py-6 text-slate-900 sm:px-6 lg:py-8 dark:bg-[#0B1120] dark:text-slate-100 dark:[color-scheme:dark] transition-colors duration-300">
 {showAIReview && (
   <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 p-3" onMouseDown={e => { if (e.target === e.currentTarget && !reviewLoading) setShowAIReview(false) }}>
-    <div role="dialog" aria-modal="true" aria-labelledby="ai-review-title" className="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
-      <div className="flex shrink-0 items-center justify-between border-b border-slate-100 px-5 py-4">
-        <div><h2 id="ai-review-title" className="text-lg font-extrabold text-slate-900">AI CV Review</h2><p className="mt-1 text-xs text-slate-500">Review and apply improvements to your CV individually.</p></div>
-        <button type="button" disabled={reviewLoading} onClick={() => setShowAIReview(false)} aria-label="Close AI CV Review" className="rounded-lg px-3 py-2 text-sm font-bold text-slate-500 hover:bg-slate-100 disabled:opacity-50">Close</button>
+    <div role="dialog" aria-modal="true" aria-labelledby="ai-review-title" className="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-[#1B263B] dark:shadow-black/25 transition-colors duration-300">
+      <div className="flex shrink-0 items-center justify-between border-b border-slate-100 px-5 py-4 dark:border-slate-700/70 transition-colors duration-300">
+        <div><h2 id="ai-review-title" className="text-lg font-extrabold text-slate-900 dark:text-slate-100 transition-colors duration-300">AI CV Review</h2><p className="mt-1 text-xs text-slate-500 dark:text-slate-400 transition-colors duration-300">Review and apply improvements to your CV individually.</p></div>
+        <button type="button" disabled={reviewLoading} onClick={() => setShowAIReview(false)} aria-label="Close AI CV Review" className="rounded-lg px-3 py-2 text-sm font-bold text-slate-500 hover:bg-slate-100 disabled:opacity-50 dark:text-slate-400 dark:hover:bg-[#26344D] transition-colors duration-300">Close</button>
       </div>
       <div className="space-y-4 overflow-y-auto p-5">
         {!reviewResult && !reviewLoading && (
-          <div className="space-y-3 rounded-xl border border-indigo-100 bg-indigo-50 p-4 text-sm text-indigo-950">
+          <div className="space-y-3 rounded-xl border border-indigo-100 bg-indigo-50 p-4 text-sm text-indigo-950 dark:bg-indigo-400/15 dark:text-indigo-200 dark:border-slate-700/70 transition-colors duration-300">
             <p className="font-extrabold">Personalized CV improvements</p>
             <p>Gemini will review the CV you have entered and suggest field-specific improvements. Nothing is applied automatically.</p>
             <p className="font-bold">1 Career Credit is used for a completed review. Failed processing is eligible for a credit refund.</p>
             <p className="text-xs">Do not accept claims, skills or achievements that you cannot verify. Suggested wording may require your edits.</p>
           </div>
         )}
-        {reviewLoading && <div className="space-y-5 rounded-2xl border border-indigo-100 bg-white p-5 text-center">
+        {reviewLoading && <div className="space-y-5 rounded-2xl border border-indigo-100 bg-white p-5 text-center dark:bg-[#1B263B] dark:border-slate-700/70 transition-colors duration-300">
           <div className="relative mx-auto flex h-20 w-20 items-center justify-center">
-            <div className="absolute inset-0 animate-ping rounded-full bg-indigo-100 opacity-40" />
-            <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 text-2xl text-white shadow-lg">✦</div>
+            <div className="absolute inset-0 animate-ping rounded-full bg-indigo-100 opacity-40 dark:bg-indigo-400/15 transition-colors duration-300" />
+            <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 text-2xl text-white shadow-lg dark:shadow-black/25 transition-colors duration-300">✦</div>
           </div>
-          <h3 className="text-lg font-extrabold text-slate-900">CVeate AI is reviewing your CV</h3>
-          <p className="text-sm text-slate-500">Reviewing clarity, accuracy and opportunities to improve your CV.</p>
+          <h3 className="text-lg font-extrabold text-slate-900 dark:text-slate-100 transition-colors duration-300">CVeate AI is reviewing your CV</h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400 transition-colors duration-300">Reviewing clarity, accuracy and opportunities to improve your CV.</p>
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-xl bg-indigo-50 p-4"><p className="text-xs font-semibold text-indigo-600">Time Elapsed</p><p className="mt-2 text-2xl font-black tabular-nums text-indigo-700">{formatReviewElapsed(reviewElapsed)}</p></div>
-            <div className="rounded-xl bg-slate-50 p-4"><p className="text-xs font-semibold text-slate-500">Status</p><p className="mt-2 text-sm font-bold text-slate-700">Processing</p></div>
+            <div className="rounded-xl bg-indigo-50 p-4 dark:bg-indigo-400/15 transition-colors duration-300"><p className="text-xs font-semibold text-indigo-600 dark:text-indigo-300 transition-colors duration-300">Time Elapsed</p><p className="mt-2 text-2xl font-black tabular-nums text-indigo-700 dark:text-indigo-200 transition-colors duration-300">{formatReviewElapsed(reviewElapsed)}</p></div>
+            <div className="rounded-xl bg-slate-50 p-4 dark:bg-[#172238] transition-colors duration-300"><p className="text-xs font-semibold text-slate-500 dark:text-slate-400 transition-colors duration-300">Status</p><p className="mt-2 text-sm font-bold text-slate-700 dark:text-slate-300 transition-colors duration-300">Processing</p></div>
           </div>
-          <div className="h-2.5 overflow-hidden rounded-full bg-indigo-100"><div className="h-full w-1/3 animate-pulse rounded-full bg-gradient-to-r from-indigo-600 to-cyan-400" /></div>
-          <p className="text-xs text-slate-500">Activity indicator, not an exact completion percentage.</p>
-          <div className="space-y-2 text-left text-xs text-slate-600">
+          <div className="h-2.5 overflow-hidden rounded-full bg-indigo-100 dark:bg-indigo-400/15 transition-colors duration-300"><div className="h-full w-1/3 animate-pulse rounded-full bg-gradient-to-r from-indigo-600 to-cyan-400" /></div>
+          <p className="text-xs text-slate-500 dark:text-slate-400 transition-colors duration-300">Activity indicator, not an exact completion percentage.</p>
+          <div className="space-y-2 text-left text-xs text-slate-600 dark:text-slate-300 transition-colors duration-300">
             <p>✓ CV received and request authenticated</p>
             <p>◌ Analyzing sections and drafting improvements</p>
             <p>◌ Validating suggestions and saving your review</p>
           </div>
-          <p className="text-xs text-slate-500">Keep this page open while the review runs.</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 transition-colors duration-300">Keep this page open while the review runs.</p>
         </div>}
-        {reviewError && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{reviewError}</p>}
+        {reviewError && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:text-red-300 dark:bg-red-400/10 dark:border-red-400/25 transition-colors duration-300">{reviewError}</p>}
         {reviewResult && (
           <div className="space-y-5">
-            <div className="rounded-xl border border-indigo-100 bg-indigo-50 p-4">
-              <div className="flex items-center gap-3"><span className="text-3xl font-extrabold text-indigo-700">{reviewResult.overallScore}/100</span><span className="text-xs font-semibold text-indigo-800">AI CV assessment</span></div>
-              <p className="mt-2 text-sm text-slate-700">{reviewResult.summary}</p>
+            <div className="rounded-xl border border-indigo-100 bg-indigo-50 p-4 dark:bg-indigo-400/15 dark:border-slate-700/70 transition-colors duration-300">
+              <div className="flex items-center gap-3"><span className="text-3xl font-extrabold text-indigo-700 dark:text-indigo-200 transition-colors duration-300">{reviewResult.overallScore}/100</span><span className="text-xs font-semibold text-indigo-800 dark:text-indigo-200 transition-colors duration-300">AI CV assessment</span></div>
+              <p className="mt-2 text-sm text-slate-700 dark:text-slate-300 transition-colors duration-300">{reviewResult.summary}</p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <div><h3 className="text-sm font-extrabold text-slate-800">Strengths</h3><ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-slate-700">{reviewResult.strengths.map((item, i) => <li key={i}>{item}</li>)}</ul></div>
-              <div><h3 className="text-sm font-extrabold text-slate-800">Priorities</h3><ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-slate-700">{reviewResult.priorities.map((item, i) => <li key={i}>{item}</li>)}</ul></div>
+              <div><h3 className="text-sm font-extrabold text-slate-800 dark:text-slate-100 transition-colors duration-300">Strengths</h3><ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-slate-700 dark:text-slate-300 transition-colors duration-300">{reviewResult.strengths.map((item, i) => <li key={i}>{item}</li>)}</ul></div>
+              <div><h3 className="text-sm font-extrabold text-slate-800 dark:text-slate-100 transition-colors duration-300">Priorities</h3><ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-slate-700 dark:text-slate-300 transition-colors duration-300">{reviewResult.priorities.map((item, i) => <li key={i}>{item}</li>)}</ul></div>
             </div>
-            <div><h3 className="text-sm font-extrabold text-slate-800">Suggested improvements</h3><p className="mt-1 text-xs text-slate-500">Apply only changes that accurately describe you. Edits to credentials, skills and factual details must be made manually.</p></div>
-            {reviewResult.suggestions.length === 0 && <p className="text-sm text-slate-600">No individual text replacements were suggested.</p>}
+            <div><h3 className="text-sm font-extrabold text-slate-800 dark:text-slate-100 transition-colors duration-300">Suggested improvements</h3><p className="mt-1 text-xs text-slate-500 dark:text-slate-400 transition-colors duration-300">Apply only changes that accurately describe you. Edits to credentials, skills and factual details must be made manually.</p></div>
+            {reviewResult.suggestions.length === 0 && <p className="text-sm text-slate-600 dark:text-slate-300 transition-colors duration-300">No individual text replacements were suggested.</p>}
             {reviewResult.suggestions.map((suggestion, index) => {
               const safe = isSafeReviewChange(suggestion)
               const sourceMatches = reviewSource ? readReviewField(reviewSource, suggestion.fieldPath) === suggestion.currentText : false
               const unchanged = readReviewField(cvData, suggestion.fieldPath) === suggestion.currentText
               const applied = appliedReviewIds.includes(suggestion.id)
-              return <div key={`${suggestion.id}-${index}`} className="space-y-3 rounded-xl border border-slate-200 p-4">
-                <div className="flex items-start justify-between gap-3"><div><p className="text-sm font-bold text-slate-900">{reviewFieldLabel(suggestion.fieldPath, reviewSource)}</p><p className="text-xs text-slate-500">{reviewFieldLabel(suggestion.fieldPath, reviewSource)}</p></div>{applied && <span className="text-xs font-bold text-emerald-700">Applied</span>}</div>
+              return <div key={`${suggestion.id}-${index}`} className="space-y-3 rounded-xl border border-slate-200 p-4 dark:border-slate-700/70 transition-colors duration-300">
+                <div className="flex items-start justify-between gap-3"><div><p className="text-sm font-bold text-slate-900 dark:text-slate-100 transition-colors duration-300">{reviewFieldLabel(suggestion.fieldPath, reviewSource)}</p><p className="text-xs text-slate-500 dark:text-slate-400 transition-colors duration-300">{reviewFieldLabel(suggestion.fieldPath, reviewSource)}</p></div>{applied && <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300 transition-colors duration-300">Applied</span>}</div>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-lg bg-slate-50 p-3"><p className="mb-1 text-xs font-bold text-slate-500">Original</p><p className="whitespace-pre-wrap break-words text-xs text-slate-700">{plainText(suggestion.currentText)}</p></div>
-                  <div className="rounded-lg bg-indigo-50 p-3"><p className="mb-1 text-xs font-bold text-indigo-700">Suggested</p><p className="whitespace-pre-wrap break-words text-xs text-slate-800">{reviewText(suggestion.suggestedText)}</p></div>
+                  <div className="rounded-lg bg-slate-50 p-3 dark:bg-[#172238] transition-colors duration-300"><p className="mb-1 text-xs font-bold text-slate-500 dark:text-slate-400 transition-colors duration-300">Original</p><p className="whitespace-pre-wrap break-words text-xs text-slate-700 dark:text-slate-300 transition-colors duration-300">{plainText(suggestion.currentText)}</p></div>
+                  <div className="rounded-lg bg-indigo-50 p-3 dark:bg-indigo-400/15 transition-colors duration-300"><p className="mb-1 text-xs font-bold text-indigo-700 dark:text-indigo-200 transition-colors duration-300">Suggested</p><p className="whitespace-pre-wrap break-words text-xs text-slate-800 dark:text-slate-100 transition-colors duration-300">{reviewText(suggestion.suggestedText)}</p></div>
                 </div>
-                <p className="text-xs text-slate-600"><strong>Why:</strong> {reviewText(suggestion.reason)}</p>
-                {suggestion.requiresConfirmation && safe && <label className="flex items-start gap-2 text-xs text-slate-700"><input type="checkbox" className="mt-0.5 accent-indigo-600" checked={!!reviewConfirmations[suggestion.id]} onChange={e => setReviewConfirmations(prev => ({ ...prev, [suggestion.id]: e.target.checked }))} /><span>I verified that this suggestion is accurate and does not add unsupported facts.</span></label>}
-                {!safe && <p className="text-xs text-amber-700">This change is not verified as a spelling-only correction. Review and edit this field manually.</p>}
-                {safe && !unchanged && !applied && <p className="text-xs text-amber-700">The field has changed since this review. Apply manually or generate a new review.</p>}
-                <button type="button" disabled={!safe || !sourceMatches || !unchanged || applied || (suggestion.requiresConfirmation && !reviewConfirmations[suggestion.id])} onClick={() => applyReviewSuggestion(suggestion)} className="rounded-lg bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300">{applied ? 'Applied' : 'Apply this improvement'}</button>
+                <p className="text-xs text-slate-600 dark:text-slate-300 transition-colors duration-300"><strong>Why:</strong> {reviewText(suggestion.reason)}</p>
+                {suggestion.requiresConfirmation && safe && <label className="flex items-start gap-2 text-xs text-slate-700 dark:text-slate-300 transition-colors duration-300"><input type="checkbox" className="mt-0.5 accent-indigo-600" checked={!!reviewConfirmations[suggestion.id]} onChange={e => setReviewConfirmations(prev => ({ ...prev, [suggestion.id]: e.target.checked }))} /><span>I verified that this suggestion is accurate and does not add unsupported facts.</span></label>}
+                {!safe && <p className="text-xs text-amber-700 dark:text-amber-200 transition-colors duration-300">This change is not verified as a spelling-only correction. Review and edit this field manually.</p>}
+                {safe && !unchanged && !applied && <p className="text-xs text-amber-700 dark:text-amber-200 transition-colors duration-300">The field has changed since this review. Apply manually or generate a new review.</p>}
+                <button type="button" disabled={!safe || !sourceMatches || !unchanged || applied || (suggestion.requiresConfirmation && !reviewConfirmations[suggestion.id])} onClick={() => applyReviewSuggestion(suggestion)} className="rounded-lg bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300 dark:disabled:bg-slate-700 dark:disabled:text-slate-400 transition-colors duration-300">{applied ? 'Applied' : 'Apply this improvement'}</button>
               </div>
             })}
           </div>
         )}
       </div>
-      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-slate-100 bg-white px-5 py-4">
-        <p className="text-xs text-slate-500">{reviewResult ? 'Saved review: reopening does not use another credit.' : '1 Career Credit per completed review'}</p>
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-slate-100 bg-white px-5 py-4 dark:bg-[#1B263B] dark:border-slate-700/70 transition-colors duration-300">
+        <p className="text-xs text-slate-500 dark:text-slate-400 transition-colors duration-300">{reviewResult ? 'Saved review: reopening does not use another credit.' : '1 Career Credit per completed review'}</p>
         <div className="flex gap-2">
-          {reviewResult && <button type="button" onClick={() => { setReviewResult(null); setReviewSource(null); setReviewError(''); setReviewPending(false); reviewRequestIdRef.current = null }} className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-bold text-slate-700">Start new review</button>}
+          {reviewResult && <button type="button" onClick={() => { setReviewResult(null); setReviewSource(null); setReviewError(''); setReviewPending(false); reviewRequestIdRef.current = null }} className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 dark:border-slate-700/70 transition-colors duration-300">Start new review</button>}
           {!reviewResult && <button type="button" disabled={reviewLoading} onClick={() => void handleGenerateAIReview()} className="rounded-lg bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white disabled:opacity-60">{reviewLoading ? 'Reviewing CV...' : reviewPending ? 'Check review status' : reviewRequestIdRef.current ? 'Retry / Check review' : 'Generate AI Review'}</button>}
           {reviewResult && <button type="button" onClick={() => setShowAIReview(false)} className="rounded-lg bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white">Done</button>}
         </div>
@@ -940,31 +940,31 @@ return (
   </div>
 )}
 <div className="mx-auto max-w-[1500px] space-y-5">
-<header className="flex flex-col gap-4 rounded-2xl border border-indigo-100 bg-white p-4 shadow-sm sm:p-5 lg:flex-row lg:items-center lg:justify-between">
+<header className="flex flex-col gap-4 rounded-2xl border border-indigo-100 bg-white p-4 shadow-sm sm:p-5 lg:flex-row lg:items-center lg:justify-between dark:bg-[#1B263B] dark:border-slate-700/70 dark:shadow-black/25 transition-colors duration-300">
 <div>
-<p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-indigo-600">CVeate Resume Workspace</p>
+<p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-indigo-600 dark:text-indigo-300 transition-colors duration-300">CVeate Resume Workspace</p>
 <h1 className="mt-1 text-2xl font-extrabold tracking-tight sm:text-3xl">Make your next CV your best.</h1>
-<p className="mt-1 text-xs text-slate-500">Edit on the left, preview on the right, and download whenever you're ready.</p>
-<p className={`mt-2 text-xs font-semibold ${saveState === 'error' ? 'text-red-600' : 'text-emerald-700'}`} aria-live="polite">
+<p className="mt-1 text-xs text-slate-500 dark:text-slate-400 transition-colors duration-300">Edit on the left, preview on the right, and download whenever you're ready.</p>
+<p className={`mt-2 text-xs font-semibold ${saveState === 'error' ? 'text-red-600 dark:text-red-300' : 'text-emerald-700 dark:text-emerald-300'}`} aria-live="polite">
 {loaded ? saveState === 'saving' ? 'Saving draft…' : saveState === 'error' ? 'Could not save draft on this device' : '✓ Draft saved on this device' : 'Loading your resume…'}
 </p>
 </div>
 <div className="flex flex-wrap items-center gap-2">
 <button type="button" onClick={handleSaveToHistory} disabled={!loaded || savingHistory}
-className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-xs font-bold text-indigo-700 transition hover:bg-indigo-100 disabled:opacity-50">
+className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-xs font-bold text-indigo-700 transition hover:bg-indigo-100 disabled:opacity-50 dark:bg-indigo-400/15 dark:text-indigo-200 dark:border-slate-700/70 dark:hover:bg-[#26344D]">
 {savingHistory ? 'Saving…' : 'Save to History'}
 </button>
 <button type="button" onClick={handleDownload} disabled={!loaded || downloading}
-className="rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-indigo-200 transition hover:bg-indigo-700 disabled:opacity-50">
+className="rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-indigo-200 transition hover:bg-indigo-700 disabled:opacity-50 dark:shadow-black/25">
 {downloading ? 'Preparing PDF…' : '↓ Download PDF'}
 </button>
 </div>
 </header>
-{message && <div role="status" className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-900">{message}</div>}
+{message && <div role="status" className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-900 dark:bg-indigo-400/15 dark:text-indigo-200 dark:border-slate-700/70 transition-colors duration-300">{message}</div>}
 
 
 {/* Compact AI CV Toolbar */}
-<div className="relative isolate overflow-hidden rounded-2xl border border-indigo-400/30 bg-gradient-to-r from-indigo-700 via-indigo-600 to-violet-600 px-4 py-3 shadow-md shadow-indigo-200/40">
+<div className="relative isolate overflow-hidden rounded-2xl border border-indigo-400/30 bg-gradient-to-r from-indigo-700 via-indigo-600 to-violet-600 px-4 py-3 shadow-md shadow-indigo-200/40 dark:shadow-black/25 dark:from-[#20254B] dark:via-[#25284F] dark:to-[#30254D] transition-colors duration-300">
 
   {/* Animated dotted network — same technique as ATS Checker */}
 <div
@@ -1054,7 +1054,7 @@ disabled={!loaded}
         type="button"
         onClick={handleCheckATS}
         disabled={!loaded}
-        className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-2.5 text-xs font-bold text-indigo-700 shadow-sm transition hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-2.5 text-xs font-bold text-indigo-700 shadow-sm transition hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[#1B263B] dark:text-indigo-200 dark:hover:bg-[#26344D] dark:shadow-black/25"
       >
         <svg
           width="15"
@@ -1078,45 +1078,45 @@ disabled={!loaded}
 </div>
 
 
-<div className="flex gap-2 rounded-xl bg-white p-1 shadow-sm lg:hidden">
-<button type="button" onClick={() => setMobileTab('edit')} className={`flex-1 rounded-lg px-3 py-2 text-sm font-bold ${mobileTab === 'edit' ? 'bg-indigo-600 text-white' : 'text-slate-600'}`}>Edit CV</button>
-<button type="button" onClick={() => setMobileTab('preview')} className={`flex-1 rounded-lg px-3 py-2 text-sm font-bold ${mobileTab === 'preview' ? 'bg-indigo-600 text-white' : 'text-slate-600'}`}>Preview CV</button>
+<div className="flex gap-2 rounded-xl bg-white p-1 shadow-sm lg:hidden dark:bg-[#1B263B] dark:shadow-black/25 transition-colors duration-300">
+<button type="button" onClick={() => setMobileTab('edit')} className={`flex-1 rounded-lg px-3 py-2 text-sm font-bold ${mobileTab === 'edit' ? 'bg-indigo-600 text-white' : 'text-slate-600 dark:text-slate-300'}`}>Edit CV</button>
+<button type="button" onClick={() => setMobileTab('preview')} className={`flex-1 rounded-lg px-3 py-2 text-sm font-bold ${mobileTab === 'preview' ? 'bg-indigo-600 text-white' : 'text-slate-600 dark:text-slate-300'}`}>Preview CV</button>
 </div>
 <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
-<section className={`overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm ${mobileTab === 'preview' ? 'hidden lg:block' : ''}`} aria-label="Resume editor">
-<div className="border-b border-slate-100 p-5">
+<section className={`overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:bg-[#1B263B] dark:border-slate-700/70 dark:shadow-black/25 ${mobileTab === 'preview' ? 'hidden lg:block' : ''}`} aria-label="Resume editor">
+<div className="border-b border-slate-100 p-5 dark:border-slate-700/70 transition-colors duration-300">
 <h2 className="text-lg font-extrabold">Edit your resume</h2>
-<p className="mt-1 text-xs text-slate-500">Choose a section to update. Changes appear instantly in the preview.</p>
+<p className="mt-1 text-xs text-slate-500 dark:text-slate-400 transition-colors duration-300">Choose a section to update. Changes appear instantly in the preview.</p>
 </div>
-<nav className="flex gap-1 overflow-x-auto border-b border-slate-100 px-3 py-3" aria-label="Resume sections">
+<nav className="flex gap-1 overflow-x-auto border-b border-slate-100 px-3 py-3 dark:border-slate-700/70 transition-colors duration-300" aria-label="Resume sections">
 {sections.map(([id, title]) => <button key={id} type="button" onClick={() => setActive(id)}
-className={`shrink-0 rounded-lg px-3 py-2 text-[11px] font-bold transition ${active === id ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-600 hover:bg-indigo-50 hover:text-indigo-700'}`}>{title}</button>)}
+className={`shrink-0 rounded-lg px-3 py-2 text-[11px] font-bold transition ${active === id ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-600 hover:bg-indigo-50 hover:text-indigo-700 dark:bg-[#172238] dark:text-slate-300 dark:hover:bg-[#26344D] dark:hover:text-indigo-200'}`}>{title}</button>)}
 </nav>
 <div className="max-h-[calc(100vh-260px)] min-h-[380px] space-y-4 overflow-y-auto p-5 sm:p-6">
 {active === 'personal' && <div className="space-y-4">
-<h3 className="text-sm font-extrabold text-indigo-700">Personal information</h3>
+<h3 className="text-sm font-extrabold text-indigo-700 dark:text-indigo-200 transition-colors duration-300">Personal information</h3>
 {field('Full name', 'fullName', 'Your full name')}
 {field('Professional headline', 'headline', 'e.g. Product Designer')}
 <div className="grid gap-3 sm:grid-cols-2">{field('Email address', 'email')}{field('Phone number', 'phone')}</div>
 <div className="grid gap-3 sm:grid-cols-3">{field('City', 'city')}{field('State', 'state')}{field('Pincode', 'pincode')}</div>
 <label className="block"><span className={labelClass}>Date of birth (optional)</span><input type="date" className={inputClass} value={cvData.dateOfBirth || ''} onChange={e => update({ dateOfBirth: e.target.value })} /></label>
-<label className="flex items-center gap-2 text-xs text-slate-600"><input type="checkbox" checked={cvData.includeDob || false} onChange={e => update({ includeDob: e.target.checked })} /> Include date of birth in PDF (usually not recommended)</label>
+<label className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 transition-colors duration-300"><input type="checkbox" checked={cvData.includeDob || false} onChange={e => update({ includeDob: e.target.checked })} /> Include date of birth in PDF (usually not recommended)</label>
 {field('LinkedIn', 'linkedin', 'linkedin.com/in/yourname')}
 <label className="block"><span className={labelClass}>Portfolio links (separate with commas)</span>
 <input className={inputClass} value={portfolioValue} onChange={e => update({ portfolio: e.target.value, portfolioLinks: undefined })} placeholder="github.com/you, behance.net/you" />
 </label>
 </div>}
 {active === 'summary' && <div className="space-y-3">
-<h3 className="text-sm font-extrabold text-indigo-700">Professional summary</h3>
-<p className="text-xs leading-relaxed text-slate-500">Highlight your experience, relevant strengths and measurable results. Use only skills you actually have.</p>
+<h3 className="text-sm font-extrabold text-indigo-700 dark:text-indigo-200 transition-colors duration-300">Professional summary</h3>
+<p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400 transition-colors duration-300">Highlight your experience, relevant strengths and measurable results. Use only skills you actually have.</p>
 <FormatEditor rows={7} value={cvData.bio} onChange={value => update({ bio: value })} />
 </div>}
 {active === 'experience' && <div className="space-y-4">
-<h3 className="text-sm font-extrabold text-indigo-700">Work experience</h3>
-<p className="text-xs text-slate-500">Choose month and year for employment dates. Older saved duration values are preserved until you select new dates.</p>
-{cvData.experiences.map((exp, index) => <div key={index} className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/60 p-4">
-<div className="flex items-center justify-between"><strong className="text-xs text-indigo-700">Experience {index + 1}</strong>
-<button type="button" onClick={() => update({ experiences: cvData.experiences.filter((_, i) => i !== index) })} className="text-xs font-bold text-red-600 hover:underline">Remove</button></div>
+<h3 className="text-sm font-extrabold text-indigo-700 dark:text-indigo-200 transition-colors duration-300">Work experience</h3>
+<p className="text-xs text-slate-500 dark:text-slate-400 transition-colors duration-300">Choose month and year for employment dates. Older saved duration values are preserved until you select new dates.</p>
+{cvData.experiences.map((exp, index) => <div key={index} className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/60 p-4 dark:bg-[#172238] dark:border-slate-700/70 transition-colors duration-300">
+<div className="flex items-center justify-between"><strong className="text-xs text-indigo-700 dark:text-indigo-200 transition-colors duration-300">Experience {index + 1}</strong>
+<button type="button" onClick={() => update({ experiences: cvData.experiences.filter((_, i) => i !== index) })} className="text-xs font-bold text-red-600 hover:underline dark:text-red-300 transition-colors duration-300">Remove</button></div>
 <div className="grid gap-3 sm:grid-cols-2">
 <label><span className={labelClass}>Job title</span><input className={inputClass} value={exp.role} onChange={e => setExperience(index, 'role', e.target.value)} /></label>
 <label><span className={labelClass}>Company</span><input className={inputClass} value={exp.company} onChange={e => setExperience(index, 'company', e.target.value)} /></label>
@@ -1125,62 +1125,62 @@ className={`shrink-0 rounded-lg px-3 py-2 text-[11px] font-bold transition ${act
 <label><span className={labelClass}>Start month / year</span><input type="month" className={inputClass} value={exp.startDate || ''} onChange={e => setExperience(index, 'startDate', e.target.value)} /></label>
 <label><span className={labelClass}>End month / year</span><input type="month" className={inputClass} disabled={!!exp.current} min={exp.startDate || undefined} value={exp.endDate || ''} onChange={e => setExperience(index, 'endDate', e.target.value)} /></label>
 </div>
-<label className="flex items-center gap-2 text-xs text-slate-700"><input type="checkbox" checked={!!exp.current} onChange={e => update({ experiences: cvData.experiences.map((item, i) => i === index ? { ...item, current: e.target.checked, endDate: e.target.checked ? '' : item.endDate } : item) })} /> Currently working here</label>
+<label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 transition-colors duration-300"><input type="checkbox" checked={!!exp.current} onChange={e => update({ experiences: cvData.experiences.map((item, i) => i === index ? { ...item, current: e.target.checked, endDate: e.target.checked ? '' : item.endDate } : item) })} /> Currently working here</label>
 {!exp.startDate && <label className="block"><span className={labelClass}>Existing duration (legacy data)</span><input className={inputClass} value={exp.duration} onChange={e => setExperience(index, 'duration', e.target.value)} placeholder="Jan 2023 – Present" /></label>}
 <label className="block"><span className={labelClass}>Achievements (one per line)</span><FormatEditor value={exp.bullets} onChange={value => setExperience(index, 'bullets', value)} /></label>
 </div>)}
 <button type="button" onClick={() => update({ experiences: [...cvData.experiences, { role: '', company: '', duration: '', bullets: '' }] })}
-className="w-full rounded-xl border-2 border-dashed border-indigo-200 px-4 py-3 text-xs font-bold text-indigo-700 hover:bg-indigo-50">+ Add work experience</button>
+className="w-full rounded-xl border-2 border-dashed border-indigo-200 px-4 py-3 text-xs font-bold text-indigo-700 hover:bg-indigo-50 dark:text-indigo-200 dark:border-slate-700/70 dark:hover:bg-[#26344D] transition-colors duration-300">+ Add work experience</button>
 </div>}
 {active === 'education' && <div className="space-y-4">
-<h3 className="text-sm font-extrabold text-indigo-700">Education & qualifications</h3>
-{cvData.qualifications.map((q, index) => <div key={index} className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/60 p-4">
-<div className="flex items-center justify-between"><strong className="text-xs text-indigo-700">Qualification {index + 1}</strong>
-<button type="button" onClick={() => update({ qualifications: cvData.qualifications.filter((_, i) => i !== index) })} className="text-xs font-bold text-red-600 hover:underline">Remove</button></div>
+<h3 className="text-sm font-extrabold text-indigo-700 dark:text-indigo-200 transition-colors duration-300">Education & qualifications</h3>
+{cvData.qualifications.map((q, index) => <div key={index} className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/60 p-4 dark:bg-[#172238] dark:border-slate-700/70 transition-colors duration-300">
+<div className="flex items-center justify-between"><strong className="text-xs text-indigo-700 dark:text-indigo-200 transition-colors duration-300">Qualification {index + 1}</strong>
+<button type="button" onClick={() => update({ qualifications: cvData.qualifications.filter((_, i) => i !== index) })} className="text-xs font-bold text-red-600 hover:underline dark:text-red-300 transition-colors duration-300">Remove</button></div>
 <label className="block"><span className={labelClass}>Degree / certification</span><input className={inputClass} value={q.degree} onChange={e => setQualification(index, 'degree', e.target.value)} /></label>
 <label className="block"><span className={labelClass}>Institution</span><input className={inputClass} value={q.institution} onChange={e => setQualification(index, 'institution', e.target.value)} /></label>
 <div className="grid gap-3 sm:grid-cols-2">
 <label><span className={labelClass}>Start month / year</span><input type="month" className={inputClass} value={q.startDate || ''} onChange={e => setQualification(index, 'startDate', e.target.value)} /></label>
 <label><span className={labelClass}>End month / year</span><input type="month" className={inputClass} min={q.startDate || undefined} disabled={!!q.current} value={q.endDate || ''} onChange={e => setQualification(index, 'endDate', e.target.value)} /></label>
 </div>
-<label className="flex items-center gap-2 text-xs text-slate-700"><input type="checkbox" checked={!!q.current} onChange={e => update({ qualifications: cvData.qualifications.map((item, i) => i === index ? { ...item, current: e.target.checked, endDate: e.target.checked ? '' : item.endDate } : item) })} /> Currently studying</label>
+<label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 transition-colors duration-300"><input type="checkbox" checked={!!q.current} onChange={e => update({ qualifications: cvData.qualifications.map((item, i) => i === index ? { ...item, current: e.target.checked, endDate: e.target.checked ? '' : item.endDate } : item) })} /> Currently studying</label>
 {!q.startDate && <label className="block"><span className={labelClass}>Existing passing year (legacy data)</span><input inputMode="numeric" maxLength={4} className={inputClass} value={q.year} onChange={e => setQualification(index, 'year', e.target.value.replace(/\D/g, '').slice(0, 4))} /></label>}
 </div>)}
 <button type="button" onClick={() => update({ qualifications: [...cvData.qualifications, { degree: '', institution: '', year: '' }] })}
-className="w-full rounded-xl border-2 border-dashed border-indigo-200 px-4 py-3 text-xs font-bold text-indigo-700 hover:bg-indigo-50">+ Add qualification</button>
+className="w-full rounded-xl border-2 border-dashed border-indigo-200 px-4 py-3 text-xs font-bold text-indigo-700 hover:bg-indigo-50 dark:text-indigo-200 dark:border-slate-700/70 dark:hover:bg-[#26344D] transition-colors duration-300">+ Add qualification</button>
 </div>}
 {active === 'projects' && <div className="space-y-4">
-<h3 className="text-sm font-extrabold text-indigo-700">Projects (optional)</h3><p className="text-xs text-slate-500">Show academic, personal, freelance or professional work. Useful for freshers and experienced candidates.</p>
-{cvData.projects.map((p, i) => <div key={i} className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/60 p-4">
-<div className="flex justify-between"><strong className="text-xs text-indigo-700">Project {i + 1}</strong><button type="button" className="text-xs font-bold text-red-600" onClick={() => update({ projects: cvData.projects.filter((_, n) => n !== i) })}>Remove</button></div>
+<h3 className="text-sm font-extrabold text-indigo-700 dark:text-indigo-200 transition-colors duration-300">Projects (optional)</h3><p className="text-xs text-slate-500 dark:text-slate-400 transition-colors duration-300">Show academic, personal, freelance or professional work. Useful for freshers and experienced candidates.</p>
+{cvData.projects.map((p, i) => <div key={i} className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/60 p-4 dark:bg-[#172238] dark:border-slate-700/70 transition-colors duration-300">
+<div className="flex justify-between"><strong className="text-xs text-indigo-700 dark:text-indigo-200 transition-colors duration-300">Project {i + 1}</strong><button type="button" className="text-xs font-bold text-red-600 dark:text-red-300 transition-colors duration-300" onClick={() => update({ projects: cvData.projects.filter((_, n) => n !== i) })}>Remove</button></div>
 <div className="grid gap-3 sm:grid-cols-2">{([['Project name','name'], ['Your role','role'], ['Tools / technologies','technologies'], ['Project link','link']] as const).map(([title, key]) => <label key={key}><span className={labelClass}>{title}</span><input className={inputClass} value={p[key]} onChange={e => update({ projects: cvData.projects.map((x,n) => n === i ? {...x, [key]: e.target.value} : x) })} /></label>)}<label><span className={labelClass}>Start month</span><input type="month" className={inputClass} value={p.startDate} onChange={e => update({ projects: cvData.projects.map((x,n) => n === i ? {...x, startDate: e.target.value} : x) })} /></label><label><span className={labelClass}>End month</span><input type="month" className={inputClass} min={p.startDate || undefined} disabled={p.current} value={p.endDate} onChange={e => update({ projects: cvData.projects.map((x,n) => n === i ? {...x, endDate: e.target.value} : x) })} /></label></div>
 <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={p.current} onChange={e => update({ projects: cvData.projects.map((x,n) => n === i ? {...x, current: e.target.checked, endDate: e.target.checked ? '' : x.endDate} : x) })} />Ongoing project</label>
 <div><span className={labelClass}>Project contribution / outcome</span><FormatEditor value={p.description} onChange={description => update({ projects: cvData.projects.map((x,n) => n === i ? {...x, description} : x) })} /></div>
 </div>)}
-<button type="button" className="w-full rounded-xl border-2 border-dashed border-indigo-200 px-4 py-3 text-xs font-bold text-indigo-700" onClick={() => update({ projects: [...cvData.projects, blankProject()] })}>+ Add project</button>
+<button type="button" className="w-full rounded-xl border-2 border-dashed border-indigo-200 px-4 py-3 text-xs font-bold text-indigo-700 dark:text-indigo-200 dark:border-slate-700/70 transition-colors duration-300" onClick={() => update({ projects: [...cvData.projects, blankProject()] })}>+ Add project</button>
 </div>}
 {active === 'certifications' && <div className="space-y-4">
-<h3 className="text-sm font-extrabold text-indigo-700">Certifications & training (optional)</h3>
-{cvData.certifications.map((c, i) => <div key={i} className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/60 p-4"><div className="flex justify-between"><strong className="text-xs text-indigo-700">Certification {i + 1}</strong><button type="button" className="text-xs font-bold text-red-600" onClick={() => update({ certifications: cvData.certifications.filter((_, n) => n !== i) })}>Remove</button></div><div className="grid gap-3 sm:grid-cols-2">{([['Certification / course name','name'],['Issuer','issuer'],['Credential ID','credentialId'],['Credential URL','url']] as const).map(([title,key]) => <label key={key}><span className={labelClass}>{title}</span><input className={inputClass} value={c[key]} onChange={e => update({ certifications: cvData.certifications.map((x,n) => n === i ? {...x, [key]: e.target.value} : x) })} /></label>)}<label><span className={labelClass}>Issued month</span><input type="month" className={inputClass} value={c.issueDate} onChange={e => update({ certifications: cvData.certifications.map((x,n) => n === i ? {...x, issueDate: e.target.value} : x) })} /></label></div></div>)}
-<button type="button" className="w-full rounded-xl border-2 border-dashed border-indigo-200 px-4 py-3 text-xs font-bold text-indigo-700" onClick={() => update({ certifications: [...cvData.certifications, blankCertification()] })}>+ Add certification</button>
+<h3 className="text-sm font-extrabold text-indigo-700 dark:text-indigo-200 transition-colors duration-300">Certifications & training (optional)</h3>
+{cvData.certifications.map((c, i) => <div key={i} className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/60 p-4 dark:bg-[#172238] dark:border-slate-700/70 transition-colors duration-300"><div className="flex justify-between"><strong className="text-xs text-indigo-700 dark:text-indigo-200 transition-colors duration-300">Certification {i + 1}</strong><button type="button" className="text-xs font-bold text-red-600 dark:text-red-300 transition-colors duration-300" onClick={() => update({ certifications: cvData.certifications.filter((_, n) => n !== i) })}>Remove</button></div><div className="grid gap-3 sm:grid-cols-2">{([['Certification / course name','name'],['Issuer','issuer'],['Credential ID','credentialId'],['Credential URL','url']] as const).map(([title,key]) => <label key={key}><span className={labelClass}>{title}</span><input className={inputClass} value={c[key]} onChange={e => update({ certifications: cvData.certifications.map((x,n) => n === i ? {...x, [key]: e.target.value} : x) })} /></label>)}<label><span className={labelClass}>Issued month</span><input type="month" className={inputClass} value={c.issueDate} onChange={e => update({ certifications: cvData.certifications.map((x,n) => n === i ? {...x, issueDate: e.target.value} : x) })} /></label></div></div>)}
+<button type="button" className="w-full rounded-xl border-2 border-dashed border-indigo-200 px-4 py-3 text-xs font-bold text-indigo-700 dark:text-indigo-200 dark:border-slate-700/70 transition-colors duration-300" onClick={() => update({ certifications: [...cvData.certifications, blankCertification()] })}>+ Add certification</button>
 </div>}
 {active === 'skills' && <div className="space-y-4">
-<h3 className="text-sm font-extrabold text-indigo-700">Skills & Expertise</h3>
-<p className="text-xs leading-5 text-slate-500">Start with a simple list of skills. If you want a more organized resume, add optional categories below. No need to enter a skill twice.</p>
+<h3 className="text-sm font-extrabold text-indigo-700 dark:text-indigo-200 transition-colors duration-300">Skills & Expertise</h3>
+<p className="text-xs leading-5 text-slate-500 dark:text-slate-400 transition-colors duration-300">Start with a simple list of skills. If you want a more organized resume, add optional categories below. No need to enter a skill twice.</p>
 <label className="block"><span className={labelClass}>Quick add skills</span>
 <textarea rows={3} className={inputClass} placeholder="e.g. Figma, Photoshop, Wireframing, Brand Identity" value={Array.isArray(cvData.technicalSkills) ? cvData.technicalSkills.join(', ') : cvData.technicalSkills} onChange={e => update({ technicalSkills: e.target.value })} />
-<span className="mt-1 block text-[11px] text-slate-500">Separate skills with commas. Existing skills are preserved.</span>
+<span className="mt-1 block text-[11px] text-slate-500 dark:text-slate-400 transition-colors duration-300">Separate skills with commas. Existing skills are preserved.</span>
 </label>
-<details className="rounded-xl border border-indigo-100 bg-indigo-50/40 p-3">
-<summary className="cursor-pointer text-xs font-extrabold text-indigo-800">Organize skills by category <span className="font-normal text-slate-500">(optional)</span></summary>
-<p className="mt-2 text-[11px] leading-5 text-slate-500">Examples: Design Tools, UI/UX, Programming, Finance, Marketing. Category names and skills appear together in your resume. Your existing groups are kept.</p>
+<details className="rounded-xl border border-indigo-100 bg-indigo-50/40 p-3 dark:bg-indigo-400/15 dark:border-slate-700/70 transition-colors duration-300">
+<summary className="cursor-pointer text-xs font-extrabold text-indigo-800 dark:text-indigo-200 transition-colors duration-300">Organize skills by category <span className="font-normal text-slate-500 dark:text-slate-400 transition-colors duration-300">(optional)</span></summary>
+<p className="mt-2 text-[11px] leading-5 text-slate-500 dark:text-slate-400 transition-colors duration-300">Examples: Design Tools, UI/UX, Programming, Finance, Marketing. Category names and skills appear together in your resume. Your existing groups are kept.</p>
 <div className="mt-3 space-y-3">
-{(cvData.skillGroups || []).map((g, i) => <div key={i} className="space-y-2 rounded-lg border border-slate-200 bg-white p-3">
+{(cvData.skillGroups || []).map((g, i) => <div key={i} className="space-y-2 rounded-lg border border-slate-200 bg-white p-3 dark:bg-[#1B263B] dark:border-slate-700/70 transition-colors duration-300">
 <label className="block"><span className={labelClass}>Category name</span><input className={inputClass} placeholder="e.g. Design Software" value={g.name} onChange={e => update({ skillGroups: (cvData.skillGroups || []).map((x, j) => i === j ? { ...x, name: e.target.value } : x) })} /></label>
 <label className="block"><span className={labelClass}>Skills in this category</span><textarea className={inputClass} rows={2} placeholder="Photoshop, Illustrator, Figma" value={g.skills} onChange={e => update({ skillGroups: (cvData.skillGroups || []).map((x, j) => i === j ? { ...x, skills: e.target.value } : x) })} /></label>
-<button type="button" className="text-xs font-bold text-red-600 hover:underline" onClick={() => update({ skillGroups: (cvData.skillGroups || []).filter((_, j) => j !== i) })}>Remove category</button>
+<button type="button" className="text-xs font-bold text-red-600 hover:underline dark:text-red-300 transition-colors duration-300" onClick={() => update({ skillGroups: (cvData.skillGroups || []).filter((_, j) => j !== i) })}>Remove category</button>
 </div>)}
-<button type="button" className="rounded-lg border border-indigo-200 bg-white px-3 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-50" onClick={() => update({ skillGroups: [...(cvData.skillGroups || []), { name: '', skills: '' }] })}>+ Add a skill category</button>
+<button type="button" className="rounded-lg border border-indigo-200 bg-white px-3 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-50 dark:bg-[#1B263B] dark:text-indigo-200 dark:border-slate-700/70 dark:hover:bg-[#26344D] transition-colors duration-300" onClick={() => update({ skillGroups: [...(cvData.skillGroups || []), { name: '', skills: '' }] })}>+ Add a skill category</button>
 </div>
 </details>
 {field('Soft skills', 'softSkills')}{field('Languages', 'languages')}{field('Hobbies & interests', 'hobbies')}
@@ -1188,8 +1188,8 @@ className="w-full rounded-xl border-2 border-dashed border-indigo-200 px-4 py-3 
 </div>}
 </div>
 </section>
-<section className={`rounded-2xl border border-slate-200 bg-slate-100 p-3 shadow-sm sm:p-5 ${mobileTab === 'edit' ? 'hidden lg:block' : ''}`} aria-label="Live resume preview">
-<div className="mb-3 flex flex-wrap items-center justify-between gap-2"><h2 className="text-sm font-extrabold text-slate-800">Live CV preview</h2><div className="flex items-center gap-2 text-xs font-semibold text-slate-700"><span>Accent color</span><select aria-label="Resume accent color" className="rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs lg:hidden" value={cvData.accentColor || 'indigo'} onChange={e => update({ accentColor: e.target.value })}>{Object.entries(PALETTE).map(([key, value]) => <option key={key} value={key}>{value.label}</option>)}</select><div className="hidden flex-wrap items-center gap-2 lg:flex" role="radiogroup" aria-label="Resume accent color">{Object.entries(PALETTE).map(([key, option]) => <label key={key} className={`flex cursor-pointer items-center gap-1 rounded-lg border px-2 py-1.5 ${cvData.accentColor === key ? 'border-indigo-400 bg-white shadow-sm' : 'border-transparent hover:bg-white/70'}`}><input type="radio" name="resume-accent" value={key} checked={(cvData.accentColor || 'indigo') === key} onChange={() => update({ accentColor: key })} className="accent-indigo-600" /><span className="h-3 w-3 rounded-full border border-slate-300" style={{ backgroundColor: option.hex }} /><span>{option.label}</span></label>)}</div></div></div>
+<section className={`rounded-2xl border border-slate-200 bg-slate-100 p-3 shadow-sm sm:p-5 dark:bg-[#111C30] dark:border-slate-700/70 dark:shadow-black/25 ${mobileTab === 'edit' ? 'hidden lg:block' : ''}`} aria-label="Live resume preview">
+<div className="mb-3 flex flex-wrap items-center justify-between gap-2"><h2 className="text-sm font-extrabold text-slate-800 dark:text-slate-100 transition-colors duration-300">Live CV preview</h2><div className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors duration-300"><span>Accent color</span><select aria-label="Resume accent color" className="rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs lg:hidden dark:bg-[#1B263B] dark:border-slate-700/70 transition-colors duration-300" value={cvData.accentColor || 'indigo'} onChange={e => update({ accentColor: e.target.value })}>{Object.entries(PALETTE).map(([key, value]) => <option key={key} value={key}>{value.label}</option>)}</select><div className="hidden flex-wrap items-center gap-2 lg:flex" role="radiogroup" aria-label="Resume accent color">{Object.entries(PALETTE).map(([key, option]) => <label key={key} className={`flex cursor-pointer items-center gap-1 rounded-lg border px-2 py-1.5 ${cvData.accentColor === key ? 'border-indigo-400 bg-white shadow-sm dark:border-indigo-400/70 dark:bg-[#26344D] dark:shadow-black/25' : 'border-transparent hover:bg-white/70 dark:hover:bg-[#26344D]'}`}><input type="radio" name="resume-accent" value={key} checked={(cvData.accentColor || 'indigo') === key} onChange={() => update({ accentColor: key })} className="accent-indigo-600" /><span className="h-3 w-3 rounded-full border border-slate-300 dark:border-slate-700/70 transition-colors duration-300" style={{ backgroundColor: option.hex }} /><span>{option.label}</span></label>)}</div></div></div>
 <div className="mx-auto min-h-[650px] w-full max-w-[760px] space-y-5 bg-white px-5 py-8 text-slate-800 shadow-md sm:px-10 sm:py-11">
 <div className="border-b border-slate-200 pb-5 text-center">
 <h2 className="break-words text-2xl font-extrabold tracking-tight text-slate-950 sm:text-3xl">{cvData.fullName || 'Your Name'}</h2>
@@ -1218,7 +1218,7 @@ className="w-full rounded-xl border-2 border-dashed border-indigo-200 px-4 py-3 
 </div>}
 {!cvData.bio && !cvData.experiences.length && !cvData.qualifications.length && !skills && !(cvData.skillGroups || []).some(g => g.name && g.skills) && <p className="py-16 text-center text-sm text-slate-400">Start editing your details to build your resume.</p>}
 </div>
-<p className="mt-3 text-center text-[11px] text-slate-500">Screen preview approximates the PDF layout. Use Download PDF to inspect exact page breaks.</p>
+<p className="mt-3 text-center text-[11px] text-slate-500 dark:text-slate-400 transition-colors duration-300">Screen preview approximates the PDF layout. Use Download PDF to inspect exact page breaks.</p>
 </section>
 </div>
 </div>
@@ -1227,7 +1227,7 @@ className="w-full rounded-xl border-2 border-dashed border-indigo-200 px-4 py-3 
 }
 export default function DashboardPage() {
 return (
-<Suspense fallback={<div className="min-h-screen bg-slate-50 p-8 text-center text-sm text-slate-600">Loading resume workspace…</div>}>
+<Suspense fallback={<div className="min-h-screen bg-slate-50 p-8 text-center text-sm text-slate-600 dark:bg-[#0B1120] dark:text-slate-100 dark:[color-scheme:dark] dark:text-slate-300 transition-colors duration-300">Loading resume workspace…</div>}>
 <DashboardContent />
 </Suspense>
 )

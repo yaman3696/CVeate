@@ -1,8 +1,10 @@
 
 import { NextRequest, NextResponse } from 'next/server'
+import { checkAdminPermission } from '@/lib/admin-permissions'
 import { requireAdmin } from '@/lib/require-admin'
 import { requireAdminMfa } from '@/lib/require-admin-mfa'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { recordAdminAudit } from '@/lib/admin-audit'
 import { sanitizeBlogHtml } from '@/lib/blog/sanitize-html'
 
 type RouteContext = {
@@ -33,6 +35,9 @@ export async function DELETE(
     )
   }
 
+  const permissionDenied = await checkAdminPermission(admin.id, 'blog.delete')
+  if (permissionDenied) return permissionDenied
+
   const { id } = await params
 
   if (
@@ -48,7 +53,7 @@ export async function DELETE(
     .from('blogs')
     .delete()
     .eq('id', id)
-    .select('id')
+    .select('id, title, slug, status')
     .maybeSingle()
 
   if (error) {
@@ -67,8 +72,10 @@ export async function DELETE(
     )
   }
 
+  const auditRecorded = await recordAdminAudit({ actorId: admin.id, action: 'blog.deleted', resourceId: data.id, summary: data.title || 'Untitled draft', metadata: { slug: data.slug, previousStatus: data.status } })
+
   return NextResponse.json(
-    { success: true, deletedId: data.id },
+    { success: true, deletedId: data.id, auditRecorded },
     { headers: { 'Cache-Control': 'no-store' } }
   )
 }
@@ -100,7 +107,7 @@ const blogResponseHeaders = {
       )
     }
   
-    return null
+    return checkAdminPermission(admin.id, 'blog.read')
   }
   
   // GET /api/admin/blogs/[id]
@@ -160,8 +167,12 @@ const blogResponseHeaders = {
     request: NextRequest,
     { params }: RouteContext
   ) {
-    const denied = await authorizeBlogRequest(request)
-    if (denied) return denied
+    const authorization = request.headers.get('authorization')
+    const admin = await requireAdmin(authorization)
+    if (!admin) return NextResponse.json({ error: 'ADMIN_REQUIRED' }, { status: 403, headers: blogResponseHeaders })
+    if (!(await requireAdminMfa(authorization))) return NextResponse.json({ error: 'MFA_REQUIRED' }, { status: 403, headers: blogResponseHeaders })
+    const permissionDenied = await checkAdminPermission(admin.id, 'blog.update')
+    if (permissionDenied) return permissionDenied
   
     const { id } = await params
   
@@ -198,6 +209,11 @@ const blogResponseHeaders = {
       )
     }
   
+    if (status === 'published') {
+      const denied = await checkAdminPermission(admin.id, 'blog.publish')
+      if (denied) return denied
+    }
+
     const getText = (value: unknown) =>
       typeof value === 'string' ? value.trim() : ''
   
@@ -313,8 +329,10 @@ const hasVisibleContent = sanitizedContent
       )
     }
   
+    const auditRecorded = await recordAdminAudit({ actorId: admin.id, action: 'blog.updated', resourceId: data.id, summary: title || 'Untitled draft', metadata: { previousStatus: existing.status, status: data.status, slug: data.slug } })
+
     return NextResponse.json(
-      { success: true, blog: data },
+      { success: true, blog: data, auditRecorded },
       { headers: blogResponseHeaders }
     )
   }
