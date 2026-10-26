@@ -1,4 +1,7 @@
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* CVeate Typography */
 @theme inline {
   --font-sans: var(--font-inter), Arial, sans-serif;

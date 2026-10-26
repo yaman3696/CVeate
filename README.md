@@ -1,36 +1,14 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CVeat administrator permissions update
 
-## Getting Started
+1. Back up your project.
+2. Run the included supabase/migrations/202610260002_admin_permissions.sql in Supabase SQL Editor BEFORE installing the code. Audit Logs setup must already be complete.
+3. Exactly one current admin: automatically becomes owner. Multiple admins: replace `owner_id uuid := null;` in the setup block with `owner_id uuid := 'YOUR-ADMIN-USER-UUID'::uuid;`. Copy your UUID from Users. Then run the entire script.
+4. Copy the included app/, lib/, supabase/ files into matching project folders. These are complete files; preserve all other files.
+5. Open /admin/permissions as the owner. Existing admins retain section/article access. Only the owner can edit grants; owners cannot be edited here. New admins have no implicit section grants.
+6. Verify a restricted admin is denied access and see the saved permission change in Audit Logs.
 
-First, run the development server:
+Server-enforced capabilities: Overview, Users, Revenue, AI Economics, Audit Logs, article viewing/creation/editing/deletion/publication; owner-only management. Permission saves and audit records commit atomically. Version checking rejects stale saves. Navigation follows grants. Light/dark styles included.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+The APIs fail closed if permission tables cannot be read. Complete SQL setup before deployment. Customer features and MFA flow are preserved.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Validation: staged TypeScript; targeted lint; mocked authorization, assignment and route-coverage tests; local PostgreSQL-engine tests for bootstrap, owner/self protection, unauthorized RPC denial, stale versions, migration replay, atomic audit rollback and append-only logs. Live Supabase setup has NOT been applied. A production build has not been run for this staged package.

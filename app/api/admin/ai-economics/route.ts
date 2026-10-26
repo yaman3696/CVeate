@@ -1,5 +1,6 @@
 
 import { NextRequest, NextResponse } from 'next/server'
+import { checkAdminPermission } from '@/lib/admin-permissions'
 import { requireAdmin } from '@/lib/require-admin'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { requireAdminMfa } from '@/lib/require-admin-mfa'
@@ -30,6 +31,9 @@ if (!mfaVerified) {
     }
   )
 }
+
+    const permissionDenied = await checkAdminPermission(admin.id, 'ai_economics.read')
+    if (permissionDenied) return permissionDenied
 
     const [
       usageResult,
