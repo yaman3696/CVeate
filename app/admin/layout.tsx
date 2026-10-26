@@ -32,13 +32,13 @@ const navigation = [
   { label: 'Permissions', href: '/admin/permissions', icon: ShieldCheck },
   { label: 'Employees', href: '/admin/employees', icon: Users },
   { label: 'Audit Logs', href: '/admin/audit', icon: ScrollText },
-  { label: 'Settings', href: '/admin/settings', icon: Settings, disabled: true },
+  { label: 'Settings', href: '/admin/settings', icon: Settings },
 ]
 
 const sectionPermissions: Record<string, AdminAccessPermission> = {
   '/admin': 'overview.read', '/admin/users': 'users.read', '/admin/blog': 'blog.read',
   '/admin/ai-economics': 'ai_economics.read', '/admin/revenue': 'revenue.read',
-  '/admin/audit': 'audit.read', '/admin/permissions': 'permissions.manage', '/admin/employees': 'permissions.manage',
+  '/admin/audit': 'audit.read', '/admin/permissions': 'permissions.manage', '/admin/employees': 'permissions.manage', '/admin/settings': 'permissions.manage',
 }
 
 export default function AdminLayout({

@@ -2,8 +2,11 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { useSiteSettings } from '@/components/site/SiteSettingsProvider'
+import { SiteSocialLinks } from '@/components/site/SiteDetails'
 
 export default function ContactPage() {
+  const site = useSiteSettings()
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const [formData, setFormData] = useState({
     name: '',
@@ -246,37 +249,25 @@ export default function ContactPage() {
                 <div>
                   <strong className="block uppercase tracking-wider text-indigo-400 mb-1 text-[10px] dark:text-indigo-300 transition-colors duration-300">Office Address</strong>
                   <p className="text-slate-300 leading-relaxed">
-                    CVeat Headquarters<br />
-                    Mayur Vihar Phase 1<br />
-                    New Delhi, Delhi, 110001, India
+                    <span className="whitespace-pre-line">{site.address}</span>
                   </p>
                 </div>
 
                 <div>
                   <strong className="block uppercase tracking-wider text-indigo-400 mb-1 text-[10px] dark:text-indigo-300 transition-colors duration-300">Contact Number</strong>
-                  <p className="text-slate-300">+91 8826733504</p>
+                  <p className="text-slate-300">{site.phone}</p>
                 </div>
 
                 <div>
                   <strong className="block uppercase tracking-wider text-indigo-400 mb-1 text-[10px] dark:text-indigo-300 transition-colors duration-300">Email Support</strong>
-                  <p className="text-slate-300">support@cveat.in</p>
+                  <a href={`mailto:${site.supportEmail}`} className="text-slate-300">{site.supportEmail}</a>
                 </div>
               </div>
             </div>
 
             <div className="pt-6 border-t border-slate-800">
               <strong className="block uppercase tracking-wider text-indigo-400 mb-3 text-[10px] dark:text-indigo-300 transition-colors duration-300">Social Media Handles</strong>
-              <div className="flex flex-wrap gap-2 text-xs">
-                <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg font-semibold transition-colors">
-                  LinkedIn
-                </a>
-                <a href="https://instagram.com" target="_blank" rel="noreferrer" className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg font-semibold transition-colors">
-                  Instagram
-                </a>
-                <a href="https://twitter.com" target="_blank" rel="noreferrer" className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg font-semibold transition-colors">
-                  Twitter (X)
-                </a>
-              </div>
+              <SiteSocialLinks />
             </div>
           </div>
 

@@ -6,6 +6,8 @@ import { supabase } from '@/utils/supabaseClient'
 import './globals.css'
 import { clearAtsDraft } from '@/lib/ats-draft-storage'
 import ThemeToggle from './ThemeToggle'
+import SiteBrand from '@/components/site/SiteBrand'
+import { SiteSettingsProvider } from '@/components/site/SiteSettingsProvider'
 import { Inter, Manrope } from 'next/font/google'
 const inter = Inter({
 subsets: ['latin'],
@@ -333,7 +335,7 @@ className={`sticky top-0 z-50 shadow-md transition-colors duration-300 ${
 <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
 <div className="flex items-center">
 <Link href="/" className={`text-2xl font-black tracking-tight ${isLightNav ? 'text-indigo-600 dark:text-white' : 'text-white'}`}>
-CVeat
+<SiteBrand />
 </Link>
 </div>
 <div className={`hidden md:flex items-center gap-6 ml-auto mr-6 text-sm font-medium ${isLightNav ? 'text-slate-600 dark:text-indigo-100' : 'text-indigo-100'}`}>
@@ -735,9 +737,9 @@ export default function ClientLayout({
 }) {
   return (
     <Suspense fallback={<div className="min-h-screen bg-white" />}>
-      <NavigationWrapper>
-        {children}
-      </NavigationWrapper>
+      <SiteSettingsProvider>
+        <NavigationWrapper>{children}</NavigationWrapper>
+      </SiteSettingsProvider>
     </Suspense>
   )
 }

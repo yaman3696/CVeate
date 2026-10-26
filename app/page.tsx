@@ -1,4 +1,6 @@
 'use client'
+import SiteBrand from '@/components/site/SiteBrand'
+import { SiteSocialLinks, SiteCopyright } from '@/components/site/SiteDetails'
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -843,14 +845,14 @@ See More Blogs
 <footer className="bg-slate-950 text-slate-400 py-16 px-6 border-t border-slate-800 dark:border-slate-700/70">
 <div className="mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
 <div className="space-y-4 md:col-span-1">
-<h3 className="text-xl font-black tracking-tight text-white">CVeat</h3>
+<h3 className="text-xl font-black tracking-tight text-white"><SiteBrand footer /></h3>
 <p className="text-xs text-slate-400 leading-relaxed">Empowering experienced professionals to bypass automated ATS filters and land interviews faster. CVeat provides a free ATS resume scanning and optimization tool designed for job seekers.</p>
 </div>
 <div className="space-y-3">
 <h4 className="text-xs font-bold uppercase tracking-wider text-white">Navigation</h4>
 <div className="flex flex-col gap-2 text-xs">
 <div><Link href="/" className="hover:text-white transition-colors dark:hover:text-indigo-200">Home</Link></div>
-<div><a href="#about" className="hover:text-white transition-colors dark:hover:text-indigo-200">About Us</a></div>
+<div><a href="/about" className="hover:text-white transition-colors dark:hover:text-indigo-200">About Us</a></div>
 <div><Link href="/blog" className="hover:text-white transition-colors dark:hover:text-indigo-200">Blog</Link></div>
 <div><Link href="/pricing" className="hover:text-white transition-colors dark:hover:text-indigo-200">Pricing</Link></div>
 <div><Link href="/ats-checker" className="hover:text-white transition-colors dark:hover:text-indigo-200">ATS Checker</Link></div>
@@ -867,6 +869,7 @@ See More Blogs
 <div className="space-y-3">
 <h4 className="text-xs font-bold uppercase tracking-wider text-white">Support</h4>
 <p className="text-xs text-slate-400">Need help? Reach out to our team.</p>
+<SiteSocialLinks />
 <Link href="/contact">
 <button className="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-md hover:bg-indigo-500 transition-all cursor-pointer dark:hover:bg-indigo-700 dark:shadow-black/20">
 Contact Support
@@ -875,7 +878,7 @@ Contact Support
 </div>
 </div>
 <div className="mx-auto max-w-6xl pt-8 border-t border-slate-900 text-xs text-slate-500 dark:border-slate-700/70 dark:text-slate-400">
-<p>© 2026 CVeat. All rights reserved.</p>
+<p><SiteCopyright /></p>
 </div>
 </footer>
 </div>

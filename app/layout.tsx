@@ -1,8 +1,10 @@
 
 import type { Metadata } from 'next'
+import { cacheLife, cacheTag } from 'next/cache'
 import { Inter, Manrope } from 'next/font/google'
 import './globals.css'
 import ClientLayout from './ClientLayout'
+import { getPublishedSiteSettings } from '@/lib/site-settings-server'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -16,8 +18,8 @@ const manrope = Manrope({
   variable: '--font-manrope',
 })
 
-export const metadata: Metadata = {
-  metadataBase: new URL('https://cveat.in'),
+const originalMetadata: Metadata = {
+  metadataBase: 'https://cveat.in',
 
   title: {
     default: 'Cveat | AI Resume Builder & ATS Checker',
@@ -67,6 +69,23 @@ export const metadata: Metadata = {
       'max-video-preview': -1,
     },
   },
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  'use cache'
+  cacheLife({ stale: 300, revalidate: 60, expire: 3600 })
+  cacheTag('site-settings')
+  const site = await getPublishedSiteSettings()
+  const images = site.shareImage ? [{ url: site.shareImage }] : undefined
+  return {
+    ...originalMetadata,
+    title: { default: site.seoTitle, template: `%s | ${site.companyName}` },
+    description: site.seoDescription,
+    applicationName: site.companyName,
+    ...(site.favicon ? { icons: { icon: [{ url: site.favicon, type: 'image/png' }], shortcut: site.favicon, apple: site.favicon } } : {}),
+    openGraph: { ...originalMetadata.openGraph, title: site.seoTitle, description: site.seoDescription, siteName: site.companyName, ...(images ? { images } : {}) },
+    twitter: { ...originalMetadata.twitter, title: site.seoTitle, description: site.seoDescription, ...(images ? { images } : {}) },
+  }
 }
 
 export default function RootLayout({
