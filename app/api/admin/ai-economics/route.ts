@@ -82,7 +82,8 @@ export async function GET(request: NextRequest) {
 
     const originalUsage = usageResult.data ?? [];
     const usage = priceLegacyAts(originalUsage, await geminiRateSnapshot("gemini-3.1-flash-lite"));
-    const historicalAtsEstimates = usage.filter((row,i) => originalUsage[i].estimated_cost_inr === null && row.estimated_cost_inr !== null).length;
+    const historicalInterviewRanges = usage.filter(row => row.cost_estimate_basis === "legacy_interview_range").length;
+    const historicalAtsEstimates = usage.filter((row,i) => row.feature === "ats_checker" && originalUsage[i].estimated_cost_inr === null && row.estimated_cost_inr !== null).length;
     const purchases = purchasesResult.data ?? [];
     const grants = grantsResult.data ?? [];
     const transactions = transactionsResult.data ?? [];
@@ -275,8 +276,8 @@ export async function GET(request: NextRequest) {
           totalInputTokens,
           totalOutputTokens,
           estimatedAiCostInr,
-          interviewCostInr: Number(interviewCosts?.lifetime?.knownCostInr || 0),
-          otherAiCostInr: usage.reduce((sum,row)=>sum+Number(row.estimated_cost_inr??0),0),
+          interviewCostInr: Number(interviewCosts?.lifetime?.knownCostInr || 0) + usage.filter(row => row.feature?.startsWith("interview_")).reduce((sum,row)=>sum+Number(row.estimated_cost_inr??0),0),
+          otherAiCostInr: usage.filter(row => !row.feature?.startsWith("interview_")).reduce((sum,row)=>sum+Number(row.estimated_cost_inr??0),0),
           revenueInr,
           estimatedContributionInr,
           contributionMarginPercent,
@@ -310,6 +311,7 @@ export async function GET(request: NextRequest) {
         recentUsage,
 
         warnings: [
+          ...(historicalInterviewRanges ? [`${historicalInterviewRanges} older interview calls lack modality/cache detail. Their displayed ranges use current configured rates; planning totals use the upper end, not a claimed invoice charge.`] : []),
           ...(historicalAtsEstimates ? [`${historicalAtsEstimates} historical ATS calls use current configured 3.1 Flash-Lite rates and no cache discount; these are planning estimates, not invoices.`] : []),
           "AI costs are modeled paid-tier estimates, not actual provider invoices.",
           "The financial summary combines lifetime interview costs and the legacy ledger, capped at 10,000 legacy entries. The interview section uses the selected start-date cohort.",

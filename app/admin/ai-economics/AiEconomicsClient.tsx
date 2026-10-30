@@ -34,6 +34,9 @@ type Feature = {
 };
 
 type Usage = {
+  cost_estimate_basis?: string;
+  cost_lower_inr?: number;
+  cost_upper_inr?: number;
   id: string;
   feature: string;
   model: string;
@@ -256,7 +259,10 @@ export default function AiEconomicsPage() {
           "Input Tokens",
           "Output Tokens",
           "Thinking Tokens",
-          "Modeled Cost (INR)",
+          "Planning Cost (INR)",
+          "Estimate Basis",
+          "Lower Estimate (INR)",
+          "Upper Estimate (INR)",
         ],
         rows: data.recentUsage.map((item) => [
           item.created_at,
@@ -267,6 +273,9 @@ export default function AiEconomicsPage() {
           item.output_tokens,
           item.thinking_tokens,
           item.estimated_cost_inr,
+          item.cost_estimate_basis || (item.estimated_cost_inr === null ? "Missing data" : "Recorded estimate"),
+          item.cost_lower_inr ?? null,
+          item.cost_upper_inr ?? null,
         ]),
       },
       ...(data.interviewCosts
@@ -454,7 +463,7 @@ export default function AiEconomicsPage() {
                 breakdown for partial coverage.
               </p>
             )}
-            <p className="rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-900">Contribution = completed purchase revenue − modeled ATS/CV costs − tracked Interview Prep costs (Gemini + Sarvam). Interview credit usage is not counted again as revenue. These estimates exclude hosting, payment fees and taxes.</p>
+            <p className="rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-900">Contribution = completed purchase revenue − modeled ATS/CV costs − tracked Interview Prep costs (Gemini + Sarvam). Interview credit usage is not counted again as revenue. Older interview ranges use their upper end in planning totals. These estimates exclude hosting, payment fees and taxes.</p>
             <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <MetricCard
                 label="Recorded revenue"
@@ -462,14 +471,14 @@ export default function AiEconomicsPage() {
                 note="Completed purchases only"
               />
               <MetricCard
-                label="Known modeled AI cost"
+                label="Modeled AI cost (planning)"
                 value={currency(data.summary.estimatedAiCostInr)}
                 note={`Interview Prep: ${currency(data.summary.interviewCostInr ?? 0)} · Other AI: ${currency(data.summary.otherAiCostInr ?? 0)}. Unpriced usage is excluded.`}
               />
               <MetricCard
-                label="Contribution from known costs"
+                label="Planning contribution"
                 value={currency(data.summary.estimatedContributionInr)}
-                note="Before hosting, payment fees and taxes"
+                note="Includes conservative legacy interview estimates; before hosting, fees and taxes"
               />
               <MetricCard
                 label="Contribution margin"
@@ -619,9 +628,9 @@ export default function AiEconomicsPage() {
             </section>
 
             <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <h2 className="text-xl font-bold">Recent legacy AI usage</h2>
+              <h2 className="text-xl font-bold">Recent API usage ledger</h2>
               <p className="mt-1 text-sm text-slate-500">
-                Latest 20 recorded API usage entries
+                Latest 20 ledger entries; detailed tracked interviews appear in the Interview Prep breakdown
               </p>
               <div className="mt-4 overflow-x-auto">
                 <table className="w-full text-left text-sm">
@@ -646,8 +655,8 @@ export default function AiEconomicsPage() {
                         <td className="p-3">{item.model}</td>
                         <td className="p-3">{item.status}</td>
                         <td className="p-3 font-medium">
-                          {item.estimated_cost_inr === null
-                            ? "Unpriced"
+                          {item.cost_estimate_basis === 'legacy_interview_range' ? <span title="Estimated token-cost range: audio/text/cache detail was not recorded. Planning totals use the upper end."><span className="whitespace-nowrap">{new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:4}).format(item.cost_lower_inr || 0)}–{new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:4}).format(item.cost_upper_inr || 0)}</span><span className="block text-xs font-normal text-amber-700">Historical estimate range</span></span> : item.estimated_cost_inr === null
+                            ? "Unpriced — token or rate data missing"
                             : currency(Number(item.estimated_cost_inr))}
                         </td>
                       </tr>

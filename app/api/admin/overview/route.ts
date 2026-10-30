@@ -152,7 +152,7 @@ export async function GET(request: NextRequest) {
           !!interviewCostResult.error ||
           Number(interviewCostResult.data?.unknownAttempts || 0) > 0 ||
           pricedUsage.some(
-            (row) => row.estimated_cost_inr === null,
+            (row) => row.estimated_cost_inr === null || row.cost_estimate_basis === "legacy_interview_range",
           ),
         trends,
       },
