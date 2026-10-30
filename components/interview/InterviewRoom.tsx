@@ -29,6 +29,7 @@ export default function InterviewRoom(p: {
     error: string;
     flagged: boolean;
     notice: ReactNode;
+    keyboardRequest: number;
     handsFree: boolean;
     onHandsFree: (value: boolean) => void;
     liveSupported: boolean;
@@ -45,6 +46,13 @@ export default function InterviewRoom(p: {
 }) {
     const [view, setView] = useState<"orb" | "avatar">("orb"), [mini, setMini] = useState(false), [full, setFull] = useState(false);
     const [transcriptOpen, setTranscriptOpen] = useState(false);
+    const answerInput = useRef<HTMLTextAreaElement>(null);
+    useEffect(() => {
+      if (!p.keyboardRequest) return;
+      setTranscriptOpen(true);
+      const tick = requestAnimationFrame(() => { answerInput.current?.focus(); answerInput.current?.scrollIntoView({block:"nearest",behavior:"smooth"}); });
+      return () => cancelAnimationFrame(tick);
+    }, [p.keyboardRequest]);
     useEffect(() => { const query = matchMedia("(max-width: 760px)"); const update = () => setTranscriptOpen(!query.matches); update(); query.addEventListener("change", update); return () => query.removeEventListener("change", update); }, []);
     const container = useRef<HTMLDivElement>(null), frame = useRef<HTMLIFrameElement>(null);
     const [avatarReady,setAvatarReady]=useState(false),[avatarProgress,setAvatarProgress]=useState<number|null>(0),[avatarNotice,setAvatarNotice]=useState("");
@@ -157,7 +165,7 @@ export default function InterviewRoom(p: {
     <h2>{p.questions[p.index]}</h2>
     <div className={`${styles.timer} ${p.seconds <= 30 ? styles.warning : ""}`}><div><span>{p.timerStarted ? "TIME REMAINING" : "YOUR ANSWER TIME"}</span><strong role="timer">{time}</strong></div><p>Up to 5 minutes.<br />Finish early when you’re ready.</p><div className={styles.track}><i style={{ width: `${p.seconds / 3}%` }}/></div></div>
     {p.notice}
-    <details className={styles.transcript} open={transcriptOpen} onToggle={e => setTranscriptOpen(e.currentTarget.open)}><summary>{p.listening ? "View your answer text" : "Write an answer using the keyboard"}</summary><p className="cveat-call-keyboard-help">This box is for keyboard input. To answer aloud, use Open mic above. Recorded speech is transcribed for review; it may appear after you close the mic.</p><textarea rows={3} maxLength={6000} disabled={p.busy || p.listening} value={p.answer} onChange={e => p.onAnswer(e.target.value)} placeholder={p.listening ? "Listening… your words appear here when available." : "Write your answer using your keyboard…"}/></details>
+    <details className={styles.transcript} open={transcriptOpen} onToggle={e => setTranscriptOpen(e.currentTarget.open)}><summary>{p.listening ? "View your answer text" : "Write an answer using the keyboard"}</summary><p className="cveat-call-keyboard-help">This box is for keyboard input. To answer aloud, use Open mic above. Recorded speech is transcribed for review; it may appear after you close the mic.</p><textarea ref={answerInput} rows={3} maxLength={6000} disabled={p.busy || p.listening} value={p.answer} onChange={e => p.onAnswer(e.target.value)} placeholder={p.listening ? "Listening… your words appear here when available." : "Write your answer using your keyboard…"}/></details>
     <p role="status" className={styles.status}>{p.interim || status}{p.timerStarted && p.seconds <= 30 ? " · 30 seconds or less remaining" : ""}</p>
     <button className={styles.primary} disabled={p.busy || p.speaking} onClick={() => { if (p.timerStarted)
         p.onNext();

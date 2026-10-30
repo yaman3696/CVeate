@@ -9,6 +9,7 @@ import { PRACTICE_LEVELS } from "@/lib/practice-interview";
 import InterviewOrb from "./InterviewOrb";
 import { saveInterviewSetupDraft, restoreInterviewSetupDraft, clearInterviewSetupDraft } from "@/lib/interview-setup-draft";
 import InterviewRoom from "./InterviewRoom";
+import MicrophoneConsentDialog from "./MicrophoneConsentDialog";
 type Session = {
     id: string;
     role: string;
@@ -93,7 +94,7 @@ export default function ConversationPractice({ userId, mode, onBack, }: {
     useEffect(() => { const urls = clipUrls.current; return () => { urls.forEach(URL.revokeObjectURL); urls.clear(); }; }, []);
     const recordingIntent = useRef(false), advanceAfterRecording = useRef(false), captureEpoch = useRef(0), autoListen = useRef(false);
     const liveTranscription = useRef<LiveTranscription | null>(null), transcriptionRequest = useRef<AbortController | null>(null);
-    const audioNotice = useRef<HTMLDivElement | null>(null), acceptAudio = useRef<HTMLButtonElement | null>(null);
+    const [keyboardRequest, setKeyboardRequest] = useState(0);
     const recorder = useRef<MediaRecorder | null>(null), audioStream = useRef<MediaStream | null>(null), audioTimer = useRef<ReturnType<typeof setTimeout> | null>(null), busyRef = useRef(false), active = useRef(true), startId = useRef<string | null>(null);
     const playback = useRef<HTMLAudioElement | null>(null), speechRequest = useRef<AbortController | null>(null), speechCache = useRef(new Map<number, string>());
     const question = session?.questions[index] || "";
@@ -466,13 +467,6 @@ export default function ConversationPractice({ userId, mode, onBack, }: {
             stopVoice();
             setError("");
             setShowAudioNotice(true);
-            requestAnimationFrame(() => {
-                audioNotice.current?.scrollIntoView({
-                    block: "nearest",
-                    behavior: "smooth",
-                });
-                acceptAudio.current?.focus();
-            });
             return;
         }
         await startRecording();
@@ -646,12 +640,9 @@ export default function ConversationPractice({ userId, mode, onBack, }: {
             stopMicrophone();
         }
     }
-    const audioConsentNotice = showAudioNotice ? <div ref={audioNotice} role="region" aria-label="Microphone processing notice" className="mt-4 rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-xs leading-6 dark:border-indigo-400/30 dark:bg-indigo-400/10">
-    <strong>Before using your microphone</strong><p>Audio-only interview. No camera is needed or accessed. {transcriptionMode === "live" ? "Live transcription may process speech with your browser’s speech provider. If unavailable, Google Gemini transcribes the recording." : "Google Gemini processes the recording for transcription."} Temporary audio remains in this tab for your review and is never saved to Supabase.</p>
-    <button ref={acceptAudio} className={primary} onClick={() => { setConsent(true); setLiveConsent(transcriptionMode === "live"); setShowAudioNotice(false); void startRecording(); }}>I agree — open mic</button><button className={button} onClick={() => { setShowAudioNotice(false); beginAnswerClock(); }}>Use my keyboard instead</button>
-  </div> : null;
+    const audioConsentNotice = showAudioNotice ? <MicrophoneConsentDialog live={transcriptionMode === "live"} onDismiss={() => setShowAudioNotice(false)} onAgree={() => { setConsent(true); setLiveConsent(transcriptionMode === "live"); setShowAudioNotice(false); void startRecording(); }} onKeyboard={() => { setShowAudioNotice(false); setHandsFree(false); beginAnswerClock(); setKeyboardRequest(n => n + 1); requestAnimationFrame(() => document.querySelector<HTMLTextAreaElement>('[data-interview-answer]')?.focus()); }} /> : null;
     if (spoken && session && !report && !reviewing)
-        return <InterviewRoom role={session.role} questions={session.questions} index={index} answer={answer} seconds={seconds} timerStarted={deadline !== null || answerClock.current !== null} listening={listening} speaking={speaking} busy={busy} micSupported={micSupported} voice={voice} stream={visualStream} audio={speechAudio} interim={interim} error={error} flagged={flags[index]} notice={audioConsentNotice} handsFree={handsFree} onHandsFree={setHandsFree} liveSupported={liveSupported} transcriptionMode={transcriptionMode} onTranscriptionMode={setTranscriptionMode} onAnswer={text => { stopVoice(); beginAnswerClock(); setAnswer(text); }} onStart={() => { if (answer.trim() || !micSupported)
+        return <InterviewRoom role={session.role} questions={session.questions} index={index} answer={answer} seconds={seconds} timerStarted={deadline !== null || answerClock.current !== null} listening={listening} speaking={speaking} busy={busy} micSupported={micSupported} voice={voice} stream={visualStream} audio={speechAudio} interim={interim} error={error} flagged={flags[index]} notice={audioConsentNotice} keyboardRequest={keyboardRequest} handsFree={handsFree} onHandsFree={setHandsFree} liveSupported={liveSupported} transcriptionMode={transcriptionMode} onTranscriptionMode={setTranscriptionMode} onAnswer={text => { stopVoice(); beginAnswerClock(); setAnswer(text); }} onStart={() => { if (answer.trim() || !micSupported)
             beginAnswerClock();
         else
             void microphone(); }} onNext={next} onMic={() => void microphone()} onVoice={() => { setVoice(!voice); if (voice)
@@ -876,34 +867,12 @@ export default function ConversationPractice({ userId, mode, onBack, }: {
                     when each question finishes.
                   </label>
                 </div>)}
-              {showAudioNotice && (<div ref={audioNotice} role="region" aria-label="Microphone processing notice" className="rounded-2xl border border-indigo-200 bg-indigo-50 p-5 dark:border-indigo-400/30 dark:bg-indigo-400/10">
-                  <h3 className="font-bold">Before using your microphone</h3>
-                  <p className="mt-2 text-sm leading-6">
-                    {transcriptionMode === "live"
-                    ? "Live transcription may send speech to your browser’s speech provider. If unavailable, the temporary recording is sent to Google Gemini for transcription."
-                    : "Your temporary recording is sent to Google Gemini for transcription."}{" "}
-                    Audio is never saved in Supabase. The microphone stops while
-                    the AI speaks. You can turn it off at any time.
-                  </p>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <button ref={acceptAudio} className={primary} onClick={() => {
-                    setConsent(true);
-                    setLiveConsent(transcriptionMode === "live");
-                    setShowAudioNotice(false);
-                    void startRecording();
-                }}>
-                      I agree — open mic
-                    </button>
-                    <button className={button} onClick={() => setShowAudioNotice(false)}>
-                      Keep typing instead
-                    </button>
-                  </div>
-                </div>)}
+              {audioConsentNotice}
               <label className="block text-sm font-semibold">
                 {spoken
                 ? "Your answer · live transcript is editable after stopping"
                 : "Your answer"}
-                <textarea rows={8} disabled={busy || listening} className={`${input} font-normal`} maxLength={6000} value={answer} onChange={(e) => {
+                <textarea data-interview-answer rows={8} disabled={busy || listening} className={`${input} font-normal`} maxLength={6000} value={answer} onChange={(e) => {
                 stopVoice();
                 setAnswer(e.target.value);
             }} placeholder={listening
