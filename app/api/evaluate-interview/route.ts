@@ -1,3 +1,4 @@
+import { signupAccess } from '@/lib/signup-server'
 
 import { GoogleGenAI } from '@google/genai'
 import { NextResponse } from 'next/server'
@@ -164,6 +165,8 @@ export async function POST(req: Request) {
       return json({ error: 'Please sign in again.' }, 401)
     }
 
+    const signupDenied = await signupAccess(user.id)
+    if (signupDenied) return signupDenied
     userId = user.id
 
     const body = await req.json()

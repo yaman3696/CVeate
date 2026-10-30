@@ -1,3 +1,4 @@
+import { signupAccess } from '@/lib/signup-server'
 import { NextRequest } from "next/server";
 import {
   enterpriseUser,
@@ -18,6 +19,8 @@ export async function POST(req: NextRequest) {
         { error: "Sign in first." },
         { status: 401, headers },
       );
+    const signupDenied = await signupAccess(user.id);
+    if (signupDenied) return signupDenied;
     if (Number(req.headers.get("content-length") || 0) > 24000)
       return Response.json(
         { error: "Request too large." },

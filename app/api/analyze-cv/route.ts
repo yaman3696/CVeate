@@ -1,3 +1,4 @@
+import { signupAccess } from '@/lib/signup-server'
 import { ATS_REPORT_SCHEMA } from '@/lib/ats-report'
 import { geminiRateSnapshot, textUsageCost } from '@/lib/ai-usage-pricing'
 import { GoogleGenAI } from '@google/genai'
@@ -30,6 +31,8 @@ export async function POST(req: Request) {
     const { data: auth, error: authError } = await supabaseAdmin.auth.getUser(authorization.slice(7))
     if (authError || !auth.user) return json({ error: 'Session expired. Please sign in again.' }, 401)
 
+    const signupDenied = await signupAccess(auth.user.id);
+    if (signupDenied) return signupDenied;
     const requestId = req.headers.get('x-ats-request-id') || ''
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestId)) {
       return json({ error: 'Invalid scan request ID.' }, 400)

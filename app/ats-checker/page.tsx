@@ -1,4 +1,5 @@
 'use client'
+import { validSignupMobile, mobileError, disposableEmail, signupTicket } from '@/lib/signup-policy'
 import AnimatedNetwork from '@/components/AnimatedNetwork'
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 import { useState, useEffect, useRef } from 'react'
@@ -208,23 +209,23 @@ setErrorMessage('')
 setSuccessMessage('')
 try {
 if (authMode === 'signup') {
-const mobileRegex = /^[0-9]{10}$/
-if (!mobileRegex.test(contactNumber)) {
-throw new Error('Please enter a valid 10-digit mobile number.')
-}
+if (!validSignupMobile(contactNumber)) throw new Error(mobileError)
+if (disposableEmail(email)) throw new Error('Please use a permanent email address. Temporary email addresses are not accepted.')
 if (password !== confirmPassword) {
 throw new Error('Passwords do not match.')
 }
 if (!agreeTerms) {
 throw new Error('You must agree to the terms and conditions to sign up.')
 }
+const ticket = await signupTicket(email, contactNumber)
 const { data, error } = await supabase.auth.signUp({
 email,
 password,
 options: {
 data: {
 full_name: fullName,
-contact_number: contactNumber
+contact_number: contactNumber,
+signup_ticket: ticket
 }
 }
 })
@@ -976,6 +977,11 @@ className="w-full rounded-xl border border-slate-200 px-4 py-2 text-sm focus:rin
 <input
 type="tel"
 maxLength={10}
+minLength={10}
+pattern="[6-9][0-9]{9}"
+inputMode="numeric"
+autoComplete="tel-national"
+aria-label="Mobile number (10 digits)"
 value={contactNumber}
 onChange={(e) => setContactNumber(e.target.value.replace(/\D/g, ''))}
 required

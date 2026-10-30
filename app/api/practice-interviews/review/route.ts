@@ -1,3 +1,4 @@
+import { signupAccess } from '@/lib/signup-server'
 import { NextRequest } from "next/server";
 import {
   enterpriseUser,
@@ -40,6 +41,8 @@ export async function POST(req: NextRequest) {
     if (!user) return json({ error: "Please sign in again." }, 401);
     if (Number(req.headers.get("content-length") || 0) > 65000)
       return json({ error: "Transcript too large." }, 413);
+    const signupDenied = await signupAccess(user.id);
+    if (signupDenied) return signupDenied;
     const body = await req.json(),
       interview = verifyInterview(body.token, user.id);
     if (

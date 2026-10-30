@@ -1,3 +1,4 @@
+import { signupAccess } from '@/lib/signup-server'
 import { GoogleGenAI } from '@google/genai'
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
@@ -163,6 +164,8 @@ export async function POST(req: Request) {
     const { data: auth, error: authError } = await supabaseAdmin.auth.getUser(authorization.slice(7))
     if (authError || !auth.user) return json({ error: 'Session expired. Please sign in again.' }, 401)
 
+    const signupDenied = await signupAccess(auth.user.id);
+    if (signupDenied) return signupDenied;
     const requestId = req.headers.get('x-review-request-id') || ''
     if (!UUID_RE.test(requestId)) return json({ error: 'Invalid AI CV Review request ID.' }, 400)
 

@@ -18,9 +18,12 @@ export default function ProfileCompletionPrompt({ user }: { user: { id: string; 
     try { if (sessionStorage.getItem(key)) return } catch {}
     let cancelled = false
     void (async () => {
+      const session = await supabase.auth.getSession()
+      const status = await fetch('/api/auth/signup-status', {headers:{Authorization:`Bearer ${session.data.session?.access_token || ''}`}}).then(r=>r.ok?r.json():null).catch(()=>null)
+      if (!status?.ready || cancelled) return
       const { data, error } = await supabase.from('profiles').select('full_name,contact_number,phone,profession,target_job_title').eq('id', user.id).maybeSingle()
       if (cancelled || error) return
-      const filled = (value: unknown) => typeof value === 'string' && value.trim().length > 0
+      const filled = (value: unknown) => (typeof value === 'string' && value.trim().length > 0) || (typeof value === 'number' && Number.isFinite(value) && value > 0)
       if (!data || !filled(data.full_name) || !(filled(data.contact_number) || filled(data.phone)) || !(filled(data.profession) || filled(data.target_job_title))) setPromptKey(key)
     })()
     return () => { cancelled = true }

@@ -1,3 +1,4 @@
+import { signupAccess } from '@/lib/signup-server'
 import { NextRequest } from "next/server";
 import { PDFDocument } from "pdf-lib";
 import { generatePracticeResponse as generate } from "@/lib/practice-ai";
@@ -82,6 +83,8 @@ export async function POST(req: NextRequest) {
     const user = await enterpriseUser(token);
     if (!user)
       return json({ error: "Sign in to personalise an interview." }, 401);
+    const signupDenied = await signupAccess(user.id);
+    if (signupDenied) return signupDenied;
     userId = user.id;
     if (Number(req.headers.get("content-length") || 0) > 3 * 1024 * 1024)
       return json({ error: "Use a PDF or TXT CV up to 2 MB." }, 413);

@@ -1,4 +1,5 @@
 'use client'
+import { validSignupMobile, mobileError, disposableEmail, signupTicket } from '@/lib/signup-policy'
 import { useState, useEffect, useRef, Suspense } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -7,6 +8,7 @@ import './globals.css'
 import { clearAtsDraft } from '@/lib/ats-draft-storage'
 import ThemeToggle from './ThemeToggle'
 import VisitorHeartbeat from '@/components/site/VisitorHeartbeat'
+import SignupCompletionGate from '@/components/site/SignupCompletionGate'
 import ProfileCompletionPrompt from '@/components/site/ProfileCompletionPrompt'
 import SiteBrand from '@/components/site/SiteBrand'
 import InteractiveCursors from '@/components/site/InteractiveCursors'
@@ -217,10 +219,8 @@ setErrorMessage('')
 setSuccessMessage('')
 try {
 if (authMode === 'signup') {
-const mobileRegex = /^[0-9]{10}$/
-if (!mobileRegex.test(contactNumber)) {
-throw new Error('Please enter a valid 10-digit mobile number.')
-}
+if (!validSignupMobile(contactNumber)) throw new Error(mobileError)
+if (disposableEmail(email)) throw new Error('Please use a permanent email address. Temporary email addresses are not accepted.')
 if (password !== confirmPassword) {
 throw new Error('Passwords do not match.')
 }
@@ -228,13 +228,15 @@ if (!agreeTerms) {
 throw new Error('You must agree to the terms and conditions to sign up.')
 }
 // Pass full_name to Supabase Auth metadata table
+const ticket = await signupTicket(email, contactNumber)
 const { data, error } = await supabase.auth.signUp({
 email,
 password,
 options: {
 data: {
 full_name: fullName,
-contact_number: contactNumber
+contact_number: contactNumber,
+signup_ticket: ticket
 }
 }
 })
@@ -350,7 +352,7 @@ return (
 <>
 <VisitorHeartbeat/>
 <InteractiveCursors/>
-<ProfileCompletionPrompt user={user} />
+<SignupCompletionGate user={user}/><ProfileCompletionPrompt user={user} />
 {/* Global Navigation Bar */}
 {!isAdminPage && (
 <nav
@@ -644,6 +646,11 @@ className="w-full rounded-xl border border-slate-200 px-4 py-2 text-sm focus:rin
 <input
 type="tel"
 maxLength={10}
+minLength={10}
+pattern="[6-9][0-9]{9}"
+inputMode="numeric"
+autoComplete="tel-national"
+aria-label="Mobile number (10 digits)"
 value={contactNumber}
 onChange={(e) => setContactNumber(e.target.value.replace(/\D/g, ''))}
 required
