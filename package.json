@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "build:avatar": "node scripts/build-interview-avatar.mjs",
+    "prebuild": "npm run build:avatar",
+    "predev": "npm run build:avatar"
   },
   "dependencies": {
     "@google/genai": "^2.28.0",

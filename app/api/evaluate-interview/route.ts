@@ -2,6 +2,9 @@
 import { GoogleGenAI } from '@google/genai'
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { PRACTICE_MODEL } from '@/lib/practice-ai'
+
+export const maxDuration = 120
 
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
@@ -183,7 +186,19 @@ export async function POST(req: Request) {
       return jobResponse(existing)
     }
 
-    const { category, seniority, questions, answers } = body
+    let { category, seniority, questions, answers } = body
+    const isConversation = body.practiceSessionId !== undefined
+    if (isConversation) {
+      if (body.practiceSessionId !== requestId) return json({ error: 'Invalid practice session.' }, 400)
+      const practice = await supabaseAdmin.from('practice_interviews')
+        .select('role,seniority,questions,answers,status').eq('id', requestId).eq('user_id', user.id).maybeSingle()
+      if (practice.error) return json({ error: 'Unable to load your completed practice session.' }, 503)
+      if (!practice.data || practice.data.status !== 'completed') return json({ error: 'Complete the practice interview before requesting feedback.' }, 409)
+      category = practice.data.role
+      seniority = practice.data.seniority
+      questions = practice.data.questions
+      answers = practice.data.answers
+    }
 
     if (
       typeof category !== 'string' ||
@@ -322,13 +337,29 @@ Return ONLY valid JSON without markdown backticks.
       | Awaited<ReturnType<typeof ai.models.generateContent>>
       | undefined
 
+    const evaluationModel = isConversation ? PRACTICE_MODEL : 'models/gemini-3.8-flash'
+    const evaluationAI = isConversation ? new GoogleGenAI({apiKey:process.env.GEMINI_API_KEY,httpOptions:{timeout:30000,retryOptions:{attempts:1}}}) : ai
+
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
-        response = await ai.models.generateContent({
-          model: 'models/gemini-3.8-flash',
+        response = await evaluationAI.models.generateContent({
+          model: evaluationModel,
           contents: [{ text: prompt }],
           config: {
             responseMimeType: 'application/json',
+            ...(isConversation ? {
+              maxOutputTokens: 8192,
+              responseJsonSchema: {
+                type: 'object',
+                properties: {
+                  overallScore: { type: 'number', minimum: 0, maximum: 10 },
+                  summary: { type: 'string' },
+                  breakdown: { type: 'array', minItems: questions.length, maxItems: questions.length,
+                    items: { type: 'object', properties: { feedback: { type: 'string' } }, required: ['feedback'], additionalProperties: false } },
+                },
+                required: ['overallScore', 'summary', 'breakdown'], additionalProperties: false,
+              },
+            } : {}),
           },
         })
         break
@@ -365,7 +396,7 @@ if (response?.usageMetadata) {
         request_id: requestId,
         transaction_id: null,
         feature: 'interview_evaluation',
-        model: response.modelVersion || 'gemini-3.8-flash',
+        model: response.modelVersion || evaluationModel,
         input_tokens: usage.promptTokenCount ?? 0,
         output_tokens: usage.candidatesTokenCount ?? 0,
         thinking_tokens: usage.thoughtsTokenCount ?? 0,

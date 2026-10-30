@@ -1,4 +1,6 @@
 'use client'
+import AnimatedNetwork from '@/components/AnimatedNetwork'
+import HomeInterviewPreview from '@/components/interview/HomeInterviewPreview'
 import SiteBrand from '@/components/site/SiteBrand'
 import { SiteSocialLinks, SiteCopyright } from '@/components/site/SiteDetails'
 import { useState, useEffect, useRef } from 'react'
@@ -7,7 +9,6 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 export default function LandingPage() {
 const router = useRouter()
-const canvasRef = useRef<HTMLCanvasElement | null>(null)
 const scrollContainerRef = useRef<HTMLDivElement | null>(null)
 const [testimonials, setTestimonials] = useState<any[]>([])
 const [latestBlogs, setLatestBlogs] = useState<any[]>([])
@@ -240,67 +241,7 @@ setEditingId(null)
 setFormError(err.message || 'Failed to save testimonial.')
 }
 }
-useEffect(() => {
-const canvas = canvasRef.current
-if (!canvas) return
-const ctx = canvas.getContext('2d')
-if (!ctx) return
-let animationFrameId: number
-let width = (canvas.width = canvas.offsetWidth)
-let height = (canvas.height = canvas.offsetHeight)
-const handleResize = () => {
-if (!canvas) return
-width = canvas.width = canvas.offsetWidth
-height = canvas.height = canvas.offsetHeight
-}
-window.addEventListener('resize', handleResize)
-const particles = Array.from({ length: 30 }, () => ({
-x: Math.random() * width,
-y: Math.random() * height,
-vx: (Math.random() - 0.5) * 0.6,
-vy: (Math.random() - 0.5) * 0.6,
-radius: Math.random() * 2 + 1.5,
-}))
-const render = () => {
-ctx.clearRect(0, 0, width, height)
-for (let i = 0; i < particles.length; i++) {
-for (let j = i + 1; j < particles.length; j++) {
-const dx = particles[i].x - particles[j].x
-const dy = particles[i].y - particles[j].y
-const dist = Math.sqrt(dx * dx + dy * dy)
-if (dist < 120) {
-const isDark = document.documentElement.classList.contains('dark')
-ctx.strokeStyle = isDark
-? `rgba(165, 180, 252, ${0.16 * (1 - dist / 120)})`
-: `rgba(99, 102, 241, ${0.12 * (1 - dist / 120)})`
-ctx.lineWidth = 1
-ctx.beginPath()
-ctx.moveTo(particles[i].x, particles[i].y)
-ctx.lineTo(particles[j].x, particles[j].y)
-ctx.stroke()
-}
-}
-}
-particles.forEach((p) => {
-p.x += p.vx
-p.y += p.vy
-if (p.x < 0 || p.x > width) p.vx *= -1
-if (p.y < 0 || p.y > height) p.vy *= -1
-ctx.fillStyle = document.documentElement.classList.contains('dark')
-? 'rgba(165, 180, 252, 0.35)'
-: 'rgba(99, 102, 241, 0.25)'
-ctx.beginPath()
-ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2)
-ctx.fill()
-})
-animationFrameId = requestAnimationFrame(render)
-}
-render()
-return () => {
-window.removeEventListener('resize', handleResize)
-cancelAnimationFrame(animationFrameId)
-}
-}, [])
+
 // FAQ Accordion State
 const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null)
 const faqs = [
@@ -346,11 +287,7 @@ return (
 `}</style>
 {/* Unified CV Builder + ATS Checker Hero */}
 <section className="relative isolate overflow-hidden bg-gradient-to-b from-indigo-50/70 via-[#fafaff] to-white px-4 pb-10 pt-6 text-slate-900 dark:from-[#101A32] dark:via-[#0E172B] dark:to-[#0B1120] dark:text-slate-100 sm:px-6 sm:pt-9 lg:pb-12 lg:pt-10 transition-colors duration-300">
-<canvas
-ref={canvasRef}
-aria-hidden="true"
-className="pointer-events-none absolute inset-0 h-full w-full opacity-20 md:opacity-50 dark:opacity-25 dark:md:opacity-[0.55]"
-/>
+<AnimatedNetwork />
 <div aria-hidden="true" className="pointer-events-none absolute -left-32 top-44 h-96 w-96 rounded-full bg-indigo-200/25 dark:bg-indigo-500/10 blur-3xl" />
 <div aria-hidden="true" className="pointer-events-none absolute -right-28 top-36 h-96 w-96 rounded-full bg-violet-200/30 dark:bg-violet-500/10 blur-3xl" />
 {/* Soft mobile background accents: visible behind content, never cover controls */}
@@ -439,6 +376,10 @@ Create a professional CV for free, check your ATS match with AI, and prepare for
 </div>
 <h2 className="mt-3 text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">Create Your CV</h2>
 <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">Build a professional, modern, ATS-friendly resume in minutes.</p>
+<div data-cv-builder-guide className="mt-3 rounded-xl border border-indigo-100 bg-indigo-50/80 px-3 py-3 dark:border-indigo-400/30 dark:bg-indigo-400/10">
+<p className="flex items-center gap-2 text-[13px] font-bold text-indigo-700 dark:text-indigo-200"><span aria-hidden="true" className="shrink-0 text-sm">✓</span>Your CV, step by step</p>
+<ol className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-medium text-slate-600 dark:text-slate-300">{['Details', 'Experience', 'Education', 'Skills'].map((step, index) => <li key={step} className="flex items-center gap-2">{index > 0 && <span aria-hidden="true" className="text-indigo-400">→</span>}<span>{step}</span></li>)}</ol>
+</div>
 <div className="mt-3 space-y-2 text-[13px] text-slate-600 dark:text-slate-300">
 {['Guided resume builder', 'ATS-friendly layout', 'Download your CV as a PDF'].map((feature) => (
 <div key={feature} className="flex items-center gap-3"><span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">✓</span><span>{feature}</span></div>
@@ -492,7 +433,7 @@ Practice Smarter.<br /><span className="text-indigo-200 dark:text-indigo-300">In
 Prepare for real interview questions, receive detailed AI feedback, and build the confidence to stand out in your next interview.
 </p>
 <div className="mt-7 flex flex-wrap justify-center gap-x-6 gap-y-3 text-sm font-medium text-indigo-100 lg:justify-start dark:text-indigo-300">
-{['Role-focused questions', 'Actionable AI feedback', 'Track your progress'].map((feature) => (
+{['Role-focused questions', 'Actionable AI feedback', 'Speak or type answers'].map((feature) => (
 <div key={feature} className="flex items-center gap-2"><span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs dark:bg-[#1B263B]">✓</span>{feature}</div>
 ))}
 </div>
@@ -500,30 +441,7 @@ Prepare for real interview questions, receive detailed AI feedback, and build th
 Start Interview Prep <span aria-hidden="true" className="text-lg">→</span>
 </Link>
 </div>
-{/* Decorative interview dashboard preview: sample content, not real user results */}
-<div aria-hidden="true" className="relative mx-auto w-full max-w-[540px]">
-<div className="absolute -inset-5 rounded-[36px] bg-white/10 blur-2xl" />
-<div className="relative overflow-hidden rounded-[28px] border border-white/25 bg-white/95 p-5 text-slate-900 shadow-[0_28px_90px_rgba(15,15,70,0.28)] sm:p-7 dark:text-slate-100 dark:bg-[#1B263B] dark:shadow-black/20">
-<div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-5 dark:border-slate-700/70">
-<div className="flex items-center gap-3">
-<div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-100 text-xl text-indigo-600 dark:text-indigo-300 dark:bg-indigo-400/15">✦</div>
-<div><div className="text-sm font-extrabold">AI Interview Coach</div><div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Practice session · Preview</div></div>
-</div>
-<span className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300"><span className="h-2 w-2 rounded-full bg-emerald-500" />Ready</span>
-</div>
-<div className="mt-6 rounded-2xl border border-indigo-100 bg-indigo-50/80 p-5 dark:border-slate-700/70 dark:bg-indigo-400/15">
-<div className="text-[11px] font-extrabold uppercase tracking-widest text-indigo-600 dark:text-indigo-300">Sample interview question</div>
-<p className="mt-3 text-base font-bold leading-6 text-slate-800 sm:text-lg dark:text-slate-100">"Tell me about a challenge you faced at work and how you solved it."</p>
-<div className="mt-4 flex items-center gap-2 text-xs font-medium text-indigo-500 dark:text-indigo-300"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-200/80 dark:bg-indigo-400/15">✦</span> Practice your response with AI</div>
-</div>
-<div className="mt-5 grid grid-cols-2 gap-3">
-<div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm dark:bg-[#1B263B] dark:border-slate-700/70 dark:shadow-black/20"><div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-100 text-violet-600 dark:bg-violet-400/15 dark:text-violet-200">◎</div><div className="mt-3 text-sm font-extrabold">Smart Feedback</div><p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">Know what to improve</p></div>
-<div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm dark:bg-[#1B263B] dark:border-slate-700/70 dark:shadow-black/20"><div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 dark:text-indigo-300 dark:bg-indigo-400/15">↗</div><div className="mt-3 text-sm font-extrabold">Progress Insights</div><p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">Learn from every attempt</p></div>
-</div>
-<div className="mt-5 flex items-center gap-3 rounded-xl bg-slate-50 px-4 py-3 text-xs font-medium text-slate-500 dark:bg-[#182238] dark:text-slate-400"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-indigo-600 dark:text-indigo-300 dark:bg-indigo-400/15">✓</span>Personalized practice to help you feel interview-ready.</div>
-</div>
-<div className="absolute -right-2 -top-5 hidden rotate-3 rounded-xl border border-white/30 bg-violet-500 px-4 py-2 text-xs font-bold text-white shadow-lg sm:block dark:shadow-black/20 dark:bg-violet-600 dark:border-violet-400/40">✦ Practice with AI</div>
-</div>
+<HomeInterviewPreview />
 </div>
 </section>
 {/* About Section */}

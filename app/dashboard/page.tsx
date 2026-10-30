@@ -1,4 +1,6 @@
 'use client'
+import { isResumeReady } from '@/lib/resume-readiness'
+import { saveToHistory } from '@/lib/save-history'
 import type { ReactNode } from 'react'
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -318,11 +320,21 @@ useEffect(() => { latestRef.current = cvData }, [cvData])
 useEffect(() => {
 let cancelled = false
 async function load() {
+let accepted = false
+const accept = (parsed: ResumeData) => {
+ if (!isResumeReady(parsed)) {
+  try { sessionStorage.setItem(`cveat_onboard_resume_${owner}`, JSON.stringify(parsed)) } catch {}
+  router.replace('/onboard?resume=1'); return false
+ }
+ accepted = true; return true
+}
+let owner = 'guest'
 try {
 const { data: { session } } = await supabase.auth.getSession()
 if (cancelled) return
 const id = session?.user?.id ?? null
 setUserId(id)
+owner = id || 'guest'
 if (id) {
   const pendingAction = sessionStorage.getItem('cveate_pending_cv_action')
 
@@ -334,6 +346,7 @@ if (id) {
   if (pendingDraft) {
     try {
       const parsed = normalize(JSON.parse(pendingDraft))
+      if (!accept(parsed)) return
 
       if (!cancelled) {
         try {
@@ -376,6 +389,7 @@ const raw = sessionStorage.getItem(key) || localStorage.getItem(key)
 if (!raw) continue
 try {
 const parsed = normalize(JSON.parse(raw))
+if (!accept(parsed)) return
 if (!cancelled) { setCvData(parsed); latestRef.current = parsed; setLoaded(true) }
 return
 } catch (error) { console.error('Unable to read saved resume:', error) }
@@ -385,11 +399,12 @@ const { data, error } = await supabase.from('cv_history').select('cv_data').eq('
 if (error) console.error('Unable to load primary resume:', error)
 if (data?.cv_data && !cancelled) {
 const parsed = normalize(data.cv_data)
+if (!accept(parsed)) return
 setCvData(parsed); latestRef.current = parsed
 }
 }
 } catch (error) { console.error('Resume load error:', error) }
-finally { if (!cancelled) setLoaded(true) }
+finally { if (!cancelled) { if (accepted) setLoaded(true); else router.replace('/onboard?resume=1') } }
 }
 load()
 return () => { cancelled = true }
@@ -818,18 +833,9 @@ setMessage(''); setSavingHistory(true)
 try {
 const { data: { session } } = await supabase.auth.getSession()
 if (!session) { setMessage('Please sign in to save a CV version to history. Your draft is still saved on this device.'); return }
-const { data: profile } = await supabase.from('profiles').select('plan_name').eq('id', session.user.id).single()
-const plan = (profile?.plan_name || 'Freemium').toLowerCase()
-const limit = plan.includes('monthly') ? 100 : plan.includes('daily') ? 10 : 2
-const { count, error: countError } = await supabase.from('cv_history').select('*', { count: 'exact', head: true }).eq('user_id', session.user.id)
-if (countError) throw countError
-if ((count ?? 0) >= limit) { setMessage(`Your ${profile?.plan_name || 'Freemium'} plan allows ${limit} saved CVs. Your draft remains saved locally.`); return }
-const { error } = await supabase.from('cv_history').insert([{
-user_id: session.user.id, cv_title: cvTitle.trim() || `${cvData.fullName || 'Professional'} Resume`,
-match_score: null, is_primary: count === 0, cv_data: cvData,
-}])
-if (error) throw error
-setMessage('CV version saved to history.')
+const result = await saveToHistory('cv', { cv_title: cvTitle.trim() || `${cvData.fullName || 'Professional'} Resume`, cv_data: cvData })
+if (!result.saved) { setMessage('Save cancelled. Your current draft and saved history are unchanged.'); return }
+setMessage(result.removed ? `CV saved (${result.count}/10). Your oldest saved CV was replaced.` : `CV version saved to history (${result.count}/10).`)
 } catch (error: unknown) {
 console.error(error)
 setMessage(error instanceof Error ? error.message : 'Could not save to history.')
@@ -856,6 +862,14 @@ const sections = [
 const skills = ungroupedSkills(cvData)
 const portfolioValue = cvData.portfolioLinks?.filter(Boolean).join(', ') || cvData.portfolio
 const contact = [[cvData.city, cvData.state, cvData.pincode].filter(Boolean).join(', '), cvData.phone, cvData.email].filter(Boolean)
+if (!loaded) return <div role="status" className="min-h-screen bg-slate-50 p-10 text-center text-sm text-slate-600 dark:bg-[#0B1120] dark:text-slate-300">Checking your CV…</div>
+const prepForInterview = () => {
+ try {
+  const text = plainText(JSON.stringify(cvData, null, 2))
+  sessionStorage.setItem('cveat_interview_cv', JSON.stringify({ owner: userId || 'guest', created: Date.now(), role: cvData.headline, name: cvData.fullName, text }))
+  router.push('/interview-prep?source=dashboard')
+ } catch { setMessage('Could not transfer your CV. Please enable browser storage and try again.') }
+}
 return (
 <main className="min-h-screen bg-slate-50 px-3 py-6 text-slate-900 sm:px-6 lg:py-8 dark:bg-[#0B1120] dark:text-slate-100 dark:[color-scheme:dark] transition-colors duration-300">
 {showAIReview && (
@@ -971,7 +985,7 @@ className="rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white sha
   className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
   aria-hidden="true"
 >
-  <AnimatedNetwork />
+  <AnimatedNetwork tone="light" />
 </div>
 
   {/* Toolbar content */}
@@ -1000,7 +1014,7 @@ className="rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white sha
           AI CV Tools
         </h3>
         <p className="text-xs text-indigo-100">
-          Improve your CV or check its match with a job.
+          Improve your CV, check its match, or prepare for an interview.
         </p>
       </div>
     </div>
@@ -1072,6 +1086,7 @@ disabled={!loaded}
         </svg>
         Check ATS Match
       </button>
+<button type="button" onClick={prepForInterview} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-white/25 bg-white/15 px-4 py-2 text-xs font-bold text-white hover:bg-white/25 cursor-pointer">Prep for Interview <span aria-hidden="true">→</span></button>
 
     </div>
   </div>

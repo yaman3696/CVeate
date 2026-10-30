@@ -1,14 +1,14 @@
 'use client'
+import AnimatedNetwork from '@/components/AnimatedNetwork'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { useSiteSettings } from '@/components/site/SiteSettingsProvider'
 import { SiteSocialLinks } from '@/components/site/SiteDetails'
 
 export default function ContactPage() {
   const site = useSiteSettings()
-  const canvasRef = useRef<HTMLCanvasElement | null>(null)
-  const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
@@ -62,81 +62,12 @@ export default function ContactPage() {
     }
   } // <-- FIXED: handleSubmit now properly closes here!
 
-  // Canvas Network Animation Effect (Now cleanly outside handleSubmit)
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
 
-    let animationFrameId: number
-    let width = (canvas.width = canvas.offsetWidth)
-    let height = (canvas.height = canvas.offsetHeight)
-
-    const handleResize = () => {
-      if (!canvas) return
-      width = canvas.width = canvas.offsetWidth
-      height = canvas.height = canvas.offsetHeight
-    }
-    window.addEventListener('resize', handleResize)
-
-    const particles = Array.from({ length: 45 }, () => ({
-      x: Math.random() * width,
-      y: Math.random() * height,
-      vx: (Math.random() - 0.5) * 0.8,
-      vy: (Math.random() - 0.5) * 0.8,
-      radius: Math.random() * 1.5 + 1,
-    }))
-
-    const render = () => {
-      ctx.clearRect(0, 0, width, height)
-
-      for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x
-          const dy = particles[i].y - particles[j].y
-          const dist = Math.sqrt(dx * dx + dy * dy)
-          if (dist < 110) {
-            ctx.strokeStyle = `rgba(59, 130, 246, ${0.15 * (1 - dist / 110)})`
-            ctx.lineWidth = 1
-            ctx.beginPath()
-            ctx.moveTo(particles[i].x, particles[i].y)
-            ctx.lineTo(particles[j].x, particles[j].y)
-            ctx.stroke()
-          }
-        }
-      }
-
-      particles.forEach((p) => {
-        p.x += p.vx
-        p.y += p.vy
-        if (p.x < 0 || p.x > width) p.vx *= -1
-        if (p.y < 0 || p.y > height) p.vy *= -1
-
-        ctx.fillStyle = 'rgba(59, 130, 246, 0.35)'
-        ctx.beginPath()
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2)
-        ctx.fill()
-      })
-
-      animationFrameId = requestAnimationFrame(render)
-    }
-
-    render()
-
-    return () => {
-      window.removeEventListener('resize', handleResize)
-      cancelAnimationFrame(animationFrameId)
-    }
-  }, [])
 
   return (
     <div className="relative min-h-[calc(100vh-73px)] bg-slate-50 py-12 px-6 text-slate-900 flex flex-col justify-center overflow-hidden dark:bg-[#0B1120] dark:text-slate-100 transition-colors duration-300">
       
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 pointer-events-none h-full w-full opacity-90"
-      />
+      <AnimatedNetwork />
 
       <div className="relative z-10 mx-auto max-w-5xl w-full space-y-8">
         

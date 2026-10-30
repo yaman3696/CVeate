@@ -1,4 +1,5 @@
 'use client'
+import { isResumeReady } from '@/lib/resume-readiness'
 import { Suspense, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -193,6 +194,17 @@ useEffect(() => {
 
   return () => window.clearTimeout(timer)
 }, [error])
+useEffect(() => {
+ let active = true
+ void supabase.auth.getSession().then(({ data: auth }) => {
+  if (!active || params.get('resume') !== '1') return
+  try {
+   const raw = sessionStorage.getItem(`cveat_onboard_resume_${auth.session?.user.id || 'guest'}`)
+   if (raw) { const draft = JSON.parse(raw); setData(previous => ({ ...previous, ...draft, technicalSkills: Array.isArray(draft.technicalSkills) ? draft.technicalSkills.join(', ') : draft.technicalSkills || '', portfolioLinks: draft.portfolioLinks || [], skillGroups: draft.skillGroups || [] })) }
+  } catch {}
+ })
+ return () => { active = false }
+}, [params])
 const [saving, setSaving] = useState(false); const [autofilled, setAutofilled] = useState(false)
 const [showCategories, setShowCategories] = useState(false); const [builder, setBuilder] = useState({ verb: 'Created', task: '', tools: '', result: '' }); const [builderIndex, setBuilderIndex] = useState<number | null>(null)
 const patch = (next: Partial<FormData>) => setData(prev => ({ ...prev, ...next }))
@@ -302,6 +314,7 @@ const submit = async () => {
     return
   }
 
+  if (!isResumeReady(data)) { setError('Please complete the required personal details, education, skills and languages.'); setStep(1); return }
   setSaving(true)
   setError('')
 try {

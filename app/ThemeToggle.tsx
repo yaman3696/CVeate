@@ -35,21 +35,23 @@ export default function ThemeToggle() {
       aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
       title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
       aria-pressed={theme === 'dark'}
-     
-className="relative flex h-10 w-[76px] shrink-0 items-center justify-between rounded-full bg-white p-1 shadow-md ring-1 ring-white/30 transition-all duration-300 hover:shadow-lg cursor-pointer"
+
+className="relative flex h-11 w-7 shrink-0 flex-col items-center justify-center cursor-pointer rounded-lg before:absolute before:inset-y-0 before:-inset-x-2 before:content-[''] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-300"
     >
+      <span aria-hidden="true" className="absolute inset-y-0 left-0 w-7 rounded-lg bg-white shadow-md ring-1 ring-white/30" />
       <span
-        className={`absolute left-1 top-1 h-8 w-8 rounded-full shadow-sm transition-transform duration-300 ease-in-out ${       
+        aria-hidden="true"
+        className={`absolute left-0.5 top-0.5 h-5 w-6 rounded-md shadow-sm transition-transform duration-300 motion-reduce:transition-none ease-in-out ${
 theme === 'dark'
-? 'translate-x-9 bg-indigo-600'
-: 'translate-x-0 bg-indigo-100'
+? 'translate-y-5 bg-indigo-600'
+: 'translate-y-0 bg-indigo-100'
         }`}
       />
 
-      <span className="relative z-10 flex h-8 w-8 items-center justify-center">
+      <span aria-hidden="true" className="relative z-10 flex h-5 w-6 items-center justify-center">
         <svg
-          width="17"
-          height="17"
+          width="13"
+          height="13"
           viewBox="0 0 24 24"
           fill="none"
           stroke={theme === 'light' ? '#4F46E5' : '#64748B'}
@@ -62,10 +64,10 @@ theme === 'dark'
         </svg>
       </span>
 
-      <span className="relative z-10 flex h-8 w-8 items-center justify-center">
+      <span aria-hidden="true" className="relative z-10 flex h-5 w-6 items-center justify-center">
         <svg
-          width="17"
-          height="17"
+          width="13"
+          height="13"
           viewBox="0 0 24 24"
           fill="none"
           stroke={theme === 'dark' ? '#FFFFFF' : '#94A3B8'}

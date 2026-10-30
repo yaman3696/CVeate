@@ -1,0 +1,96 @@
+{
+  "version": "20257a8313407bce2587",
+  "modelSha256": "e456a1b38d2f02d1782273d891926665ea471d38f33dd1d5d2de853269934078",
+  "backgroundPixelsSha256": "3726b60598853eed4e0ab570c58d3bad0e8985b86de3678813f643df774439c2",
+  "lossless": true,
+  "files": {
+    "Cveat_Office_Avatar_Web.glb": {
+      "bytes": 7710296,
+      "sha256": "e456a1b38d2f02d1782273d891926665ea471d38f33dd1d5d2de853269934078"
+    },
+    "Cveat_Office_Avatar_Web.glb.br": {
+      "bytes": 6323179,
+      "sha256": "69a17527b5d4ab1e03132857d804c6f3cf47fcbb234ea2afd76533f2c1285dbc"
+    },
+    "demo-cues.json": {
+      "bytes": 3967,
+      "sha256": "1df4db467b95be79f2fb6fedf5dc67fa145688bfbdfd507ce37f85fef16f55b6"
+    },
+    "licenses/MESHOPT-LICENSE.md": {
+      "bytes": 1079,
+      "sha256": "f03037ca7bad1e3eb7f4a63fa6084a8baabd5ba30d3c239a9a7f35705d873e26"
+    },
+    "licenses/MPFB-ASSETS-CC0.md": {
+      "bytes": 6962,
+      "sha256": "f6089cba01cb570a24712b41ab8a586ccd3cc5ef53dc266ca50b95c288956d2c"
+    },
+    "licenses/RHUBARB-LICENSE.md": {
+      "bytes": 27808,
+      "sha256": "c9a10d99959990ec6802c5e2d519fb23665affa7ba32abbdea5b251ee5f93af6"
+    },
+    "office-background.webp": {
+      "bytes": 1249790,
+      "sha256": "db81983e06df19fe5c4bfcbba140ff77d4dd7f7b2b26e8a0f932a976796392c3"
+    },
+    "viewer/facial-safety.js": {
+      "bytes": 581,
+      "sha256": "3c532bffaaba551f255e5e1012f8476fd063f223911b5a68834a1a5eb9678a6e"
+    },
+    "viewer/gesture-playback.js": {
+      "bytes": 819,
+      "sha256": "ec87e913ff034c054d8f4d9547cf6e8bfb42711c89e7b7bc353f5b2b58121048"
+    },
+    "viewer/index.html": {
+      "bytes": 2405,
+      "sha256": "e426745e8b95896278b8b5297354351953bf0fe9bee027197ee787b06108f820"
+    },
+    "viewer/interview-motion.js": {
+      "bytes": 6837,
+      "sha256": "3efec2e4a542fa935ce1ac06ee82d7f80b609eb83469c1ec34c701ff4a855a19"
+    },
+    "viewer/status.js": {
+      "bytes": 386,
+      "sha256": "11e8694a2d04c764d334972012e64018adff8896613916addf85bfe63f24819e"
+    },
+    "viewer/vendor/environments/RoomEnvironment.js": {
+      "bytes": 2097,
+      "sha256": "1cc713ddf1ff45f67d459055dd4351dd45abc7c3246cbc004a8a8ac7fff20220"
+    },
+    "viewer/vendor/libs/meshopt_decoder.module.js": {
+      "bytes": 22086,
+      "sha256": "1ee5d4d832baeebdc1a5006aa8fe3bad801cd7e6cb5c605860d69f9a906a0cde"
+    },
+    "viewer/vendor/LICENSE": {
+      "bytes": 1081,
+      "sha256": "bfe119ea4fd413f5f7ca3fcd63adb0c4a073ed39daa2fe7d3e6b769e21272601"
+    },
+    "viewer/vendor/lights/RectAreaLightTexturesLib.js": {
+      "bytes": 247208,
+      "sha256": "e01de7d10279ad16a20653ab258f6a84bda50deb3caf35322969f04938a80183"
+    },
+    "viewer/vendor/lights/RectAreaLightUniformsLib.js": {
+      "bytes": 304,
+      "sha256": "6cee4785100ff21b70d60873c122a10efcf3c7885a1d7ab3d62f936b9bf72bb3"
+    },
+    "viewer/vendor/loaders/GLTFLoader.js": {
+      "bytes": 44838,
+      "sha256": "2ee27eb0e581f145467d0a4ea66beebfce2c6a6bed5b7b760b73539a6dcdbb4d"
+    },
+    "viewer/vendor/three.core.js": {
+      "bytes": 381108,
+      "sha256": "ec0f661ab2f2908a0d52a1901add5f8fcfe0b235a2fd7cf423b666a9949a19d0"
+    },
+    "viewer/vendor/three.module.js": {
+      "bytes": 341139,
+      "sha256": "47d6661b1004f345ad66efb5f0b556f6cfb3c43e5935920a80fb654fa60c2c61"
+    },
+    "viewer/vendor/utils/BufferGeometryUtils.js": {
+      "bytes": 12816,
+      "sha256": "7be0c31ac77ad89ef2b34dfcc7f0b256c415bf058378819373560b3db36ad382"
+    },
+    "viewer/viewer.js": {
+      "bytes": 12107,
+      "sha256": "21344dc2ffb6303abe16f763e57ed93a0a754356e8f98608665b8743e6a6a207"
+    }
+  }
+}

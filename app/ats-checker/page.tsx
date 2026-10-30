@@ -1,4 +1,5 @@
 'use client'
+import AnimatedNetwork from '@/components/AnimatedNetwork'
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
@@ -13,7 +14,6 @@ export default function AtsCheckerPage() {
     const router = useRouter()
     const pathname = usePathname()
     const searchParams = useSearchParams()
-const canvasRef = useRef<HTMLCanvasElement | null>(null)
 const scanRequestIdRef = useRef<string | null>(null)
 const [user, setUser] = useState<any>(null)
 const [authLoading, setAuthLoading] = useState(true)
@@ -149,74 +149,6 @@ console.error('Unable to update profile name:', updateError)
 }
 }
 }
-// Reliable Canvas Network Animation Effect
-useEffect(() => {
-if (authLoading) return
-const canvas = canvasRef.current
-if (!canvas) return
-const ctx = canvas.getContext('2d')
-if (!ctx) return
-let animationFrameId: number
-let running = true
-const initCanvas = () => {
-if (!running || !canvas) return
-const width = window.innerWidth || 1920
-const height = window.innerHeight || 1080
-const dpr = window.devicePixelRatio || 1
-canvas.width = width * dpr
-canvas.height = height * dpr
-canvas.style.width = `${width}px`
-canvas.style.height = `${height}px`
-ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-const particles = Array.from({ length: 45 }, () => ({
-x: Math.random() * width,
-y: Math.random() * height,
-vx: (Math.random() - 0.5) * 0.8,
-vy: (Math.random() - 0.5) * 0.8,
-radius: Math.random() * 1.5 + 1,
-}))
-const animate = () => {
-if (!running) return
-ctx.clearRect(0, 0, width, height)
-for (let i = 0; i < particles.length; i++) {
-for (let j = i + 1; j < particles.length; j++) {
-const dx = particles[i].x - particles[j].x
-const dy = particles[i].y - particles[j].y
-const dist = Math.sqrt(dx * dx + dy * dy)
-if (dist < 110) {
-ctx.strokeStyle = `rgba(255, 255, 255, ${0.18 * (1 - dist / 110)})`
-ctx.lineWidth = 1
-ctx.beginPath()
-ctx.moveTo(particles[i].x, particles[i].y)
-ctx.lineTo(particles[j].x, particles[j].y)
-ctx.stroke()
-}
-}
-}
-particles.forEach((p) => {
-p.x += p.vx
-p.y += p.vy
-if (p.x < 0 || p.x > width) p.vx *= -1
-if (p.y < 0 || p.y > height) p.vy *= -1
-ctx.fillStyle = 'rgba(255, 255, 255, 0.4)'
-ctx.beginPath()
-ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2)
-ctx.fill()
-})
-animationFrameId = requestAnimationFrame(animate)
-}
-animate()
-}
-const timer = setTimeout(initCanvas, 50)
-const handleResize = () => { initCanvas() }
-window.addEventListener('resize', handleResize)
-return () => {
-running = false
-clearTimeout(timer)
-cancelAnimationFrame(animationFrameId)
-window.removeEventListener('resize', handleResize)
-}
-}, [authLoading])
 // Check Session on Load, Verify Credits Timer via Secure RPC, & Listen for Auth Changes
 useEffect(() => {
 const checkUserSession = async () => {
@@ -635,10 +567,7 @@ return <div className="min-h-screen flex items-center justify-center text-slate-
 }
 return (
 <div className="min-h-[calc(100vh-72px)] bg-indigo-600 text-white flex flex-col relative overflow-hidden dark:bg-[#101A32] dark:text-slate-100 transition-colors duration-300">
-<canvas
-ref={canvasRef}
-className="fixed inset-0 w-full h-full pointer-events-none z-0"
-/>
+<AnimatedNetwork tone="light" className="!fixed" />
 <style jsx>{`
 @keyframes siriPulse {
 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }

@@ -6,7 +6,9 @@ import { supabase } from '@/utils/supabaseClient'
 import './globals.css'
 import { clearAtsDraft } from '@/lib/ats-draft-storage'
 import ThemeToggle from './ThemeToggle'
+import ProfileCompletionPrompt from '@/components/site/ProfileCompletionPrompt'
 import SiteBrand from '@/components/site/SiteBrand'
+import InteractiveCursors from '@/components/site/InteractiveCursors'
 import { SiteSettingsProvider } from '@/components/site/SiteSettingsProvider'
 import { Inter, Manrope } from 'next/font/google'
 const inter = Inter({
@@ -51,6 +53,30 @@ const [userProfile, setUserProfile] = useState<any>(null)
 const [latestPurchasedPack, setLatestPurchasedPack] = useState<string>('Free')
 const [isProfileOpen, setIsProfileOpen] = useState(false)
 const dropdownRef = useRef<HTMLDivElement | null>(null)
+const [enterpriseAccessUser, setEnterpriseAccessUser] = useState<string | null>(null)
+useEffect(() => {
+  if (!user?.id) return
+  const id = user.id, controller = new AbortController()
+  let running = false
+  const check = async () => {
+    if (running || controller.signal.aborted) return
+    running = true
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session || session.user.id !== id) return
+      const response = await fetch('/api/enterprise/access', { signal: controller.signal, cache: 'no-store', headers: { Authorization: `Bearer ${session.access_token}` } })
+      const data = response.ok ? await response.json() : null
+      if (!controller.signal.aborted) setEnterpriseAccessUser(data?.allowed ? id : null)
+    } catch { if (!controller.signal.aborted) setEnterpriseAccessUser(null) }
+    finally { running = false }
+  }
+  void check()
+  const focus = () => { void check() }
+  window.addEventListener('focus', focus)
+  const interval = window.setInterval(focus, 60000)
+  return () => { controller.abort(); window.clearInterval(interval); window.removeEventListener('focus', focus) }
+}, [user?.id])
+const canOpenEnterprise = !!user?.id && enterpriseAccessUser === user.id
 // Fetch user profile plan and ATS credits from Supabase
 const fetchUserProfile = async (userId: string) => {
   const { data } = await supabase
@@ -321,6 +347,8 @@ alert('First create and save CV to use this feature.')
 }
 return (
 <>
+<InteractiveCursors/>
+<ProfileCompletionPrompt user={user} />
 {/* Global Navigation Bar */}
 {!isAdminPage && (
 <nav
@@ -332,37 +360,23 @@ className={`sticky top-0 z-50 shadow-md transition-colors duration-300 ${
 
 
 >
-<div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+<div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
 <div className="flex items-center">
 <Link href="/" className={`text-2xl font-black tracking-tight ${isLightNav ? 'text-indigo-600 dark:text-white' : 'text-white'}`}>
 <SiteBrand />
 </Link>
 </div>
-<div className={`hidden md:flex items-center gap-6 ml-auto mr-6 text-sm font-medium ${isLightNav ? 'text-slate-600 dark:text-indigo-100' : 'text-indigo-100'}`}>
+<div className={`hidden xl:flex items-center gap-6 ml-auto mr-6 text-sm font-medium ${isLightNav ? 'text-slate-600 dark:text-indigo-100' : 'text-indigo-100'}`}>
 <Link href="/about" className={isLightNav ? 'hover:text-indigo-600 transition-colors dark:hover:text-white' : 'hover:text-white transition-colors'}>About Us</Link>
 <Link href="/blog" className={isLightNav ? 'hover:text-indigo-600 transition-colors dark:hover:text-white' : 'hover:text-white transition-colors'}>Blog</Link>
 <Link href="/pricing" className={isLightNav ? 'hover:text-indigo-600 transition-colors dark:hover:text-white' : 'hover:text-white transition-colors'}>Pricing</Link>
 <Link href="/ats-checker" className={isLightNav ? 'hover:text-indigo-600 transition-colors dark:hover:text-white' : 'hover:text-white transition-colors'}>ATS Checker</Link>
+<Link href="/jobs" className={isLightNav ? 'hover:text-indigo-600 transition-colors dark:hover:text-white' : 'hover:text-white transition-colors'}>Jobs</Link>
+{canOpenEnterprise && <Link href="/enterprise" className={isLightNav ? 'hover:text-indigo-600 transition-colors dark:hover:text-white' : 'hover:text-white transition-colors'}>Enterprise</Link>}
 <Link href="/interview-prep" className={isLightNav ? 'hover:text-indigo-600 transition-colors dark:hover:text-white' : 'hover:text-white transition-colors'}>Interview Prep</Link>
 </div>
-<div className="flex items-center gap-3">
+<div className="flex items-center gap-2 sm:gap-3">
 
-<div className="hidden md:block">
-  <ThemeToggle />
-</div>
-
-{user && (
-<button
-onClick={handleQuickDownload}
-title="Quick CV Download"
-className={`hidden sm:flex items-center gap-2 rounded-xl border px-3.5 py-2 text-xs font-semibold transition-all cursor-pointer shadow-sm ${isLightNav ? 'border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:border-indigo-400 dark:bg-indigo-600 dark:text-white dark:hover:bg-indigo-700' : 'border-indigo-400 bg-indigo-600 text-white hover:bg-indigo-700'}`}
->
-<svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-<path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-</svg>
-<span>Quick CV Download</span>
-</button>
-)}
 {user ? (
 <div className="relative" ref={dropdownRef}>
 <button
@@ -372,7 +386,7 @@ fetchUserProfile(user.id)
 }
 setIsProfileOpen(!isProfileOpen)
 }}
-className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold shadow-sm transition-all cursor-pointer ${isLightNav ? 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-700/80 dark:border-indigo-500 dark:text-white dark:hover:bg-indigo-700' : 'bg-indigo-700/80 border-indigo-500 text-white hover:bg-indigo-700'}`}
+className={`flex h-11 items-center gap-2 rounded-xl border px-3 sm:px-4 py-2 text-sm font-semibold shadow-sm transition-all cursor-pointer ${isLightNav ? 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-700/80 dark:border-indigo-500 dark:text-white dark:hover:bg-indigo-700' : 'bg-indigo-700/80 border-indigo-500 text-white hover:bg-indigo-700'}`}
 >
 <div className="h-7 w-7 rounded-full bg-white text-indigo-700 font-bold flex items-center justify-center text-xs">
 {userProfile?.full_name ? userProfile.full_name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}
@@ -452,14 +466,33 @@ className="w-full text-left px-4 py-2.5 text-red-600 hover:bg-red-50 font-semibo
 ) : (
 <button
 onClick={() => openAuth('signup')}
-className={`rounded-xl px-5 py-2.5 text-sm font-semibold shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer ${isLightNav ? 'bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-white dark:text-indigo-600 dark:hover:bg-white' : 'bg-white text-indigo-600 hover:shadow-indigo-950/40'}`}
+className={`h-11 rounded-xl px-5 py-2.5 text-sm font-semibold shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer ${isLightNav ? 'bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-white dark:text-indigo-600 dark:hover:bg-white' : 'bg-white text-indigo-600 hover:shadow-indigo-950/40'}`}
 >
 Get Started
 </button>
 )}
+{user && (
+<div className="group relative shrink-0">
+<button
+ type="button"
+ onClick={handleQuickDownload}
+ aria-label="Download your primary CV"
+ aria-describedby="primary-cv-download-tip"
+ className={`flex h-11 w-11 items-center justify-center rounded-xl border transition-colors cursor-pointer shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-300 ${isLightNav ? 'border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:border-indigo-400 dark:bg-indigo-600 dark:text-white dark:hover:bg-indigo-700' : 'border-indigo-400 bg-indigo-600 text-white hover:bg-indigo-700'}`}
+>
+<svg aria-hidden="true" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+<path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+</svg>
+</button>
+<span id="primary-cv-download-tip" role="tooltip" className="pointer-events-none absolute right-0 top-full z-50 mt-2 w-max max-w-[220px] rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white shadow-lg opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 dark:bg-white dark:text-slate-900">Download your primary CV</span>
+</div>
+)}
+<div className="hidden md:block">
+  <ThemeToggle />
+</div>
 <button
 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-className={`md:hidden rounded-xl p-2.5 transition-colors focus:outline-none cursor-pointer ${isLightNav ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-indigo-700 dark:text-white dark:hover:bg-indigo-800' : 'bg-indigo-700 text-white hover:bg-indigo-800'}`}
+className={`xl:hidden rounded-xl p-2.5 transition-colors focus:outline-none cursor-pointer ${isLightNav ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-indigo-700 dark:text-white dark:hover:bg-indigo-800' : 'bg-indigo-700 text-white hover:bg-indigo-800'}`}
 aria-label="Toggle Menu"
 >
 <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -474,7 +507,7 @@ aria-label="Toggle Menu"
 </div>
 {isMobileMenuOpen && (
 <div 
-className={`md:hidden border-t px-6 py-6 space-y-4 shadow-xl transition-colors duration-300 ${
+className={`xl:hidden border-t px-6 py-6 space-y-4 shadow-xl transition-colors duration-300 ${
   isLightNav
     ? 'bg-white border-slate-200 text-slate-700 dark:bg-indigo-950 dark:border-indigo-900 dark:text-white'
     : 'bg-indigo-700 border-indigo-500 text-white dark:bg-indigo-950 dark:border-indigo-900'
@@ -485,6 +518,8 @@ className={`md:hidden border-t px-6 py-6 space-y-4 shadow-xl transition-colors d
 <Link href="/blog" onClick={() => setIsMobileMenuOpen(false)} className={isLightNav ? 'hover:text-indigo-600 transition-colors py-1.5 dark:hover:text-indigo-200' : 'hover:text-indigo-200 transition-colors py-1.5'}>Blog</Link>
 <Link href="/pricing" onClick={() => setIsMobileMenuOpen(false)} className={isLightNav ? 'hover:text-indigo-600 transition-colors py-1.5 dark:hover:text-indigo-200' : 'hover:text-indigo-200 transition-colors py-1.5'}>Pricing</Link>
 <Link href="/ats-checker" onClick={() => setIsMobileMenuOpen(false)} className={isLightNav ? 'hover:text-indigo-600 transition-colors py-1.5 dark:hover:text-indigo-200' : 'hover:text-indigo-200 transition-colors py-1.5'}>ATS Checker</Link>
+<Link href="/jobs" onClick={() => setIsMobileMenuOpen(false)} className={isLightNav ? 'hover:text-indigo-600 transition-colors py-1.5 dark:hover:text-indigo-200' : 'hover:text-indigo-200 transition-colors py-1.5'}>Jobs</Link>
+{canOpenEnterprise && <Link href="/enterprise" onClick={() => setIsMobileMenuOpen(false)} className={isLightNav ? 'hover:text-indigo-600 transition-colors py-1.5 dark:hover:text-indigo-200' : 'hover:text-indigo-200 transition-colors py-1.5'}>Enterprise</Link>}
 <Link href="/interview-prep" onClick={() => setIsMobileMenuOpen(false)} className={isLightNav ? 'hover:text-indigo-600 transition-colors py-1.5 dark:hover:text-indigo-200' : 'hover:text-indigo-200 transition-colors py-1.5'}>Interview-Prep</Link>
 
 {/* Mobile Theme Toggle */}
@@ -688,7 +723,7 @@ onChange={(e) => setAgreeTerms(e.target.checked)}
 className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer dark:text-indigo-300 dark:border-slate-700 dark:focus:ring-indigo-400 dark:[color-scheme:dark] dark:accent-indigo-600 transition-colors duration-300"
 />
 <label htmlFor="terms-checkbox" className="text-[11px] text-slate-600 leading-relaxed cursor-pointer dark:text-slate-300 transition-colors duration-300">
-I agree to the <span className="text-indigo-600 font-bold hover:underline dark:text-indigo-300 transition-colors duration-300">Terms and Conditions</span> and Privacy Policy.
+I agree to the <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-indigo-600 font-bold hover:underline focus-visible:underline dark:text-indigo-300 transition-colors duration-300">Terms and Conditions<span className="sr-only"> (opens in a new tab)</span></a> and <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-indigo-600 font-bold hover:underline focus-visible:underline dark:text-indigo-300 transition-colors duration-300">Privacy Policy<span className="sr-only"> (opens in a new tab)</span></a>.
 </label>
 </div>
 )}

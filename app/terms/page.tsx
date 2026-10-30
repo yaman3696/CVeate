@@ -9,61 +9,18 @@ export default function TermsPage() {
              Back to Home
           </Link>
           <h1 className="text-3xl font-extrabold tracking-tight mt-3">Terms & Conditions</h1>
-          <p className="text-xs text-slate-500 mt-1 dark:text-slate-400 transition-colors duration-300">Last updated: October 2026</p>
+          <p className="text-xs text-slate-500 mt-1 dark:text-slate-400 transition-colors duration-300">Last updated: 30 October 2026</p>
         </div>
 
         <div className="bg-white/95 backdrop-blur-md rounded-3xl border border-slate-200 p-8 shadow-sm space-y-6 text-sm text-slate-700 leading-relaxed dark:bg-[#1B263B]/95 dark:text-slate-300 dark:border-slate-700/70 dark:shadow-black/25 dark:[&_strong]:text-slate-100 transition-colors duration-300">
           
-          <section className="space-y-2">
-            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 transition-colors duration-300">1. Acceptance of Terms</h2>
-            <p>
-              By accessing, browsing, or utilizing CVeat (cveat.in), you acknowledge that you have read, understood, and agree to be bound by these Terms and Conditions. If you do not agree with any part of these terms, you must immediately cease all use of our platform, resume builder, ATS rater, and related services.
-            </p>
-          </section>
-
-          <section className="space-y-2">
-            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 transition-colors duration-300">2. Description of Services & User Responsibilities</h2>
-            <p>
-              CVeat provides free digital career tools, including an Applicant Tracking System (ATS) checker, AI-assisted resume formatting, and document generation wizards. 
-            </p>
-            <ul className="list-disc pl-5 space-y-1 mt-2">
-              <li><strong>Accuracy of Information:</strong> You represent and warrant that all professional summaries, work histories, educational backgrounds, and personal data you input into the platform are accurate, truthful, and owned by you.</li>
-              <li><strong>Prohibited Conduct:</strong> You agree not to upload malicious software, attempt unauthorized access to the database or administrative endpoints, reverse-engineer platform code, or scrape data through automated scripts.</li>
-            </ul>
-          </section>
-
-          <section className="space-y-2">
-            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 transition-colors duration-300">3. Recruiter Marketplace & Two-Sided Platform Guidelines</h2>
-            <p>
-              CVeat operates a growing talent-matching ecosystem connecting job seekers with hiring organizations.
-            </p>
-            <ul className="list-disc pl-5 space-y-1 mt-2">
-              <li><strong>For Job Seekers:</strong> By opting into recruiter search visibility, you consent to making your professional resume data queryable by verified employers. You retain the right to toggle your profile privacy status at any time.</li>
-              <li><strong>For Employers and Recruiters:</strong> Registered hiring partners agree to comply with all applicable local employment, labor, and anti-discrimination regulations. Candidate contact information and data retrieved from the talent database must be used exclusively for legitimate active job openings and recruitment purposes. Reselling or harvesting data is strictly prohibited.</li>
-            </ul>
-          </section>
-
-          <section className="space-y-2">
-            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 transition-colors duration-300">4. Intellectual Property Rights</h2>
-            <p>
-              All software architecture, user interface design, source code, visual branding, logos, and published educational blog materials associated with CVeat are the exclusive intellectual property of the platform and protected under international copyright laws. Users retain full ownership of the raw personal resume text and content they generate using our tools.
-            </p>
-          </section>
-
-          <section className="space-y-2">
-            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 transition-colors duration-300">5. Limitation of Liability and No Employment Guarantee</h2>
-            <p>
-              While our ATS optimization metrics and resume layout tools are designed to maximize compatibility with automated screening algorithms, <strong>CVeat does not guarantee employment, interview callbacks, or job offers</strong> from third-party employers. The platform acts solely as a technological utility and shall not be held liable for hiring decisions, recruitment outcomes, or third-party employer actions.
-            </p>
-          </section>
-
-          <section className="space-y-2">
-            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 transition-colors duration-300">6. Modifications to Terms</h2>
-            <p>
-              We reserve the right to modify or update these Terms and Conditions at any time. Continued use of CVeat following any modifications constitutes your formal acceptance of the revised terms.
-            </p>
-          </section>
-
+<section className="space-y-2"><h2 className="text-base font-bold text-slate-900 dark:text-slate-100">1. Using CVeat</h2><p>These terms apply to CVeat (cveat.in), including CV building, PDF exports, ATS analysis, conversational interview practice and related account services. Read our <Link className="underline" href="/privacy">Privacy Policy</Link> for information about data processing. AI features are intended for users aged 18 or over. Keep account credentials secure and use the service lawfully.</p></section>
+<section className="space-y-2"><h2 className="text-base font-bold text-slate-900 dark:text-slate-100">2. Your content and responsibilities</h2><p>Submit accurate information and only content you own or are authorised to use. Avoid unnecessary sensitive information and confidential material belonging to others. You retain your rights in your submitted content and permit CVeat and the providers needed for your selected feature to process it to deliver that feature, as described in the Privacy Policy.</p><p>Do not upload malware, impersonate another person, bypass security or credit controls, access another user’s information, or harvest candidate data. The software, branding and other platform materials remain the property of their respective owners, including applicable third-party and open-source licensors.</p></section>
+<section className="space-y-2"><h2 className="text-base font-bold text-slate-900 dark:text-slate-100">3. AI and interview practice</h2><p>AI outputs, ATS scores, transcriptions and interview feedback can be incomplete, inaccurate or biased. Review them before relying on them or including them in an application. A score is an estimate for practice and does not represent an employer’s actual screening result. CVeat does not guarantee an interview, job offer, salary or employment outcome.</p><p>The interviewer and voice are synthetic. Sarvam generates spoken questions; Gemini provides selected analysis, question generation and transcription. Optional browser speech recognition may use your browser’s speech provider. Microphone recording is optional, requires permission and the recording notice, and can be replaced with typed answers. We do not use your camera for interview practice. See the Privacy Policy for provider processing and retention details.</p></section>
+<section className="space-y-2"><h2 className="text-base font-bold text-slate-900 dark:text-slate-100">4. Credits, checkout and support</h2><p>CV building and PDF export are offered free as shown in the product. Eligible AI services use Career Credits at the rate displayed before you start or submit the paid action. Purchased packs are one-time credit purchases rather than recurring subscriptions unless checkout expressly says otherwise. Welcome credits and their eligibility are described in the product; they are not a promise of daily refills.</p><p>Review the pack, price, taxes, eligible uses and any validity conditions at checkout. Payments are processed through Razorpay. If a payment is duplicated, credits do not arrive, or you need to request a refund, contact support@cveat.in with your order reference. Refund requests are reviewed under applicable law and the conditions disclosed for the purchase. Nothing in these terms removes mandatory consumer rights.</p></section>
+<section className="space-y-2"><h2 className="text-base font-bold text-slate-900 dark:text-slate-100">5. Drafts, saved History and service availability</h2><p>Local drafts depend on your browser storage. Save or download important CVs and answers before clearing browser data or leaving a session. History limits are displayed in the product; saving beyond a category’s limit requires confirmation before an oldest save is replaced. Cancelling replacement keeps existing saves.</p><p>Temporary recordings are not a permanent cloud backup. Provider processing and separate operational, billing and security records are described in the Privacy Policy. Services can be interrupted by maintenance, connectivity or provider failures. Contact support if an interrupted paid action needs review.</p></section>
+<section className="space-y-2"><h2 className="text-base font-bold text-slate-900 dark:text-slate-100">6. Job links and other third parties</h2><p>Verify an employer and opportunity before sharing personal information or making commitments. External job listings, application destinations and third-party services have their own terms. Using our tools alone does not authorise public recruiter discovery of your CV. Any employer accessing candidate information must have appropriate permission and use it lawfully for legitimate recruitment rather than resale or unrelated marketing.</p></section>
+<section className="space-y-2"><h2 className="text-base font-bold text-slate-900 dark:text-slate-100">7. Restrictions, changes and disputes</h2><p>We may restrict access where reasonably necessary to address unlawful use, security risks or abuse. Features and terms may change; material changes should be communicated appropriately, and mandatory consumer and privacy rights continue to apply. To the extent permitted by applicable law, CVeat is not responsible for employment decisions or third-party actions beyond its control. These terms do not exclude liability that cannot lawfully be excluded.</p><p>For service complaints, billing disputes or questions about these terms, contact <a className="underline" href="mailto:support@cveat.in">support@cveat.in</a> so we can review the issue. You retain any complaint or dispute-resolution rights available under applicable law.</p></section>
         </div>
       </div>
     </div>

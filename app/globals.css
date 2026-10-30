@@ -165,3 +165,17 @@ i, em {
   animation: dotTravel 12s linear infinite;
 }
 
+
+/* Conversational practice host; scoped classes preserve existing page styles. */
+.cveat-practice-host{position:relative;display:grid;place-items:center;width:112px;height:112px;margin:auto;border-radius:50%;background:radial-gradient(circle at 30% 25%,#818cf8,#4f46e5 55%,#312e81);box-shadow:0 12px 35px #4f46e533}
+.cveat-practice-host:before{content:'';position:absolute;inset:-9px;border:1px solid #818cf84d;border-radius:50%}
+.cveat-practice-face{position:relative;width:68px;height:62px;border:1px solid #ffffff4d;border-radius:23px;background:#ffffff14}
+.cveat-practice-eye{position:absolute;top:21px;width:7px;height:9px;background:white;border-radius:50%;animation:cveat-practice-blink 5s infinite}
+.cveat-practice-eye:first-child{left:18px}.cveat-practice-eye:nth-child(2){right:18px}
+.cveat-practice-mouth{position:absolute;left:26px;bottom:13px;width:16px;height:3px;border-radius:8px;background:white}
+.cveat-practice-speaking .cveat-practice-mouth{animation:cveat-practice-talk .28s infinite alternate}.cveat-practice-speaking:before,.cveat-practice-listening:before{animation:cveat-practice-ripple 1.5s infinite}.cveat-practice-listening:before{border-color:#34d399}
+@keyframes cveat-practice-blink{0%,44%,48%,100%{transform:scaleY(1)}46%{transform:scaleY(.1)}}
+@keyframes cveat-practice-talk{from{height:3px}to{height:11px}}
+@keyframes cveat-practice-ripple{from{transform:scale(1);opacity:1}to{transform:scale(1.18);opacity:0}}
+@media(prefers-reduced-motion:reduce){.cveat-practice-eye,.cveat-practice-speaking .cveat-practice-mouth,.cveat-practice-speaking:before,.cveat-practice-listening:before{animation:none}}
+

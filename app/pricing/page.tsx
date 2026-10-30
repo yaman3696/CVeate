@@ -1,6 +1,8 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
+import AnimatedNetwork from '@/components/AnimatedNetwork'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { Crown } from 'lucide-react'
 import { supabase } from '@/utils/supabaseClient'
 type RazorpayResponse = {
 razorpay_order_id: string
@@ -83,7 +85,6 @@ features: ['25 Career Credits', 'Use across eligible AI tools', 'One-time pack, 
 },
 ]
 export default function PricingPage() {
-const canvasRef = useRef<HTMLCanvasElement | null>(null)
 const [paymentBusy, setPaymentBusy] = useState<string | null>(null)
 const [billingPack, setBillingPack] = useState<Pack | null>(null)
 const [billing, setBilling] = useState<BillingDetails>(emptyBilling)
@@ -98,65 +99,7 @@ const [contact, setContact] = useState('')
 const [email, setEmail] = useState('')
 const [requirement, setRequirement] = useState('')
 const [message, setMessage] = useState('')
-useEffect(() => {
-const canvas = canvasRef.current
-if (!canvas) return
-const ctx = canvas.getContext('2d')
-if (!ctx) return
-let frame = 0
-let width = 0
-let height = 0
-const resize = () => {
-const rect = canvas.getBoundingClientRect()
-width = Math.max(1, rect.width)
-height = Math.max(1, rect.height)
-const dpr = Math.min(window.devicePixelRatio || 1, 2)
-canvas.width = Math.round(width * dpr)
-canvas.height = Math.round(height * dpr)
-ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-}
-resize()
-window.addEventListener('resize', resize)
-const particles = Array.from({ length: 25 }, () => ({
-x: Math.random() * width, y: Math.random() * height,
-vx: (Math.random() - 0.5) * 0.5,
-vy: (Math.random() - 0.5) * 0.5,
-radius: Math.random() * 2 + 1.5,
-}))
-const render = () => {
-ctx.clearRect(0, 0, width, height)
-for (let i = 0; i < particles.length; i++) {
-for (let j = i + 1; j < particles.length; j++) {
-const dx = particles[i].x - particles[j].x
-const dy = particles[i].y - particles[j].y
-const dist = Math.hypot(dx, dy)
-if (dist < 120) {
-ctx.strokeStyle = `rgba(99,102,241,${0.15 * (1 - dist / 120)})`
-ctx.lineWidth = 1
-ctx.beginPath()
-ctx.moveTo(particles[i].x, particles[i].y)
-ctx.lineTo(particles[j].x, particles[j].y)
-ctx.stroke()
-}
-}
-const p = particles[i]
-p.x += p.vx
-p.y += p.vy
-if (p.x < 0 || p.x > width) p.vx *= -1
-if (p.y < 0 || p.y > height) p.vy *= -1
-ctx.fillStyle = 'rgba(99,102,241,0.3)'
-ctx.beginPath()
-ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2)
-ctx.fill()
-}
-frame = window.requestAnimationFrame(render)
-}
-frame = window.requestAnimationFrame(render)
-return () => {
-window.removeEventListener('resize', resize)
-window.cancelAnimationFrame(frame)
-}
-}, [])
+
 const validateBilling = (details: BillingDetails) => {
   const errors: Partial<Record<keyof BillingDetails, string>> = {}
   const required: Array<keyof BillingDetails> = ['billing_name', 'billing_email', 'address_line1', 'city', 'state', 'postal_code']
@@ -331,8 +274,7 @@ window.location.href = `mailto:support@cveat.in?subject=${encodeURIComponent(sub
 return (
 <main className="relative min-h-screen overflow-hidden bg-white text-slate-900 dark:bg-[#0B1120] dark:text-slate-100 transition-colors duration-300">
 <section className="relative isolate overflow-hidden bg-gradient-to-b from-indigo-50/80 via-[#fafaff] to-white px-4 pb-16 pt-6 sm:px-6 sm:pt-8 dark:from-[#101A32] dark:via-[#0E172B] dark:to-[#0B1120] transition-colors duration-300">
-<canvas ref={canvasRef} aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 h-full w-full opacity-40" />
-<canvas ref={canvasRef} aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 h-full w-full opacity-[0.65] dark:opacity-80" />
+<AnimatedNetwork />
 <div aria-hidden="true" className="pointer-events-none absolute -left-24 top-20 h-80 w-80 rounded-full bg-indigo-200/25 blur-3xl dark:bg-indigo-500/10 transition-colors duration-300" />
 <div aria-hidden="true" className="pointer-events-none absolute -right-24 top-20 h-80 w-80 rounded-full bg-violet-200/30 blur-3xl dark:bg-violet-500/10 transition-colors duration-300" />
 <div className="relative z-10 mx-auto max-w-6xl">
@@ -351,7 +293,7 @@ Your next opportunity.<br />
 {pack.popular && <span className="absolute -top-3 right-6 flex h-7 w-32 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-extrabold uppercase tracking-wide text-white shadow-md dark:shadow-black/25 transition-colors duration-300">Most Popular</span>}
 <div className="grid flex-1 grid-cols-1 gap-5 sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] sm:gap-6">
 <div className="flex min-w-0 flex-col">
-<div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-xl font-black text-indigo-600 dark:bg-indigo-400/15 dark:text-indigo-300 transition-colors duration-300">{pack.free ? '✦' : pack.popular ? '↗' : '◎'}</div>
+<div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-xl font-black text-indigo-600 dark:bg-indigo-400/15 dark:text-indigo-300 transition-colors duration-300">{pack.free ? '✦' : pack.popular ? '↗' : pack.packageKey === 'career_pro' ? <Crown size={22} strokeWidth={1.8} aria-hidden="true" /> : '◎'}</div>
 <div className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-indigo-600 dark:text-indigo-300 transition-colors duration-300">{pack.eyebrow}</div>
 <h2 className="mt-1 text-[23px] font-extrabold tracking-tight text-slate-950 dark:text-slate-100 transition-colors duration-300">{pack.name}</h2>
 <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400 transition-colors duration-300">{pack.description}</p>

@@ -9,62 +9,19 @@ export default function PrivacyPage() {
              Back to Home
           </Link>
           <h1 className="text-3xl font-extrabold tracking-tight mt-3">Privacy Policy</h1>
-          <p className="text-xs text-slate-500 mt-1 dark:text-slate-400 transition-colors duration-300">Last updated: October 2026</p>
+          <p className="text-xs text-slate-500 mt-1 dark:text-slate-400 transition-colors duration-300">Last updated: 30 October 2026</p>
         </div>
 
         <div className="bg-white/95 backdrop-blur-md rounded-3xl border border-slate-200 p-8 shadow-sm space-y-6 text-sm text-slate-700 leading-relaxed dark:bg-[#1B263B]/95 dark:text-slate-300 dark:border-slate-700/70 dark:shadow-black/25 dark:[&_strong]:text-slate-100 transition-colors duration-300">
           
-          <section className="space-y-2">
-            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 transition-colors duration-300">1. Information We Collect</h2>
-            <p>
-              At CVeat (cveat.in), we respect your right to privacy. To provide robust resume building and ATS scoring services, we collect and store:
-            </p>
-            <ul className="list-disc pl-5 space-y-1 mt-2">
-              <li><strong>Account Registration Data:</strong> Names, email addresses, and secure authentication identifiers collected when creating an account or logging in.</li>
-              <li><strong>Resume and Career Content:</strong> Professional work history, skills, educational credentials, and target job descriptions submitted during onboarding or tool usage to power your user dashboard.</li>
-              <li><strong>Technical and Telemetry Data:</strong> Standard browser types, IP addresses, device information, and interaction records captured through server security logs.</li>
-            </ul>
-          </section>
-
-          <section className="space-y-2">
-            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 transition-colors duration-300">2. How We Use Your Data & Recruiter Talent Search Controls</h2>
-            <p>
-              Your data is processed strictly to maintain your dashboard, execute secure ATS compatibility algorithms, and allow PDF document exports. 
-            </p>
-            <p className="mt-2">
-              As we expand into an employer marketplace, your data visibility remains entirely under your control:
-            </p>
-            <ul className="list-disc pl-5 space-y-1 mt-2">
-              <li><strong>Visibility Toggles:</strong> You can explicitly authorize or block verified recruiters from discovering your profile via candidate database searches. New accounts default to private.</li>
-              <li><strong>Direct Applications:</strong> Submitting an application directly to a posted opening shares your resume package exclusively with that specific hiring entity.</li>
-              <li><strong>No Data Sales:</strong> We never sell, trade, or rent personal resume records to third-party data brokers or marketing firms.</li>
-            </ul>
-          </section>
-
-          <section className="space-y-2">
-            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 transition-colors duration-300">3. Cookies, Caching, and Google AdSense Compliance</h2>
-            <p>
-              We utilize essential session cookies and encrypted local storage tokens (via Supabase) to manage secure user authentication and session continuity. Performance caching is utilized across edge networks (Vercel CDN) to optimize static assets and blog speed while ensuring private user data and dashboard routes bypass public caches entirely.
-            </p>
-            <p className="mt-2">
-              Additionally, we partner with third-party advertising networks, including <strong>Google AdSense</strong>. Google uses cookies (such as DART cookies) to serve advertisements based on your prior visits to cveat.in and other web destinations. You can review Google’s privacy practices and opt out of personalized advertising by visiting <a href="https://adssettings.google.com" target="_blank" rel="noopener" className="text-indigo-600 underline font-medium dark:text-indigo-300 dark:hover:text-indigo-200 transition-colors duration-300">Google Ads Settings</a>.
-            </p>
-          </section>
-
-          <section className="space-y-2">
-            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 transition-colors duration-300">4. Data Security & User Rights</h2>
-            <p>
-              We implement industry-standard security measures, including HTTPS/TLS encryption in transit and secure database protection protocols. You retain the absolute right to view, update, correct, or completely delete your personal account and associated resume records from our system at any time.
-            </p>
-          </section>
-
-          <section className="space-y-2">
-            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 transition-colors duration-300">5. Contact Information</h2>
-            <p>
-              If you have any questions, compliance inquiries, or data removal requests regarding this Privacy Policy, please contact our administrative team at support@cveat.in.
-            </p>
-          </section>
-
+<section className="space-y-2"><h2 className="text-base font-bold text-slate-900 dark:text-slate-100">1. Information we process</h2><p>CVeat (cveat.in) provides CV building, ATS analysis and conversational interview practice. Depending on the features you choose, we process account identifiers and contact details; profile and career information; CVs, job descriptions and uploaded documents; interview questions, typed answers, transcripts and feedback; payment and credit records; and technical information used to operate and protect the service.</p><p>Microphone recordings are processed only when you enable the microphone and accept the recording notice. Interview practice does not access or record your camera. Please avoid submitting identity numbers, banking details, health information, confidential employer material or other unnecessary sensitive data.</p></section>
+<section className="space-y-2"><h2 className="text-base font-bold text-slate-900 dark:text-slate-100">2. Why we process information</h2><p>We use this information to maintain your account and drafts, create and export CVs, analyse job matches, prepare interview questions, transcribe spoken answers, produce practice feedback, manage payments and credits, prevent abuse, troubleshoot failures and respond to support requests. AI feedback is practice guidance, not an employer hiring decision.</p><p>Using our CV or interview tools does not by itself publish your CV to recruiters. If you choose to share a CV, submit an application or follow an employer’s external link, review the recipient’s privacy terms before sending information. We do not sell personal CV records to data brokers.</p></section>
+<section className="space-y-2"><h2 className="text-base font-bold text-slate-900 dark:text-slate-100">3. AI providers, including Sarvam</h2><p><strong>Sarvam AI — spoken questions:</strong> When voice playback is enabled, CVeat sends the interview question text to Sarvam’s text-to-speech API to generate synthetic speech. Questions can contain information derived from your CV or target role. The current integration does not send your recorded answers or full CV file directly to Sarvam and does not clone your voice.</p><p>Sarvam may process submitted text, generated audio and associated request or service logs. Retention and any model-improvement use depend on the applicable agreement and account settings; we do not promise zero retention or no training without verifying those settings. Read <a className="underline" href="https://www.sarvam.ai/privacy-policy" target="_blank" rel="noopener noreferrer">Sarvam’s Privacy Policy</a>, <a className="underline" href="https://www.sarvam.ai/eula" target="_blank" rel="noopener noreferrer">EULA</a> and <a className="underline" href="https://docs.sarvam.ai/api/platform/data-retention" target="_blank" rel="noopener noreferrer">API retention documentation</a>.</p><p><strong>Google Gemini — AI analysis and transcription:</strong> CV content, job descriptions and answers are sent to Gemini as needed for the selected AI feature. Recordings may be sent for transcription when you choose that mode or browser transcription is unavailable. The current Gemini configuration uses unpaid quota. Google may use submissions and outputs for service or model improvement and human review. Its terms prohibit submitting personal, sensitive or confidential information to unpaid services. Real CVs and identifiable recordings should therefore not be submitted through this configuration; a suitable provider configuration is needed first. See <a className="underline" href="https://ai.google.dev/gemini-api/terms" target="_blank" rel="noopener noreferrer">the Gemini API terms</a>. Do not submit personal, sensitive or confidential content.</p><p><strong>Browser speech recognition:</strong> Optional live transcription may send speech to the speech service provided by your browser. That provider’s processing terms apply. You can use typed answers instead of the microphone, turn voice playback off, and revoke microphone permission in your browser.</p></section>
+<section className="space-y-2"><h2 className="text-base font-bold text-slate-900 dark:text-slate-100">4. Hosting, authentication and payments</h2><p>Supabase supports account authentication and database storage. Our hosting and infrastructure services process requests and technical logs. Razorpay processes checkout and payment details; CVeat retains transaction identifiers, payment status, billing details and credit records needed for fulfilment and support, rather than asking you to enter payment-card credentials into the CV editor. Email and support delivery services may process messages you send or receive.</p><p>Providers may process information in countries where they or their subprocessors operate. Storage location and safeguards depend on the specific service and account configuration; CVeat does not make a blanket promise that every provider processes all data only in India.</p></section>
+<section className="space-y-2"><h2 className="text-base font-bold text-slate-900 dark:text-slate-100">5. Browser storage and cookies</h2><p>We use browser local storage and session storage for authentication sessions, CV drafts and selected workflow transfers. Browser storage is not automatically encrypted by CVeat and can remain on a shared device. Sign out after use and clear site storage when appropriate; clearing it can remove unsaved drafts.</p><p>Essential storage supports the features you request. Any introduction of optional advertising or analytics tracking needs a corresponding notice and consent controls where required. Third-party sites you visit through links have their own cookie practices.</p></section>
+<section className="space-y-2"><h2 className="text-base font-bold text-slate-900 dark:text-slate-100">6. Retention, recordings and deletion</h2><p>Audio clips used for playback and answer review are held temporarily in the interview tab and are not saved to Supabase Storage by the current interview flow. This does not mean the transcription provider retains no data. Closing the tab ends access to these temporary clips unless you downloaded them yourself.</p><p>CV drafts remain in browser storage until cleared or replaced. Account information, saved CVs, evaluations, operational interview records, AI usage records and payment records are separate categories. Operational records can exist even if you do not choose Save to History. Not all server records currently have an automatic deletion schedule.</p><p>History limits are shown in the product; replacing an oldest save requires confirmation. Deleting or replacing a History item does not automatically erase separate billing records, security logs, provider-held copies or backups. To request broader deletion or an explanation of retention, contact support@cveat.in. Some records may need to be retained for legal, security or payment obligations; backup deletion follows the relevant provider’s retention cycle.</p></section>
+<section className="space-y-2"><h2 className="text-base font-bold text-slate-900 dark:text-slate-100">7. Your choices, rights and security</h2><p>You can edit profile information, delete saved History items, clear local drafts, use typed answers and stop microphone use. Contact <a className="underline" href="mailto:support@cveat.in">support@cveat.in</a> for access, correction, account deletion, consent withdrawal or a privacy complaint. We may need to verify account ownership. Applicable legal exceptions and required retention can limit deletion; withdrawing consent can make dependent features unavailable.</p><p>We use measures such as encrypted HTTPS connections and access controls. No service can guarantee absolute security. AI features are intended for adults aged 18 or over. If information about a child has been submitted, contact us to request review and removal.</p></section>
+<section className="space-y-2"><h2 className="text-base font-bold text-slate-900 dark:text-slate-100">8. Changes and contact</h2><p>Check the date above for policy changes. Material changes should be explained through an appropriate service notice, with fresh consent where required. Privacy enquiries and complaints can be sent to <a className="underline" href="mailto:support@cveat.in">support@cveat.in</a>.</p></section>
         </div>
       </div>
     </div>

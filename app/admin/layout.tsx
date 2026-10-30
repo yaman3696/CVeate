@@ -22,10 +22,10 @@ import {
   ArrowLeft,
 } from 'lucide-react'
 
-const navigation = [
+const navigation: { label: string; href: string; icon: typeof LayoutDashboard; disabled?: boolean }[] = [
   { label: 'Overview', href: '/admin', icon: LayoutDashboard },
   { label: 'Users', href: '/admin/users', icon: Users },
-  { label: 'Enterprises', href: '/admin/enterprises', icon: Building2, disabled: true },
+  { label: 'Enterprises', href: '/admin/enterprises', icon: Building2 },
   { label: 'Blog Management', href: '/admin/blog', icon: FileText },
   { label: 'AI Economics', href: '/admin/ai-economics', icon: BrainCircuit },
   { label: 'Revenue', href: '/admin/revenue', icon: Wallet },
@@ -38,7 +38,7 @@ const navigation = [
 const sectionPermissions: Record<string, AdminAccessPermission> = {
   '/admin': 'overview.read', '/admin/users': 'users.read', '/admin/blog': 'blog.read',
   '/admin/ai-economics': 'ai_economics.read', '/admin/revenue': 'revenue.read',
-  '/admin/audit': 'audit.read', '/admin/permissions': 'permissions.manage', '/admin/employees': 'permissions.manage', '/admin/settings': 'permissions.manage',
+  '/admin/audit': 'audit.read', '/admin/permissions': 'permissions.manage', '/admin/employees': 'permissions.manage', '/admin/settings': 'permissions.manage', '/admin/enterprises': 'permissions.manage',
 }
 
 export default function AdminLayout({

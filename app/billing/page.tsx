@@ -95,45 +95,45 @@ export default function BillingPage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-72px)] bg-slate-50 px-4 py-12 sm:px-6">
+    <div className="min-h-[calc(100vh-72px)] bg-slate-50 px-4 py-12 sm:px-6 dark:bg-[#0B1120] dark:text-slate-100">
       <div className="mx-auto max-w-5xl">
         <div className="mb-8">
-          <p className="mb-2 text-xs font-bold uppercase tracking-widest text-indigo-600">Your account</p>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Billing &amp; Payments</h1>
-          <p className="mt-2 text-sm text-slate-600">Review your Career Credit purchases and download payment receipts.</p>
+          <p className="mb-2 text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-300">Your account</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">Billing &amp; Payments</h1>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Review your Career Credit purchases and download payment receipts.</p>
         </div>
 
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-6 py-5">
-            <h2 className="text-base font-bold text-slate-900">Purchase history</h2>
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-[#1B263B] dark:shadow-black/15">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-6 py-5 dark:border-slate-700/70">
+            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">Purchase history</h2>
             <Link href="/pricing" className="rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white transition-colors hover:bg-indigo-700">Buy Credits →</Link>
           </div>
 
           {receiptError && (
-            <div role="alert" className="mx-6 mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div role="alert" className="mx-6 mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-400/25 dark:bg-red-400/10 dark:text-red-300">
               {receiptError}
               <button type="button" onClick={() => setReceiptError('')} className="ml-3 font-semibold underline">Dismiss</button>
             </div>
           )}
 
           {loading ? (
-            <p className="px-6 py-12 text-center text-sm text-slate-500">Loading your purchases...</p>
+            <p className="px-6 py-12 text-center text-sm text-slate-500 dark:text-slate-400">Loading your purchases...</p>
           ) : signedOut ? (
             <div className="px-6 py-12 text-center">
-              <p className="text-sm text-slate-600">Please sign in to view your payment history.</p>
-              <Link href="/?auth=signin" className="mt-4 inline-block text-sm font-bold text-indigo-600 hover:underline">Sign in →</Link>
+              <p className="text-sm text-slate-600 dark:text-slate-300">Please sign in to view your payment history.</p>
+              <Link href="/?auth=signin" className="mt-4 inline-block text-sm font-bold text-indigo-600 hover:underline dark:text-indigo-300">Sign in →</Link>
             </div>
           ) : error ? (
-            <p role="alert" className="px-6 py-12 text-center text-sm text-red-600">{error}</p>
+            <p role="alert" className="px-6 py-12 text-center text-sm text-red-600 dark:text-red-300">{error}</p>
           ) : purchases.length === 0 ? (
             <div className="px-6 py-12 text-center">
-              <p className="font-semibold text-slate-800">No purchases yet</p>
-              <p className="mt-2 text-sm text-slate-500">Your Career Credit purchases will appear here.</p>
+              <p className="font-semibold text-slate-800 dark:text-slate-100">No purchases yet</p>
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Your Career Credit purchases will appear here.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[680px] text-left text-sm">
-                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:bg-[#111C30] dark:text-slate-400">
                   <tr>
                   <th className="px-6 py-4 font-semibold">Date</th>
 <th className="px-6 py-4 font-semibold">Package</th>
@@ -143,9 +143,9 @@ export default function BillingPage() {
                     <th className="px-6 py-4 font-semibold">Receipt</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-700/70">
                   {purchases.map((purchase) => (
-                    <tr key={purchase.id} className="align-top text-slate-700">
+                    <tr key={purchase.id} className="align-top text-slate-700 dark:text-slate-200">
                       <td className="whitespace-nowrap px-6 py-4">
   {new Date(purchase.created_at).toLocaleDateString('en-IN', {
     day: '2-digit',
@@ -159,7 +159,7 @@ export default function BillingPage() {
 <td className="px-6 py-4 font-semibold">{purchase.credits}</td>
                       <td className="whitespace-nowrap px-6 py-4 font-semibold">{formatMoney(purchase.amount_paise, purchase.currency)}</td>
                       <td className="px-6 py-4">
-                        <span className={`inline-block rounded-full px-2.5 py-1 text-xs font-semibold ${purchase.status === 'completed' ? 'bg-green-50 text-green-700' : purchase.status === 'created' ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
+                        <span className={`inline-block rounded-full px-2.5 py-1 text-xs font-semibold ${purchase.status === 'completed' ? 'bg-green-50 text-green-700 dark:bg-emerald-400/10 dark:text-emerald-300' : purchase.status === 'created' ? 'bg-amber-50 text-amber-700 dark:bg-amber-400/10 dark:text-amber-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-700/50 dark:text-slate-300'}`}>
                           {purchase.status === 'completed' ? 'Completed' : purchase.status === 'created' ? 'Pending' : purchase.status}
                         </span>
                       </td>
@@ -169,11 +169,11 @@ export default function BillingPage() {
                             type="button"
                             onClick={() => void downloadReceipt(purchase)}
                             disabled={downloadingId !== null}
-                            className="inline-flex items-center rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-bold text-indigo-700 transition-colors hover:bg-indigo-600 hover:text-white disabled:cursor-wait disabled:opacity-50"
+                            className="inline-flex items-center rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-bold text-indigo-700 transition-colors hover:bg-indigo-600 hover:text-white disabled:cursor-wait disabled:opacity-50 dark:border-indigo-400/30 dark:bg-indigo-400/10 dark:text-indigo-200 dark:hover:bg-indigo-600 dark:hover:text-white"
                           >
                             {downloadingId === purchase.id ? 'Preparing PDF…' : '↓ Download PDF'}
                           </button>
-                        ) : <span className="text-xs text-slate-400">Not available</span>}
+                        ) : <span className="text-xs text-slate-400 dark:text-slate-400">Not available</span>}
                       </td>
                     </tr>
                   ))}
@@ -182,7 +182,7 @@ export default function BillingPage() {
             </div>
           )}
         </div>
-        <p className="mt-5 text-xs leading-relaxed text-slate-500">Downloadable documents are payment receipts, not GST tax invoices. Receipts are available for completed purchases with saved billing details. For assistance, contact support@cveat.in.</p>
+        <p className="mt-5 text-xs leading-relaxed text-slate-500 dark:text-slate-400">Downloadable documents are payment receipts, not GST tax invoices. Receipts are available for completed purchases with saved billing details. For assistance, contact support@cveat.in.</p>
       </div>
     </div>
   )
