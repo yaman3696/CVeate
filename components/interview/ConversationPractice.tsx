@@ -26,6 +26,9 @@ type Report = {
 };
 const input = "mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-[#111C30] dark:text-slate-100";
 const button = "inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold transition-colors hover:bg-slate-100 disabled:opacity-50 dark:border-slate-600 dark:hover:bg-slate-800";
+function feedbackTone(score: number) {
+  return score < 5 ? 'border-red-300 bg-red-50 text-red-900 dark:border-red-400/40 dark:bg-red-400/10 dark:text-red-200' : score < 8 ? 'border-yellow-300 bg-yellow-50 text-yellow-900 dark:border-yellow-400/40 dark:bg-yellow-400/10 dark:text-yellow-100' : 'border-emerald-300 bg-emerald-50 text-emerald-900 dark:border-emerald-400/40 dark:bg-emerald-400/10 dark:text-emerald-100';
+}
 const primary = "inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 font-bold text-white transition-colors hover:bg-indigo-700 disabled:opacity-50";
 export default function ConversationPractice({ userId, mode, onBack, }: {
     userId: string | null;
@@ -645,7 +648,7 @@ export default function ConversationPractice({ userId, mode, onBack, }: {
     }
     const audioConsentNotice = showAudioNotice ? <div ref={audioNotice} role="region" aria-label="Microphone processing notice" className="mt-4 rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-xs leading-6 dark:border-indigo-400/30 dark:bg-indigo-400/10">
     <strong>Before using your microphone</strong><p>Audio-only interview. No camera is needed or accessed. {transcriptionMode === "live" ? "Live transcription may process speech with your browser’s speech provider. If unavailable, Google Gemini transcribes the recording." : "Google Gemini processes the recording for transcription."} Temporary audio remains in this tab for your review and is never saved to Supabase.</p>
-    <button ref={acceptAudio} className={primary} onClick={() => { setConsent(true); setLiveConsent(transcriptionMode === "live"); setShowAudioNotice(false); void startRecording(); }}>I agree — start microphone</button><button className={button} onClick={() => { setShowAudioNotice(false); beginAnswerClock(); }}>Type my answer instead</button>
+    <button ref={acceptAudio} className={primary} onClick={() => { setConsent(true); setLiveConsent(transcriptionMode === "live"); setShowAudioNotice(false); void startRecording(); }}>I agree — open mic</button><button className={button} onClick={() => { setShowAudioNotice(false); beginAnswerClock(); }}>Use my keyboard instead</button>
   </div> : null;
     if (spoken && session && !report && !reviewing)
         return <InterviewRoom role={session.role} questions={session.questions} index={index} answer={answer} seconds={seconds} timerStarted={deadline !== null || answerClock.current !== null} listening={listening} speaking={speaking} busy={busy} micSupported={micSupported} voice={voice} stream={visualStream} audio={speechAudio} interim={interim} error={error} flagged={flags[index]} notice={audioConsentNotice} handsFree={handsFree} onHandsFree={setHandsFree} liveSupported={liveSupported} transcriptionMode={transcriptionMode} onTranscriptionMode={setTranscriptionMode} onAnswer={text => { stopVoice(); beginAnswerClock(); setAnswer(text); }} onStart={() => { if (answer.trim() || !micSupported)
@@ -775,29 +778,22 @@ export default function ConversationPractice({ userId, mode, onBack, }: {
                   Reset preparation attempt
                 </button>)}
             </form>) : report ? (<div className="space-y-6">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="text-2xl font-bold">Your interview feedback</h2>
-                <span className="rounded-full bg-indigo-50 px-4 py-2 font-bold text-indigo-600 dark:bg-indigo-400/10 dark:text-indigo-300">
-                  {report.overallScore}/10
-                </span>
+              <h2 className="text-2xl font-bold">Your interview feedback</h2>
+              <div data-feedback-score className={`rounded-2xl border p-6 sm:p-8 ${feedbackTone(report.overallScore)}`}>
+                <p className="text-xs font-bold uppercase tracking-wider">Overall interview score</p>
+                <p className="mt-3 flex items-baseline gap-2"><strong className="text-6xl font-extrabold sm:text-7xl">{report.overallScore}</strong><span className="text-2xl font-semibold">/ 10</span></p>
+                <p className="mt-3 text-sm font-bold">{report.overallScore < 5 ? "Needs improvement" : report.overallScore < 8 ? "Making progress" : "Strong performance"}</p>
+                <p className="mt-4 whitespace-pre-wrap text-sm leading-7">{report.summary}</p>
               </div>
-              <p className="whitespace-pre-wrap text-sm leading-7 text-slate-600 dark:text-slate-300">
-                {report.summary}
-              </p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Career Credits used: {creditUsed} for this complete interview.
-              </p>
-              {session.questions.map((q, i) => (<details key={i} className="rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
-                  <summary className="cursor-pointer text-sm font-bold">
-                    {i + 1}. {q}
-                  </summary>
-                  <p className="mt-4 whitespace-pre-wrap text-sm text-slate-500 dark:text-slate-400">
-                    Your answer: {answers[i]}
-                  </p>
-                  <p className="mt-4 whitespace-pre-wrap text-sm leading-7">
-                    {report.breakdown[i].feedback}
-                  </p>
-                </details>))}
+              <div aria-label="Score colour guide" className="flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold"><span className="text-red-700 dark:text-red-300">1–4 · Needs improvement</span><span className="text-yellow-800 dark:text-yellow-200">5–7 · Making progress</span><span className="text-emerald-700 dark:text-emerald-300">8–10 · Strong performance</span></div>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Career Credits used: {creditUsed} for this complete interview.</p>
+              {session.questions.map((q, i) => (<section key={i} data-question-feedback className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700">
+                  <h3 className="border-b border-indigo-100 bg-indigo-50 px-5 py-4 text-sm font-bold text-indigo-900 dark:border-indigo-400/20 dark:bg-indigo-400/10 dark:text-indigo-100">Question {i + 1} · {q}</h3>
+                  <div className="space-y-4 p-5">
+                    <div><p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Your answer</p><p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-slate-600 dark:text-slate-300">{answers[i] || "No answer provided."}</p></div>
+                    <div className={`rounded-xl border p-4 ${feedbackTone(report.overallScore)}`}><h4 className="text-xs font-bold uppercase tracking-wider">AI feedback</h4><p className="mt-2 whitespace-pre-wrap text-sm leading-7">{report.breakdown[i]?.feedback || "Feedback is unavailable for this question."}</p></div>
+                  </div>
+                </section>))}
               <div className="rounded-2xl bg-indigo-50 p-5 dark:bg-indigo-400/10">
                 <h3 className="font-bold">
                   Would you like to save this interview?
@@ -896,7 +892,7 @@ export default function ConversationPractice({ userId, mode, onBack, }: {
                     setShowAudioNotice(false);
                     void startRecording();
                 }}>
-                      I agree — start microphone
+                      I agree — open mic
                     </button>
                     <button className={button} onClick={() => setShowAudioNotice(false)}>
                       Keep typing instead

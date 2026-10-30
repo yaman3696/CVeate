@@ -134,6 +134,11 @@ export default function InterviewRoom(p: {
     } }
     return <section className={styles.room}>
   <div className={styles.heading}><div><span className={styles.eyebrow}>YOUR AI CONVERSATION</span><h1>A conversation, at your pace.</h1><p>{p.role} · {p.questions.length} questions</p></div><button onClick={p.onLeave} disabled={p.busy}>Leave session ↗</button></div>
+  <div className="cveat-call-mic-banner">
+    <div><strong>{p.listening ? "Microphone is open — you can speak now" : "Open your mic before you speak"}</strong><p>{p.listening ? "Your answer is being recorded. Close the mic when you finish." : p.speaking ? "Listen to the question, then click Open mic and allow microphone access." : "Click Open mic and allow access. Speaking alone does not start recording."}</p></div>
+    <button type="button" aria-pressed={p.listening} disabled={p.busy || !p.micSupported || p.speaking} onClick={p.onMic}>{p.listening ? <MicOff size={20}/> : <Mic size={20}/>} {p.listening ? "Close mic" : "Open mic"}</button>
+    {!p.micSupported && <p>Microphone unavailable in this browser. Write your answer using the keyboard below.</p>}
+  </div>
   {p.error && <div role="alert" className={styles.error}>{p.error}</div>}
   <div ref={container} className={`${styles.window} ${mini ? styles.minimized : ""}`}>
    <div className={styles.stage}>
@@ -152,7 +157,7 @@ export default function InterviewRoom(p: {
     <h2>{p.questions[p.index]}</h2>
     <div className={`${styles.timer} ${p.seconds <= 30 ? styles.warning : ""}`}><div><span>{p.timerStarted ? "TIME REMAINING" : "YOUR ANSWER TIME"}</span><strong role="timer">{time}</strong></div><p>Up to 5 minutes.<br />Finish early when you’re ready.</p><div className={styles.track}><i style={{ width: `${p.seconds / 3}%` }}/></div></div>
     {p.notice}
-    <details className={styles.transcript} open={transcriptOpen} onToggle={e => setTranscriptOpen(e.currentTarget.open)}><summary>Type or review your transcript</summary><textarea rows={3} maxLength={6000} disabled={p.busy || p.listening} value={p.answer} onChange={e => p.onAnswer(e.target.value)} placeholder={p.listening ? "Listening… your words appear here when available." : "Speak your answer, or type it here…"}/></details>
+    <details className={styles.transcript} open={transcriptOpen} onToggle={e => setTranscriptOpen(e.currentTarget.open)}><summary>{p.listening ? "View your answer text" : "Write an answer using the keyboard"}</summary><p className="cveat-call-keyboard-help">This box is for keyboard input. To answer aloud, use Open mic above. Recorded speech is transcribed for review; it may appear after you close the mic.</p><textarea rows={3} maxLength={6000} disabled={p.busy || p.listening} value={p.answer} onChange={e => p.onAnswer(e.target.value)} placeholder={p.listening ? "Listening… your words appear here when available." : "Write your answer using your keyboard…"}/></details>
     <p role="status" className={styles.status}>{p.interim || status}{p.timerStarted && p.seconds <= 30 ? " · 30 seconds or less remaining" : ""}</p>
     <button className={styles.primary} disabled={p.busy || p.speaking} onClick={() => { if (p.timerStarted)
         p.onNext();
@@ -160,11 +165,11 @@ export default function InterviewRoom(p: {
         if (!p.micSupported)
             setTranscriptOpen(true);
         p.onStart();
-    } }}>{p.timerStarted ? (p.index === p.questions.length - 1 ? "Finish & review" : "Next question") : "Start my answer"}<ArrowRight size={17}/></button>
+    } }}>{p.timerStarted ? (p.index === p.questions.length - 1 ? "Finish & review" : "Next question") : (p.micSupported ? "Open mic to answer" : "Write my answer")}<ArrowRight size={17}/></button>
     <p className={styles.note}>{p.timerStarted ? "At 00:00, your answer finishes and the next question opens." : "The timer starts with your answer."}</p>
     <p className={styles.promise}>✓ Audio-only interview. No camera needed.<span>We never access or record your camera.</span></p>
    </aside>
-   <footer className={styles.controls}><div className={styles.switch}><button aria-pressed={view === "orb"} onClick={() => selectView("orb")}><Circle size={14}/>Orb</button><button aria-pressed={view === "avatar"} onClick={() => selectView("avatar")}><UserRound size={14}/>3D interviewer</button></div><div className={styles.devices}><button disabled={p.busy || !p.micSupported || p.speaking} onClick={p.onMic}>{p.listening ? <MicOff size={17}/> : <Mic size={17}/>} {p.listening ? "Stop mic" : "Speak my answer"}</button><button onClick={p.onVoice} disabled={p.busy || p.listening}>{p.voice ? <Volume2 size={17}/> : <VolumeX size={17}/>} Voice {p.voice ? "on" : "off"}</button><button disabled={!p.voice || p.busy || p.listening || p.speaking} onClick={p.onReplay}>Replay question</button></div><span className={styles.powered}>Sarvam voice · Gemini feedback</span></footer>
+   <footer className={styles.controls}><div className={styles.switch}><button aria-pressed={view === "orb"} onClick={() => selectView("orb")}><Circle size={14}/>Orb</button><button aria-pressed={view === "avatar"} onClick={() => selectView("avatar")}><UserRound size={14}/>3D interviewer</button></div><div className={styles.devices}><button onClick={p.onVoice} disabled={p.busy || p.listening}>{p.voice ? <Volume2 size={17}/> : <VolumeX size={17}/>} Voice {p.voice ? "on" : "off"}</button><button disabled={!p.voice || p.busy || p.listening || p.speaking} onClick={p.onReplay}>Replay question</button></div><span className={styles.powered}>Sarvam voice · Gemini feedback</span></footer>
   </div>
   <div className={styles.options}><label><input type="checkbox" checked={p.handsFree} onChange={e => p.onHandsFree(e.target.checked)}/> After microphone consent, start recording automatically when each spoken question finishes.</label><label>Transcription <select disabled={p.listening || p.busy} value={p.transcriptionMode} onChange={e => p.onTranscriptionMode(e.target.value as "live" | "record")}>{p.liveSupported && <option value="live">Live text, with recording fallback</option>}<option value="record">Record and transcribe</option></select></label></div>
   {avatarNotice&&<p role="status" className="cveat-call-fallback">{avatarNotice}</p>}
