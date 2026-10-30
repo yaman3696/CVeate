@@ -7,6 +7,7 @@ import { saveToHistory } from "@/lib/save-history";
 import { appendTranscript, speechRecognitionConstructor, startLiveTranscription, type LiveTranscription, } from "@/lib/live-transcription";
 import { PRACTICE_LEVELS } from "@/lib/practice-interview";
 import InterviewOrb from "./InterviewOrb";
+import { saveInterviewSetupDraft, restoreInterviewSetupDraft, clearInterviewSetupDraft } from "@/lib/interview-setup-draft";
 import InterviewRoom from "./InterviewRoom";
 type Session = {
     id: string;
@@ -34,6 +35,13 @@ export default function ConversationPractice({ userId, mode, onBack, }: {
     const spoken = mode === "conversation";
     const [importedName, setImportedName] = useState("");
     useEffect(() => {
+      let cancelled = false;
+      void (async () => {
+      try {
+        const draft = await restoreInterviewSetupDraft(userId);
+        if (cancelled) return;
+        if (draft) { setRole(draft.role); setLevel(draft.level); setJd(draft.jd); setFile(draft.file); setImportedName(draft.importedName); return; }
+      } catch { /* Dashboard transfer can still be restored if local draft storage is unavailable. */ }
       if (new URLSearchParams(window.location.search).get('source') !== 'dashboard') return;
       try {
         const raw = sessionStorage.getItem('cveat_interview_cv'); if (!raw) return;
@@ -46,6 +54,8 @@ export default function ConversationPractice({ userId, mode, onBack, }: {
         setFile(new File([transfer.text], 'dashboard-cv.txt', {type:'text/plain'}));
         setRole(String(transfer.role || '').slice(0,100)); setImportedName(String(transfer.name || 'Your CV'));
       } catch {}
+      })();
+      return () => { cancelled = true };
     }, [userId]);
     const [session, setSession] = useState<Session | null>(null), [role, setRole] = useState(""), [level, setLevel] = useState("Junior"), [jd, setJd] = useState(""), [file, setFile] = useState<File | null>(null);
     const [answers, setAnswers] = useState<string[]>([]), [index, setIndex] = useState(0), [answer, setAnswer] = useState(""), [reviewing, setReviewing] = useState(false), [report, setReport] = useState<Report | null>(null);
@@ -284,6 +294,11 @@ export default function ConversationPractice({ userId, mode, onBack, }: {
     async function start(e: React.FormEvent) {
         e.preventDefault();
         if (!userId) {
+            if (busyRef.current) return;
+            busyRef.current = true; setBusy(true); setError("");
+            try { await saveInterviewSetupDraft({ role, level, jd, file, importedName, owner: null }); }
+            catch { setError("Could not keep your interview setup for sign-in. Allow site storage and try again. Your entries are still here."); return; }
+            finally { busyRef.current = false; setBusy(false); }
             if (importedName) { try { const transfer = JSON.parse(sessionStorage.getItem('cveat_interview_cv') || '{}'); if (transfer.owner === 'guest') sessionStorage.setItem('cveat_claim_guest_interview', String(transfer.created)); } catch {} }
             window.dispatchEvent(new CustomEvent("open-auth-modal", { detail: "signin" }));
             return;
@@ -313,6 +328,7 @@ export default function ConversationPractice({ userId, mode, onBack, }: {
                 throw Error(data.error || "Unable to prepare interview.");
             if (!active.current)
                 return;
+            void clearInterviewSetupDraft().catch(() => {});
             setSession(data.session);
             setAnswers(Array(5).fill(""));
             setFile(null);
@@ -729,6 +745,7 @@ export default function ConversationPractice({ userId, mode, onBack, }: {
                   <FileText size={18}/>
                   {importedName ? "CV from your dashboard" : "Upload your CV · PDF or TXT"}
                 </span>
+                {file && !importedName && <p role="status" className="mt-2 text-xs font-normal text-indigo-600 dark:text-indigo-300">Attached: {file.name}</p>}
                 {importedName && <p role="status" className="mt-2 text-xs font-normal text-indigo-600 dark:text-indigo-300">{importedName} is attached. Your current dashboard CV will be used. Choose a file below to replace it.</p>}
                 <input className="mt-3 block w-full text-xs font-normal" type="file" accept="application/pdf,text/plain" onChange={(e) => { setFile(e.target.files?.[0] || null); setImportedName(""); }}/>
                 <span className="mt-2 block text-xs font-normal text-slate-500 dark:text-slate-400">

@@ -4,11 +4,12 @@ import { ArrowRight, Check, Clock3, FileText, MessageSquare, Mic, ShieldCheck, S
 import { supabase } from "@/lib/supabase";
 import dynamic from "next/dynamic";
 const ConversationPractice=dynamic(()=>import("@/components/interview/ConversationPractice"),{ssr:false,loading:()=> <p role="status" className="py-20 text-center text-sm text-slate-500 dark:text-slate-400">Preparing your interview setup…</p>});
+import { hasInterviewSetupDraft } from "@/lib/interview-setup-draft";
 import InterviewOrb from "@/components/interview/InterviewOrb";
 import AnimatedNetwork from "@/components/AnimatedNetwork";
 
 export default function InterviewPrepPage() {
-  useEffect(() => { if (new URLSearchParams(window.location.search).get('source') === 'dashboard') setStarted(true) }, []);
+  useEffect(() => { if (new URLSearchParams(window.location.search).get('source') === 'dashboard' || hasInterviewSetupDraft()) setStarted(true) }, []);
   const [started,setStarted]=useState(false),[userId,setUserId]=useState<string|null>(null),[loading,setLoading]=useState(true);
   useEffect(() => {
     let mounted = true;
