@@ -6,6 +6,7 @@ import { supabase } from '@/utils/supabaseClient'
 import './globals.css'
 import { clearAtsDraft } from '@/lib/ats-draft-storage'
 import ThemeToggle from './ThemeToggle'
+import VisitorHeartbeat from '@/components/site/VisitorHeartbeat'
 import ProfileCompletionPrompt from '@/components/site/ProfileCompletionPrompt'
 import SiteBrand from '@/components/site/SiteBrand'
 import InteractiveCursors from '@/components/site/InteractiveCursors'
@@ -347,6 +348,7 @@ alert('First create and save CV to use this feature.')
 }
 return (
 <>
+<VisitorHeartbeat/>
 <InteractiveCursors/>
 <ProfileCompletionPrompt user={user} />
 {/* Global Navigation Bar */}

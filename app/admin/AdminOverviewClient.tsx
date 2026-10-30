@@ -1,5 +1,6 @@
 "use client";
 
+import LiveVisitorCounts from '@/components/admin/LiveVisitorCounts';
 import { getAdminMfaHref } from "@/lib/admin-navigation";
 
 import ExportExcelButton from "@/components/admin/ExportExcelButton";
@@ -245,6 +246,8 @@ export default function AdminDashboardPage() {
         <p className="mt-2 text-slate-600">
           Manage users, enterprises, revenue and platform operations.
         </p>
+
+        <LiveVisitorCounts />
 
         {/* Live Overview Metrics */}
         <section className="mt-8">
