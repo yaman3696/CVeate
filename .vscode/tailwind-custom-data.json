@@ -1,0 +1,13 @@
+{
+  "version": 1.1,
+  "atDirectives": [
+    {
+      "name": "@custom-variant",
+      "description": "Tailwind CSS v4 custom variant, used for class-based dark mode."
+    },
+    {
+      "name": "@theme",
+      "description": "Tailwind CSS v4 design tokens."
+    }
+  ]
+}

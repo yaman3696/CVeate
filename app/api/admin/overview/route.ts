@@ -1,3 +1,4 @@
+import { geminiRateSnapshot, priceLegacyAts } from "@/lib/ai-usage-pricing";
 import { NextRequest, NextResponse } from "next/server";
 import { checkAdminPermission } from "@/lib/admin-permissions";
 import { requireAdmin } from "@/lib/require-admin";
@@ -60,7 +61,7 @@ export async function GET(request: NextRequest) {
 
       supabaseAdmin
         .from("cveate_ai_usage")
-        .select("estimated_cost_inr")
+        .select("feature,model,input_tokens,output_tokens,thinking_tokens,estimated_cost_inr")
         .eq("status", "generated"),
       supabaseAdmin.rpc("interview_cost_lifetime"),
     ]);
@@ -79,9 +80,10 @@ export async function GET(request: NextRequest) {
       0,
     );
 
+    const pricedUsage = priceLegacyAts(aiUsageResult.data ?? [], await geminiRateSnapshot("gemini-3.1-flash-lite"));
     const aiCost =
       Number(interviewCostResult.data?.knownCostInr || 0) +
-      (aiUsageResult.data ?? []).reduce(
+      pricedUsage.reduce(
         (total, usage) => total + Number(usage.estimated_cost_inr ?? 0),
         0,
       );
@@ -149,7 +151,7 @@ export async function GET(request: NextRequest) {
         aiCostIncomplete:
           !!interviewCostResult.error ||
           Number(interviewCostResult.data?.unknownAttempts || 0) > 0 ||
-          (aiUsageResult.data ?? []).some(
+          pricedUsage.some(
             (row) => row.estimated_cost_inr === null,
           ),
         trends,

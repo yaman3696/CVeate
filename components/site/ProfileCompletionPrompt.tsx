@@ -8,6 +8,8 @@ export default function ProfileCompletionPrompt({ user }: { user: { id: string; 
   const pathname = usePathname()
   const router = useRouter()
   const dialog = useRef<HTMLDialogElement>(null)
+  const [revision, setRevision] = useState(0)
+  useEffect(() => { const refresh = () => setRevision(n => n + 1); window.addEventListener('cveat-profile-updated', refresh); return () => window.removeEventListener('cveat-profile-updated', refresh) }, [])
   const [promptKey, setPromptKey] = useState<string | null>(null)
   useEffect(() => {
     setPromptKey(null)
@@ -22,7 +24,7 @@ export default function ProfileCompletionPrompt({ user }: { user: { id: string; 
       if (!data || !filled(data.full_name) || !(filled(data.contact_number) || filled(data.phone)) || !(filled(data.profession) || filled(data.target_job_title))) setPromptKey(key)
     })()
     return () => { cancelled = true }
-  }, [user?.id, user?.last_sign_in_at, pathname])
+  }, [user?.id, user?.last_sign_in_at, pathname, revision])
   useEffect(() => {
     if (!promptKey || !dialog.current) return
     const element = dialog.current

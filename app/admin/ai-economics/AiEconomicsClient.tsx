@@ -16,6 +16,8 @@ type Summary = {
   totalInputTokens: number;
   totalOutputTokens: number;
   estimatedAiCostInr: number;
+  interviewCostInr: number;
+  otherAiCostInr: number;
   revenueInr: number;
   estimatedContributionInr: number;
   contributionMarginPercent: number | null;
@@ -452,6 +454,7 @@ export default function AiEconomicsPage() {
                 breakdown for partial coverage.
               </p>
             )}
+            <p className="rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-900">Contribution = completed purchase revenue − modeled ATS/CV costs − tracked Interview Prep costs (Gemini + Sarvam). Interview credit usage is not counted again as revenue. These estimates exclude hosting, payment fees and taxes.</p>
             <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <MetricCard
                 label="Recorded revenue"
@@ -461,7 +464,7 @@ export default function AiEconomicsPage() {
               <MetricCard
                 label="Known modeled AI cost"
                 value={currency(data.summary.estimatedAiCostInr)}
-                note="Includes tracked interviews; unknown costs are excluded"
+                note={`Interview Prep: ${currency(data.summary.interviewCostInr ?? 0)} · Other AI: ${currency(data.summary.otherAiCostInr ?? 0)}. Unpriced usage is excluded.`}
               />
               <MetricCard
                 label="Contribution from known costs"

@@ -1,3 +1,5 @@
+import { ATS_REPORT_SCHEMA } from '@/lib/ats-report'
+import { geminiRateSnapshot, textUsageCost } from '@/lib/ai-usage-pricing'
 import { GoogleGenAI } from '@google/genai'
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
@@ -305,6 +307,7 @@ if (previous?.transaction_status === 'reserved') {
           ],
           config: {
             responseMimeType: 'application/json',
+            responseJsonSchema: ATS_REPORT_SCHEMA,
           },
         })
         break
@@ -349,7 +352,7 @@ if (response?.usageMetadata) {
         output_tokens: outputTokens,
         thinking_tokens: thinkingTokens,
         total_tokens: totalTokens,
-        estimated_cost_inr: null,
+        estimated_cost_inr: textUsageCost(await geminiRateSnapshot(response.modelVersion || ATS_MODEL), usage),
         status: 'generated'
       })
 
@@ -492,7 +495,8 @@ return json(result)
       const refund = await supabaseAdmin.rpc('refund_career_credit', { p_transaction_id: transactionId })
       if (refund.error) console.error('ATS refund requires reconciliation:', transactionId, refund.error)
     }
-    return json({ error: 'Unable to complete ATS analysis. Please retry or contact support if a credit remains reserved.' }, 500)
+    const formatFailure = ['ATS_REPORT_VALIDATION_FAILED','ATS_JSON_PARSE_FAILED','ATS_GEMINI_EMPTY_RESPONSE'].includes(error?.message)
+    return json({ error: formatFailure ? 'The AI returned an incomplete report. Your inputs are kept. Please retry; if a credit remains reserved, contact support.' : 'Unable to complete ATS analysis. Your inputs are kept. Please retry or contact support if a credit remains reserved.' }, 500)
   }
 }
 

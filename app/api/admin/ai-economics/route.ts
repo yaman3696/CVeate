@@ -1,3 +1,4 @@
+import { geminiRateSnapshot, priceLegacyAts } from "@/lib/ai-usage-pricing";
 import { NextRequest, NextResponse } from "next/server";
 import { checkAdminPermission } from "@/lib/admin-permissions";
 import { requireAdmin } from "@/lib/require-admin";
@@ -60,7 +61,7 @@ export async function GET(request: NextRequest) {
 
         supabaseAdmin
           .from("cveate_credit_purchases")
-          .select("amount_paise, credits, status"),
+          .select("amount_paise, credits, status").eq("currency", "INR"),
 
         supabaseAdmin
           .from("cveate_credit_grants")
@@ -79,7 +80,9 @@ export async function GET(request: NextRequest) {
       throw transactionsResult.error;
     }
 
-    const usage = usageResult.data ?? [];
+    const originalUsage = usageResult.data ?? [];
+    const usage = priceLegacyAts(originalUsage, await geminiRateSnapshot("gemini-3.1-flash-lite"));
+    const historicalAtsEstimates = usage.filter((row,i) => originalUsage[i].estimated_cost_inr === null && row.estimated_cost_inr !== null).length;
     const purchases = purchasesResult.data ?? [];
     const grants = grantsResult.data ?? [];
     const transactions = transactionsResult.data ?? [];
@@ -232,7 +235,7 @@ export async function GET(request: NextRequest) {
 
     const averageCostPerLinkedCompletedReportInr =
       linkedCompletedTransactionCount > 0
-        ? totalRecordedAtsAiCostInr / linkedCompletedTransactionCount
+        ? completedAiCostInr / linkedCompletedTransactionCount
         : null;
 
     // Preserve recentUsage, but show final ATS credit
@@ -272,6 +275,8 @@ export async function GET(request: NextRequest) {
           totalInputTokens,
           totalOutputTokens,
           estimatedAiCostInr,
+          interviewCostInr: Number(interviewCosts?.lifetime?.knownCostInr || 0),
+          otherAiCostInr: usage.reduce((sum,row)=>sum+Number(row.estimated_cost_inr??0),0),
           revenueInr,
           estimatedContributionInr,
           contributionMarginPercent,
@@ -305,6 +310,7 @@ export async function GET(request: NextRequest) {
         recentUsage,
 
         warnings: [
+          ...(historicalAtsEstimates ? [`${historicalAtsEstimates} historical ATS calls use current configured 3.1 Flash-Lite rates and no cache discount; these are planning estimates, not invoices.`] : []),
           "AI costs are modeled paid-tier estimates, not actual provider invoices.",
           "The financial summary combines lifetime interview costs and the legacy ledger, capped at 10,000 legacy entries. The interview section uses the selected start-date cohort.",
           "Interview provider estimates exclude free credits, tax and negotiated discounts; the USD/INR rate is a configurable planning assumption, not a live FX quote.",

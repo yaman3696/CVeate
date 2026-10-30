@@ -8,6 +8,7 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [loadFailed, setLoadFailed] = useState(false)
   const [message, setMessage] = useState({ text: '', type: '' })
 
   const [formData, setFormData] = useState({
@@ -31,17 +32,19 @@ export default function ProfilePage() {
     const fetchProfile = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser()
-        if (!user) return
+        if (!user) throw new Error('Please sign in to load your profile.')
 
         const { data, error } = await supabase
           .from('profiles')
-          .select('full_name,first_name,contact_number,phone,address_line_1,gender,birthdate,profession,target_job_title,current_job_title,career_status,total_experience_years,total_experience_months,notice_period,current_ctc,expected_ctc')
+          .select('full_name,contact_number,phone,address_line_1,gender,birthdate,profession,target_job_title,current_job_title,career_status,total_experience_years,total_experience_months,notice_period,current_ctc,expected_ctc')
           .eq('id', user.id)
           .single()
 
+        if (error) throw error
+        if (!data) throw new Error('Your profile could not be found. Please contact support.')
         if (data) {
           setFormData({
-            fullName: data.full_name || data.first_name || user.user_metadata?.full_name || '',
+            fullName: data.full_name || user.user_metadata?.full_name || '',
             contactNumber: data.contact_number || data.phone || user.user_metadata?.contact_number || '',
             address: data.address_line_1 || '',
             gender: data.gender || 'Male',
@@ -58,6 +61,8 @@ export default function ProfilePage() {
         }
       } catch (err) {
         console.error('Error loading profile:', err)
+        setLoadFailed(true)
+        setMessage({text: err instanceof Error ? err.message : 'Could not load your profile. Please retry.',type:'error'})
       } finally {
         setLoading(false)
       }
@@ -109,6 +114,7 @@ export default function ProfilePage() {
         throw new Error('Profile not found. Please sign in again.')
       }
 
+      window.dispatchEvent(new Event('cveat-profile-updated'))
       setMessage({ text: 'Profile settings updated and saved successfully!', type: 'success' })
       setIsEditing(false)
     } catch (err: any) {
@@ -126,6 +132,7 @@ export default function ProfilePage() {
     )
   }
 
+  if (loadFailed) return <main className="min-h-screen bg-slate-50 p-8 text-slate-900 dark:bg-[#0B1120] dark:text-slate-100"><h1 className="text-2xl font-bold">Could not load your profile</h1><p role="alert" className="my-4">{message.text}</p><button onClick={() => window.location.reload()} className="rounded-xl bg-indigo-600 px-5 py-3 text-white">Retry loading profile</button></main>
   return (
     <div className="min-h-screen bg-slate-50 pt-12 pb-16 px-6 text-slate-900 dark:bg-[#0B1120] dark:text-slate-100">
       <div className="mx-auto max-w-3xl w-full space-y-6">

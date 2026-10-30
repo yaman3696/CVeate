@@ -360,10 +360,10 @@ if (report) {
     })
   }
 setIsAnalyzing(false)
-setScanNotice('')
+setScanNotice(refunded ? 'This scan did not complete and its Career Credit was refunded. Your CV and job description are kept—please try again.' : '')
 clearPendingScan(userId)
 void refreshCredits(userId)
-if (refunded) alert('This scan was refunded. No Career Credit was charged.')
+
 }
 // Restore a pending request ID on refresh. Never launch Gemini again here.
 useEffect(() => {
@@ -672,6 +672,7 @@ Activity indicator - not an exact completion percentage
 </div>
 ) : !analysisResult ? (
 <div className="space-y-8">
+{scanNotice && <p role="alert" className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:bg-amber-400/10 dark:text-amber-200">{scanNotice}</p>}
 <div className="text-center space-y-3">
 <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">AI ATS Resume Scanner</h1>
 <p className="text-sm text-indigo-100 max-w-lg mx-auto">
