@@ -358,40 +358,6 @@
   font-size:13px;
   margin-bottom:18px
 }
-.cveat-call-minimized{
-  grid-template-rows:100px auto
-}
-.cveat-call-minimized .cveat-call-stage{
-  grid-column:1/-1
-}
-.cveat-call-minimized .cveat-call-name{
-  bottom:10px;
-  left:20px;
-  padding:5px 8px
-}
-.cveat-call-minimized .cveat-call-name span{
-  display:none
-}
-.cveat-call-minimized .cveat-call-panel{
-  grid-column:1/-1;
-  max-height:500px
-}
-.cveat-call-window:fullscreen{
-  height:100dvh;
-  width:100vw;
-  max-width:none;
-  grid-template-rows:minmax(0,1fr) auto;
-  border:0;
-  border-radius:0
-}
-.cveat-call-window:fullscreen .cveat-call-panel{
-  display:flex;
-  flex-direction:column;
-  justify-content:center
-}
-.cveat-call-window:fullscreen .cveat-call-promise{
-  margin-top:20px
-}
 :where([class~="dark"]) .cveat-call-room{
   --page:#0b1120;
   --surface:#1b263b;
@@ -640,3 +606,62 @@
 .cveat-call-keyboard-help{font-size:12px;line-height:1.6;color:#64748b;margin:10px 0}
 .dark .cveat-call-mic-banner{background:#25284f;border-color:#6366f180;color:#e0e7ff}.dark .cveat-call-keyboard-help{color:#cbd5e1}
 @media(max-width:600px){.cveat-call-mic-banner{padding:16px}.cveat-call-mic-banner button{width:100%}}
+
+/* A fixed-height conversation panel scrolls independently of the action dock. */
+.cveat-call-window{position:relative;grid-template-columns:minmax(0,1fr) 370px;grid-template-rows:minmax(300px,1fr) 76px;height:clamp(460px,70dvh,760px)}
+.cveat-call-stage{grid-column:1;grid-row:1}
+.cveat-call-panel{grid-column:2;grid-row:1/3;padding:22px;overscroll-behavior:contain}
+.cveat-call-panel h2{font-size:20px;line-height:1.4;margin:10px 0 16px}
+.cveat-call-steps{margin:12px 0 16px}
+.cveat-call-timer{padding:10px 12px 13px}
+.cveat-call-timer strong{font-size:26px}
+.cveat-call-timer p{font-size:10px}
+.cveat-call-transcript{margin-top:12px}
+.cveat-call-keyboard-help{font-size:11px;line-height:1.5}
+.cveat-call-controls{grid-column:1;grid-row:2;display:grid;grid-template-columns:1fr auto 1fr;gap:12px;padding:12px 18px;background:var(--surface);z-index:4}
+.cveat-call-controls .cveat-call-primary{grid-column:3;width:auto;justify-self:end;gap:14px;white-space:nowrap}
+.cveat-call-devices{grid-column:2;flex-wrap:nowrap;gap:8px;justify-content:center}
+.cveat-call-devices button{min-height:42px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);gap:0}
+.cveat-call-devices button span{max-width:0;overflow:hidden;white-space:nowrap;opacity:0;transition:max-width .2s,opacity .2s,margin .2s}
+.cveat-call-devices button:hover span,.cveat-call-devices button:focus-visible span{max-width:120px;opacity:1;margin-left:7px}
+.cveat-call-stageTop{align-items:flex-start;flex-wrap:wrap;inset:14px}
+.cveat-call-tools{align-items:center}
+.cveat-call-tools>button{width:38px;height:38px;border-radius:10px;flex-shrink:0}
+.cveat-call-tools .cveat-call-switch{width:auto;border:1px solid var(--line)}
+.cveat-call-tools .cveat-call-switch button{width:auto;height:32px;padding:6px 9px;border:0;border-radius:6px;display:flex;font-size:11px}
+.cveat-call-name{bottom:14px;left:14px}
+.cveat-call-window:fullscreen,.cveat-call-window.cveat-call-expanded{height:100dvh;width:100%;max-width:none;grid-template-rows:minmax(0,1fr) 76px;border-radius:0}
+.cveat-call-window.cveat-call-expanded:not(:fullscreen){position:fixed;inset:0;z-index:1000}
+.cveat-call-window:fullscreen .cveat-call-panel{display:block;overflow:auto}
+@media(min-width:1700px){.cveat-call-window{grid-template-columns:minmax(0,1fr) 420px}.cveat-call-panel h2{font-size:22px}}
+@media(min-width:761px) and (max-width:1200px){.cveat-call-controls{grid-template-columns:1fr auto}.cveat-call-devices{grid-column:1}.cveat-call-controls .cveat-call-primary{grid-column:2}}
+@media(max-width:760px),(orientation:portrait) and (max-width:1100px){
+.cveat-call-window{display:flex;height:auto;overflow:visible}
+.cveat-call-stage{height:280px;min-height:240px;border-radius:18px 18px 0 0}
+.cveat-call-panel{padding:18px;overflow:visible}
+.cveat-call-panel h2{font-size:19px}
+.cveat-call-stageTop{inset:12px;gap:8px}
+.cveat-call-badge{padding:6px 9px}
+.cveat-call-controls{position:sticky;bottom:0;display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;padding:12px;border-radius:0 0 18px 18px;box-shadow:0 -6px 18px #0f172a0a}
+.cveat-call-devices{width:auto;gap:6px}
+.cveat-call-devices button{padding:10px 8px;font-size:10px}
+.cveat-call-devices button span{max-width:none;opacity:1;margin-left:6px}
+.cveat-call-controls .cveat-call-primary{flex:1;justify-content:center;font-size:11px;padding:12px;gap:8px}
+.cveat-call-window:fullscreen,.cveat-call-window.cveat-call-expanded{overflow:auto}
+.cveat-call-window:fullscreen .cveat-call-stage,.cveat-call-window.cveat-call-expanded .cveat-call-stage{height:32dvh;min-height:230px}
+.cveat-call-window:fullscreen .cveat-call-panel{overflow:visible;flex-shrink:0}
+.cveat-call-controls{flex-shrink:0}
+}
+@media(prefers-reduced-motion:reduce){.cveat-call-devices button span{transition:none}}
+
+@media(max-width:760px),(orientation:portrait) and (max-width:1100px){
+.cveat-call-window{height:82dvh;min-height:520px;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:220px minmax(0,1fr) auto;overflow:hidden}
+.cveat-call-stage{grid-column:1;grid-row:1;height:auto;min-height:0}
+.cveat-call-panel{grid-column:1;grid-row:2;overflow:auto;min-height:0}
+.cveat-call-controls{grid-column:1;grid-row:3;position:relative;bottom:auto}
+.cveat-call-window:fullscreen,.cveat-call-window.cveat-call-expanded{grid-template-rows:minmax(180px,30dvh) minmax(0,1fr) auto;min-height:0;overflow:hidden}
+.cveat-call-window:fullscreen .cveat-call-stage,.cveat-call-window.cveat-call-expanded .cveat-call-stage{height:auto;min-height:0}
+.cveat-call-window:fullscreen .cveat-call-panel{overflow:auto}
+}
+
+.cveat-call-full-mic{display:flex;align-items:center;gap:8px;background:var(--accent);color:white;padding:10px 14px;border-radius:10px;font-size:12px;min-height:40px}.cveat-call-full-mic[aria-pressed=true]{background:#be123c}.cveat-call-full-mic:disabled{opacity:.5}

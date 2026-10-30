@@ -776,7 +776,6 @@ export default function ConversationPractice({ userId, mode, onBack, }: {
                 <p className="mt-3 text-sm font-bold">{report.overallScore < 5 ? "Needs improvement" : report.overallScore < 8 ? "Making progress" : "Strong performance"}</p>
                 <p className="mt-4 whitespace-pre-wrap text-sm leading-7">{report.summary}</p>
               </div>
-              <div aria-label="Score colour guide" className="flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold"><span className="text-red-700 dark:text-red-300">1–4 · Needs improvement</span><span className="text-yellow-800 dark:text-yellow-200">5–7 · Making progress</span><span className="text-emerald-700 dark:text-emerald-300">8–10 · Strong performance</span></div>
               <p className="text-xs text-slate-500 dark:text-slate-400">Career Credits used: {creditUsed} for this complete interview.</p>
               {session.questions.map((q, i) => (<section key={i} data-question-feedback className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700">
                   <h3 className="border-b border-indigo-100 bg-indigo-50 px-5 py-4 text-sm font-bold text-indigo-900 dark:border-indigo-400/20 dark:bg-indigo-400/10 dark:text-indigo-100">Question {i + 1} · {q}</h3>
