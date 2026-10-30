@@ -2,6 +2,8 @@ import { GoogleGenAI } from '@google/genai'
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
+const ATS_MODEL = process.env.GEMINI_ATS_MODEL?.trim() || 'gemini-3.1-flash-lite'
+
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
 const json = (body: unknown, status = 200) =>
   NextResponse.json(body, { status })
@@ -296,7 +298,7 @@ if (previous?.transaction_status === 'reserved') {
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
         response = await ai.models.generateContent({
-          model: 'gemini-3.8-flash',
+          model: ATS_MODEL,
           contents: [
             { inlineData: { data: base64Data, mimeType } },
             { text: prompt },
@@ -342,7 +344,7 @@ if (response?.usageMetadata) {
         user_id: auth.user.id,
         transaction_id: transactionId,
         feature: 'ats_checker',
-        model: 'gemini-3.8-flash',
+        model: response?.modelVersion || ATS_MODEL,
         input_tokens: inputTokens,
         output_tokens: outputTokens,
         thinking_tokens: thinkingTokens,
@@ -471,7 +473,7 @@ return json(result)
           transaction_id: transactionId,
           error_type: errorType,
           error_message: errorMessage,
-          gemini_model: 'gemini-3.8-flash',
+          gemini_model: ATS_MODEL,
         })
 
       if (logError) {
